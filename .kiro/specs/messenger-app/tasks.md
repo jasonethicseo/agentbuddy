@@ -98,7 +98,7 @@ How to work through this list:
   - Result (2026-11-13): fonts downloaded once with the builder's OK from `https://raw.githubusercontent.com/google/fonts/main/ofl/{nanumgothic,silkscreen}/` (6.3 MB in all). SHA-256: NanumGothic-Regular `76f45ef4…2e2d31`, Bold `f96298f9…33c674`, ExtraBold `5c4568e5…e691ae`, Silkscreen-Regular `c8454733…642ebd8`, OFL-NanumGothic `eeacf160…6c30f`, OFL-Silkscreen `86c5e9c9…efbd3`. Both licenses read `SIL OPEN FONT LICENSE Version 1.1`. Also: `--on-fill` token, `styles/icons.css` (icon colors by class), `src/ui/env.d.ts` for stylesheet imports; the three stylesheets are imported by both pages already. Contrast: icon-only button glyphs count as graphics (3:1); footer dots join the rings as known exceptions (see design "Contrast").
 
 - [ ] 10. UI screens
-  - [ ] 10.1 `model/list.ts`, `model/chrome.ts`, `model/inbox.ts`; unit tests (online counts, offline group, same-name folders, `[n]`, session rows only for two or more visible sessions, the buddy-row × only with exactly one visible session, the hidden-sessions line, alert strip, per-tab footer, connections, browser mode); P26
+  - [x] 10.1 `model/list.ts`, `model/chrome.ts`, `model/inbox.ts`; unit tests (online counts, offline group, same-name folders, `[n]`, session rows only for two or more visible sessions, the buddy-row × only with exactly one visible session, the hidden-sessions line, alert strip, per-tab footer, connections, browser mode); P26
     - _Requirements: 5.10, 5.11, 6.1–6.10, 11.3, 14.1_
   - [ ] 10.2 `index.html`, `chrome.ts` and `styles/main.css` (title bar, alert strip, tabs, footer)
     - _Requirements: 5.9–5.11, 6.11, 6.13_
