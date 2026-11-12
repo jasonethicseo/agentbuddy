@@ -8,7 +8,7 @@ const examples = [...eventsMd.matchAll(/^```json\n(.*)\n```$/gm)].map((m) => m[1
 
 describe('fixtures', () => {
   it('found the raw payload examples in events.md', () => {
-    expect(examples.length).toBe(11);
+    expect(examples.length).toBe(12);
   });
 
   it.each(FIXTURES.filter((f) => f.verbatim).map((f) => [f.id, f.raw] as const))('%s is verbatim', (_id, raw) => {

@@ -90,6 +90,27 @@ Claude app `SessionEnd` (stdin):
 - Claude Code CLI (2.1.322, run in a VS Code terminal: `CLAUDE_CODE_ENTRYPOINT=cli`, `TERM_PROGRAM=vscode`): `UserPromptSubmit` and `Stop` observed at 04:28 UTC. Prompts carry `scratchpad_dir`, `prompt_id`, `permission_mode`; `Stop` also carries `effort`, `stop_hook_active`, `background_tasks`, `session_crons`; app prompts after the first one carry `session_title`. None of these is read by the mapping.
 - Replaying all of today's Claude events through the fixed core gives one buddy per session folder: the app session (11 events, 2 different `cwd`) and the CLI session (2 events, 2 different `cwd`).
 
+Claude Code CLI `Stop` (stdin; `CLAUDE_CODE_ENTRYPOINT=cli`, `CLAUDE_PROJECT_DIR=/Users/dev/demo`, after the session ran `cd research`):
+```json
+{"session_id":"7199…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/7199….jsonl","cwd":"/Users/dev/demo/research","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/7199…/scratchpad","prompt_id":"c0de…","permission_mode":"auto","effort":{"level":"medium"},"hook_event_name":"Stop","stop_hook_active":false,"last_assistant_message":"research has one file.","background_tasks":[],"session_crons":[]}
+```
+
+Probe summary at the end of the observation (2026-11-12, 02:29–04:50 UTC; probe connections removed afterwards):
+
+| Agent / launcher | Event | Calls |
+|---|---|---|
+| Claude app (`claude-desktop`) | `UserPromptSubmit` | 10 |
+| Claude app | `Stop` | 10 |
+| Claude app | `SessionEnd` (`reason: "other"`) | 1 |
+| Claude Code CLI (`cli`) | `UserPromptSubmit` | 1 |
+| Claude Code CLI | `Stop` | 1 |
+| Claude, any | `Notification` | 0 |
+| Codex CLI, Codex in the ChatGPT app | `notify` | 0 |
+| Kiro CLI | `SessionEnd` | 0 |
+
+- Value types seen on Claude `Stop`: `effort` an object (`{"level":"medium"}`), `background_tasks` and `session_crons` arrays (empty), `stop_hook_active` boolean (`false`). `permission_mode` was `auto` in every call.
+- The relay log over the same span: 64 events from 4 Kiro sessions and 2 Claude sessions, no hook errors.
+
 Not yet observed after connecting:
 - Claude app and CLI: `Notification` (`permission_prompt`, `idle_prompt`).
 - Claude `SessionEnd` with a reason other than `other` (`clear`, `resume`, `logout`, `prompt_input_exit`).

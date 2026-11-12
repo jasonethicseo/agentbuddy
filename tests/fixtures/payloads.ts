@@ -136,6 +136,16 @@ export const FIXTURES: readonly Fixture[] = [
     note: 'Claude app SessionEnd, observed on 2026-11-12',
   },
   {
+    id: 'claude-cli-stop-after-cd',
+    row: 'Claude Stop',
+    label: 'observed',
+    verbatim: true,
+    agent: 'claude',
+    raw: String.raw`{"session_id":"7199…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/7199….jsonl","cwd":"/Users/dev/demo/research","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/7199…/scratchpad","prompt_id":"c0de…","permission_mode":"auto","effort":{"level":"medium"},"hook_event_name":"Stop","stop_hook_active":false,"last_assistant_message":"research has one file.","background_tasks":[],"session_crons":[]}`,
+    expected: { agent: 'claude', session: '7199…', kind: 'stop', cwd: '/Users/dev/demo/research', text: 'research has one file.' },
+    note: 'Claude Code CLI Stop after cd into a subfolder, observed on 2026-11-12',
+  },
+  {
     id: 'claude-stop',
     row: 'Claude Stop',
     label: 'observed',
