@@ -116,12 +116,12 @@ How to work through this list:
   - [x] 12.6 Move `src/relay/store.ts` and `main.ts` to the new core API: prune after accept and on the 30-second tick; progress stays per buddy; update the relay tests
     - _Requirements: 16.3, 18.3, 18.6, 23.8_
 
-- [ ] 13. Sessions under buddies: UI and browser check
-  - [ ] 13.1 Rewrite `src/ui/screens/list.ts`: buddy rows collapsed by default, session rows when expanded, `IDLE` / `OFFLINE` sessions hidden behind a toggle, choices kept across updates; `Sessions` column in `index.html`
+- [x] 13. Sessions under buddies: UI and browser check
+  - [x] 13.1 Rewrite `src/ui/screens/list.ts`: buddy rows collapsed by default, session rows when expanded, `IDLE` / `OFFLINE` sessions hidden behind a toggle, choices kept across updates; `Sessions` column in `index.html`
     - _Requirements: 20.1, 20.3, 20.8–20.10_
-  - [ ] 13.2 Update `tests/unit/ui-list.test.ts` for buddy cells, session cells and hidden sessions
+  - [x] 13.2 Update `tests/unit/ui-list.test.ts` for buddy cells, session cells and hidden sessions
     - _Requirements: 20.1, 20.8, 20.9_
-  - [ ] 13.3 Browser check with the builder: two sessions in one folder (one waiting for approval, one working) show the buddy as `WAITING_APPROVAL` with both sessions listed; an idle session is hidden until shown
+  - [x] 13.3 Browser check with the builder: two sessions in one folder (one waiting for approval, one working) show the buddy as `WAITING_APPROVAL` with both sessions listed; an idle session is hidden until shown
     - _Requirements: 22.2, 20.9_
 
 - [ ] 14. Kiro progress

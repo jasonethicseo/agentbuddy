@@ -1,12 +1,13 @@
 // UI entry. Relay mode only in this spec; demo mode arrives with the demo spec.
 
 import type { BuddyView } from '../core/buddies';
-import { renderList } from './screens/list';
+import { createBuddyList } from './screens/list';
 
 const RETRY_MS = 3000;
 
 const tbody = document.querySelector<HTMLTableSectionElement>('#buddies tbody');
 const notice = document.querySelector<HTMLElement>('#notice');
+const list = tbody ? createBuddyList(tbody) : null;
 
 function connect(): void {
   const source = new EventSource('/stream');
@@ -18,8 +19,8 @@ function connect(): void {
     } catch {
       return;
     }
-    if (!Array.isArray(data) || !tbody) return;
-    renderList(tbody, data as BuddyView[]);
+    if (!Array.isArray(data) || !list) return;
+    list.render(data as BuddyView[]);
     if (notice) notice.hidden = true;
   });
 
