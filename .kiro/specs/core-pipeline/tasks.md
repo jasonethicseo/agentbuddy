@@ -46,7 +46,7 @@ How to work through this list:
   - [x] 4.4 Write `tests/unit/state.test.ts`: Kiro `stop` keeps the prompt text, a late `prompt` lands in its place, Claude `permission` then `idle`, a spec path kept after 60 chat events, thresholds at exactly 10 and 30 minutes
     - _Requirements: 8.2, 9.8, 9.9, 9.10, 10.3–10.5_
 
-- [ ] 5. Checkpoint: core
+- [x] 5. Checkpoint: core
   - All tests pass. `src/core` imports nothing outside `src/core` and no `node:` modules (check with a grep).
   - Every file stays under about 200 lines.
 
