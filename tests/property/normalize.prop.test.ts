@@ -1,10 +1,12 @@
-// P1: normalize never throws and returns null or a valid event (Requirements 5.1–5.3, 6.1).
+// P1: normalize never throws and returns null or a valid event (Requirements 5.1–5.3, 6.1),
+// and keeps launcher fields exactly when well-formed (messenger-app Requirements 1.2–1.4).
 // P2: Codex title turns are dropped whichever signal is present (Requirements 4.2–4.4).
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { TEXT_LIMIT } from '../../src/core/config';
 import { validateEvent } from '../../src/core/event';
 import type { AgentId, BuddyEvent } from '../../src/core/event';
+import { isBundleId, isTermProgram } from '../../src/core/launcher';
 import { CODEX_TITLE_PREFIX, normalize } from '../../src/core/normalize';
 import { codePointLength } from '../../src/core/text';
 
@@ -44,6 +46,17 @@ const rawInput = fc.oneof(
   nearPayload.map((p) => JSON.stringify(p)),
 );
 
+// Environment values as the hook would pass them: observed ones, near misses and anything.
+const envValue = fc.option(
+  fc.oneof(
+    fc.constantFrom('com.microsoft.VSCode', 'dev.kiro.desktop', 'com.apple.Terminal', 'vscode', 'Apple_Terminal', 'tmux'),
+    fc.constantFrom('', ' ', 'com.', '-b.x', 'com.x;id', 'vs code', 'a'.repeat(300)),
+    fc.string({ unit: 'binary', maxLength: 80 }),
+  ),
+  { nil: undefined },
+);
+const launcherEnv = fc.record({ bundleId: envValue, termProgram: envValue });
+
 function checkOutput(out: BuddyEvent | null) {
   if (out === null) return;
   expect(validateEvent(out)).toEqual(out);
@@ -63,6 +76,25 @@ describe('P1 normalize', () => {
       }),
       { numRuns: 1000 },
     );
+  });
+
+  it('with any launcher environment, keeps each launcher field exactly when it is well-formed', () => {
+    let withLauncher = 0;
+    fc.assert(
+      fc.property(agent, nearPayload, launcherEnv, (a, p, env) => {
+        const raw = JSON.stringify(p);
+        const out = normalize(a, raw, AT, env);
+        checkOutput(out);
+        // The environment never decides whether an event is kept.
+        expect(out === null).toBe(normalize(a, raw, AT) === null);
+        if (out === null) return;
+        expect(out.bundleId).toBe(isBundleId(env.bundleId) ? env.bundleId : undefined);
+        expect(out.termProgram).toBe(isTermProgram(env.termProgram) ? env.termProgram : undefined);
+        if (out.bundleId !== undefined || out.termProgram !== undefined) withLauncher++;
+      }),
+      { numRuns: 1000 },
+    );
+    expect(withLauncher).toBeGreaterThan(10);
   });
 
   it('produces real events for near-real payloads (generator sanity check)', () => {

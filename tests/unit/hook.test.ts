@@ -131,6 +131,37 @@ describe('agentbuddy-hook', () => {
     expect(JSON.parse(relay.received[0]!.body)).toMatchObject({ agent: 'claude', kind: 'stop', projectDir: '/Users/dev/demo' });
   });
 
+  it('passes __CFBundleIdentifier and TERM_PROGRAM on as bundleId and termProgram, for every agent', async () => {
+    const relay = await fakeRelay(true);
+    const env = { __CFBundleIdentifier: 'com.microsoft.VSCode', TERM_PROGRAM: 'vscode' };
+    const runs = [
+      await run(['kiro'], { stdin: fixture('kiro-stop'), port: relay.port, env }),
+      await run(['claude'], { stdin: fixture('claude-stop'), port: relay.port, env }),
+      await run(['codex', fixture('codex-turn-complete')], { port: relay.port, env }),
+    ];
+    await relay.close();
+    for (const r of runs) expectQuietExit(r);
+    expect(relay.received.map((x) => JSON.parse(x.body))).toEqual([
+      expect.objectContaining({ agent: 'kiro', bundleId: 'com.microsoft.VSCode', termProgram: 'vscode' }),
+      expect.objectContaining({ agent: 'claude', bundleId: 'com.microsoft.VSCode', termProgram: 'vscode' }),
+      expect.objectContaining({ agent: 'codex', bundleId: 'com.microsoft.VSCode', termProgram: 'vscode' }),
+    ]);
+    expect(errorLog()).toEqual([]);
+  });
+
+  it('sends the event without malformed launcher values, and logs nothing', async () => {
+    const relay = await fakeRelay(true);
+    const env = { __CFBundleIdentifier: 'com.x; rm -rf ~', TERM_PROGRAM: 'vs code' };
+    const r = await run(['kiro'], { stdin: fixture('kiro-stop'), port: relay.port, env });
+    await relay.close();
+    expectQuietExit(r);
+    const event = JSON.parse(relay.received[0]!.body);
+    expect(event).toMatchObject({ agent: 'kiro', kind: 'stop' });
+    expect(event).not.toHaveProperty('bundleId');
+    expect(event).not.toHaveProperty('termProgram');
+    expect(errorLog()).toEqual([]);
+  });
+
   it('reads the Codex payload from the last argv item without waiting for stdin', async () => {
     const relay = await fakeRelay(true);
     const r = await run(['codex', fixture('codex-turn-complete')], { keepStdinOpen: true, port: relay.port });

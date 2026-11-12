@@ -49,16 +49,23 @@ export function insertEvent(window: readonly Stamped[], item: Stamped, cap: numb
 export function isTaskEvent(item: Stamped): boolean {
   return item.event.kind === 'task_start' || item.event.kind === 'task_done';
 }
-
+/** An event that carries `bundleId` or `termProgram`. */
+export function hasLauncher(item: Stamped): boolean {
+  return item.event.bundleId !== undefined || item.event.termProgram !== undefined;
+}
 /**
- * Running maximum of task events in event order. Only a later task event
- * replaces the kept one, so the result depends on the set of task events,
- * not on arrival order, and never on what is still in a window.
+ * Running maximum in event order over the events that match `pred`. Only a
+ * later matching event replaces the kept one, so the result depends on the set
+ * of matching events, not on arrival order, and never on what is still in a window.
  */
+export function latest(kept: Stamped | undefined, item: Stamped, pred: (s: Stamped) => boolean): Stamped | undefined {
+  if (!pred(item)) return kept;
+  return kept === undefined || compareStamped(item, kept) > 0 ? item : kept;
+}
+
+/** Running maximum of task events in event order (see `latest`). */
 export function laterTask(kept: Stamped | undefined, item: Stamped): Stamped | undefined {
-  if (!isTaskEvent(item)) return kept;
-  if (kept === undefined || compareStamped(item, kept) > 0) return item;
-  return kept;
+  return latest(kept, item, isTaskEvent);
 }
 
 /** Running minimum in event order: the earlier of `kept` and `item`. */

@@ -9,6 +9,13 @@ export const KINDS: EventKind[] = ['prompt', 'task_start', 'task_done', 'permiss
 export const CWDS = ['/Users/dev/demo', '/Users/dev/demo/research/live', '/Users/dev/app'];
 /** Claude `CLAUDE_PROJECT_DIR` per session, as Claude Code keeps it fixed for a session. */
 export const PROJECT_OF: Readonly<Record<string, string>> = { 'sess_aa…': '/Users/dev/demo', 'sess_bb…': '/Users/dev/app', 'e697…': '/Users/dev/demo' };
+/** Launcher pairs as hooks send them (events.md); some carry only one field. */
+export const LAUNCHERS: ReadonlyArray<Pick<BuddyEvent, 'bundleId' | 'termProgram'>> = [
+  { bundleId: 'dev.kiro.desktop' },
+  { bundleId: 'com.microsoft.VSCode', termProgram: 'vscode' },
+  { bundleId: 'com.apple.Terminal', termProgram: 'Apple_Terminal' },
+  { termProgram: 'tmux' },
+];
 export const SESSIONS = ['sess_aa…', 'sess_bb…', 'e697…'];
 
 export const isoAt = (ms: number) => new Date(ms).toISOString();
@@ -37,8 +44,9 @@ export function eventArb(shape: EventShape = {}): fc.Arbitrary<BuddyEvent> {
       spec: fc.constantFrom('a', 'b'),
       withProject: fc.boolean(),
       success: fc.option(fc.boolean(), { nil: undefined }),
+      launcher: fc.option(fc.constantFrom(...LAUNCHERS), { nil: undefined }),
     })
-    .map(({ agent, cwd, session, kind, sec, text, input, spec, success, withProject }) => {
+    .map(({ agent, cwd, session, kind, sec, text, input, spec, success, withProject, launcher }) => {
       const e: BuddyEvent = { v: 1, agent, session, kind, at: isoAt(BASE_MS + sec * 1000), cwd };
       if (text !== undefined && kind !== 'task_start' && kind !== 'task_done') e.text = text;
       if (kind === 'task_start' || kind === 'task_done') {
@@ -47,6 +55,7 @@ export function eventArb(shape: EventShape = {}): fc.Arbitrary<BuddyEvent> {
       }
       if (agent === 'codex' && kind === 'stop' && input !== undefined) e.firstInput = input;
       if (agent === 'claude' && withProject && PROJECT_OF[session]) e.projectDir = PROJECT_OF[session];
+      if (launcher !== undefined) Object.assign(e, launcher);
       return e;
     });
 }

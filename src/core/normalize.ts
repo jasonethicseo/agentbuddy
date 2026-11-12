@@ -3,6 +3,8 @@
 // Never throws: every path ends in a BuddyEvent that passed validateEvent, or null.
 
 import { isAgentId, isRecord, validateEvent } from './event';
+import { launcherFields } from './launcher';
+import type { LauncherEnv } from './launcher';
 import type { AgentId, BuddyEvent, EventKind, TaskInfo } from './event';
 import { truncate } from './text';
 
@@ -144,8 +146,16 @@ const NORMALIZERS: Readonly<Record<AgentId, Normalizer>> = {
  * BuddyEvent, or null for anything unparsable, unrecorded or malformed.
  * `env.projectDir` is Claude's `CLAUDE_PROJECT_DIR`, passed in by the hook
  * (core reads no environment); it is kept on Claude events only.
+ * `env.bundleId` and `env.termProgram` are the hook's `__CFBundleIdentifier`
+ * and `TERM_PROGRAM`; they are kept on every agent's events when well-formed,
+ * and a malformed one is left out without dropping the event.
  */
-export function normalize(agent: AgentId, raw: string, at: string, env: { projectDir?: string | undefined } = {}): BuddyEvent | null {
+export function normalize(
+  agent: AgentId,
+  raw: string,
+  at: string,
+  env: { projectDir?: string | undefined } & LauncherEnv = {},
+): BuddyEvent | null {
   try {
     if (!isAgentId(agent) || typeof raw !== 'string') return null;
     const payload: unknown = JSON.parse(raw);
@@ -153,6 +163,7 @@ export function normalize(agent: AgentId, raw: string, at: string, env: { projec
     const event = NORMALIZERS[agent](payload, at);
     if (event === null) return null;
     if (agent === 'claude' && typeof env.projectDir === 'string' && env.projectDir !== '') event.projectDir = env.projectDir;
+    Object.assign(event, launcherFields(env));
     return validateEvent(event);
   } catch {
     return null;

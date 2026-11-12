@@ -48,6 +48,8 @@ export interface SessionRecord {
   state: SessionState;
   /** Latest task event of this session (running maximum). */
   lastTask?: Stamped;
+  /** Latest event that carries `bundleId` or `termProgram` (running maximum). */
+  launcher?: Stamped;
 }
 
 /**

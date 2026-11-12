@@ -5,7 +5,7 @@
 
 import { SESSION_TTL_MS } from './config';
 import type { AgentId, BuddyEvent } from './event';
-import { buddyKey, insertEvent, laterTask, sessionKey, stamp } from './history';
+import { buddyKey, hasLauncher, insertEvent, laterTask, latest, sessionKey, stamp } from './history';
 import type { Stamped } from './history';
 import { displayState, foldSession, updateFirsts } from './state';
 import type { DisplayState, SessionRecord } from './state';
@@ -42,6 +42,9 @@ export interface SessionView {
   lastAt: string;
   title?: string;
   startedAt: string;
+  /** From the session's latest event with a launcher field (Requirement 1.6). */
+  bundleId?: string;
+  termProgram?: string;
 }
 
 export interface BuddyView {
@@ -77,6 +80,8 @@ export function applyEvent(list: SessionList, event: BuddyEvent, seq: number): {
   const record: SessionRecord = { window, firsts, state: foldSession(window, firsts) };
   const lastTask = laterTask(old?.lastTask, item);
   if (lastTask !== undefined) record.lastTask = lastTask;
+  const launcher = latest(old?.launcher, item, hasLauncher);
+  if (launcher !== undefined) record.launcher = launcher;
   const next = new Map(list);
   next.set(key, record);
   return { list: next, session: key, buddy: buddyKey(event.agent, record.state.folder) };
@@ -132,13 +137,15 @@ function compareSessions(a: SessionView & { ms: number }, b: SessionView & { ms:
 /** Buddy view at `nowMs`. A buddy from `groupBuddies` always has at least one session. */
 export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): BuddyView {
   const sessions = b.sessions
-    .map(({ state: s }) => {
+    .map(({ state: s, launcher }) => {
       const view: SessionView & { ms: number } = {
         key: s.key, session: shortId(s.session), state: displayState(s, nowMs),
         lastAt: s.lastAt, startedAt: s.startedAt, ms: s.lastAtMs,
       };
       if (s.statusText !== undefined) view.statusText = s.statusText;
       if (s.title !== undefined) view.title = s.title;
+      if (launcher?.event.bundleId !== undefined) view.bundleId = launcher.event.bundleId;
+      if (launcher?.event.termProgram !== undefined) view.termProgram = launcher.event.termProgram;
       return view;
     })
     .sort(compareSessions);
