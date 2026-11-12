@@ -63,7 +63,7 @@ How to work through this list:
   - Note: `store.ts`, `main.ts` and the relay tests move to the session model in task 12.
   - [x] 7.1 Create `src/relay/home.ts`: home folder (mode 700), token create or load (mode 600), daily log names
     - _Requirements: 15.2, 16.2_
-  - [x] 7.2 Create `src/relay/store.ts` with `accept`, `views` and ordered daily log appends (mode 600). Restore comes in task 16.
+  - [x] 7.2 Create `src/relay/store.ts` with `accept`, `views` and ordered daily log appends (mode 600). Restore comes in task 17.
     - _Requirements: 16.2–16.5_
   - [x] 7.3 Create `src/relay/stream.ts`: SSE, full list on connect and on change, heartbeat every 25 s
     - _Requirements: 18.1–18.4_
@@ -124,29 +124,37 @@ How to work through this list:
   - [x] 13.3 Browser check with the builder: two sessions in one folder (one waiting for approval, one working) show the buddy as `WAITING_APPROVAL` with both sessions listed; an idle session is hidden until shown
     - _Requirements: 22.2, 20.9_
 
-- [ ] 14. Kiro progress
-  - [ ] 14.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
-    - _Requirements: 11.1–11.7, 19.2_
-  - [ ] 14.2 Write property test P8 and `tests/unit/progress.test.ts` with marker cases (including those seen in task 11) and path cases (inside, sibling prefix, outside, wrong tail, nested)
-    - _Requirements: 11.2–11.7, 19.2_
-  - [ ] 14.3 Create `src/relay/tasks.ts` and wire it in `main.ts`: read on Kiro `task_start`, `task_done` and `stop` in any session when the buddy has a spec path, real paths inside the real `cwd`, regular file of at most 1 MB, newest read wins
-    - _Requirements: 19.1–19.6_
-  - [ ] 14.4 Add relay tests: a symlinked `tasks.md` pointing outside `cwd` gives progress unknown; a valid file gives `task n/m`
-    - _Requirements: 19.2–19.4_
-  - [ ] 14.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done
+- [ ] 14. Connect Claude Code and Codex; observe CLI and app sessions
+  - [ ] 14.1 Add `scripts/probe.mjs`: records the raw payload (stdin, or the last argv item for Codex) to `~/.agentbuddy/probe/<agent>.jsonl` (mode 600, size-capped), never writes to stdout, exits 0 within 900 ms. Observation only; it is not part of the product.
+  - [ ] 14.2 Add `scripts/codex-notify.sh`: runs the original `notify` program first, with exactly the arguments it received, and keeps that program's behavior and exit status; then runs `agentbuddy-hook codex` (and the probe with a leading `--probe`) with a 1-second limit on our part only. No personal paths. Tests with stub programs: arguments passed through, exit status kept, a missing or hanging `agentbuddy-hook` changes nothing and adds at most about 1 second.
+  - [ ] 14.3 Claude Code: back up `~/.claude/settings.json`; show the diff that appends one AgentBuddy group (and one probe group) to the hook lists of `UserPromptSubmit`, `Notification`, `Stop` and `SessionEnd`, leaving every existing group as it is; apply only after the builder approves.
+  - [ ] 14.4 Codex: back up `~/.codex/config.toml`; show the diff that points `notify` at `scripts/codex-notify.sh` followed by the original program and its arguments; apply only after the builder approves.
+  - [ ] 14.5 Session end: confirm in the docs which agents have a session-end hook (Claude Code `SessionEnd`; Kiro `SessionEnd`, CLI V3 only). Connect the probe to them for observation only; `agentbuddy-hook` keeps dropping these events.
+  - [ ] 14.6 Observe with the builder: one session each of Claude Code and Codex in the CLI and in the app, and a Kiro CLI session end. Record the sanitized raw payloads in events.md as observed, and mark what did not arrive. If app payloads differ from the CLI ones, ask before changing any mapping.
 
-- [ ] 15. Checkpoint: watched work
-  - All tests pass. The buddy list showed this repository's Kiro sessions for tasks 12–14 with state and progress.
+- [ ] 15. Kiro progress
+  - [ ] 15.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
+    - _Requirements: 11.1–11.7, 19.2_
+  - [ ] 15.2 Write property test P8 and `tests/unit/progress.test.ts` with marker cases (including those seen in task 11) and path cases (inside, sibling prefix, outside, wrong tail, nested)
+    - _Requirements: 11.2–11.7, 19.2_
+  - [ ] 15.3 Create `src/relay/tasks.ts` and wire it in `main.ts`: read on Kiro `task_start`, `task_done` and `stop` in any session when the buddy has a spec path, real paths inside the real `cwd`, regular file of at most 1 MB, newest read wins
+    - _Requirements: 19.1–19.6_
+  - [ ] 15.4 Add relay tests: a symlinked `tasks.md` pointing outside `cwd` gives progress unknown; a valid file gives `task n/m`
+    - _Requirements: 19.2–19.4_
+  - [ ] 15.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done
+
+- [ ] 16. Checkpoint: watched work
+  - All tests pass. The buddy list showed this repository's Kiro sessions for tasks 12–15 with state and progress.
   - Note in the report any hook call that took longer than expected or left a line in the hook error log.
 
-- [ ] 16. Restore on start
-  - [ ] 16.1 Add `restore` to `src/relay/store.ts`: yesterday's then today's log, valid lines with `at` in the last 24 hours, same core functions, sequences in file order, then `pruneList`; then read progress for Kiro buddies with a spec path
+- [ ] 17. Restore on start
+  - [ ] 17.1 Add `restore` to `src/relay/store.ts`: yesterday's then today's log, valid lines with `at` in the last 24 hours, same core functions, sequences in file order, then `pruneList`; then read progress for Kiro buddies with a spec path
     - _Requirements: 17.1–17.5, 23.8_
-  - [ ] 16.2 Add relay tests: two daily files with lines older than 24 hours, an invalid line and a cut-off last line; a missing file; sessions and session names come back
+  - [ ] 17.2 Add relay tests: two daily files with lines older than 24 hours, an invalid line and a cut-off last line; a missing file; sessions and session names come back
     - _Requirements: 17.1–17.5, 23.4_
-  - [ ] 16.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its sessions, state and progress
+  - [ ] 17.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its sessions, state and progress
 
-- [ ] 17. README and final checkpoint
+- [ ] 18. README and final checkpoint
   - README: what the pipeline does, `npm run build` / `npm run relay`, `npm link`, the hook command per agent (with `|| true`), `AGENTBUDDY_PORT`, buddies and sessions, the third-party libraries, and the known limits from the design.
   - All tests pass and `npm run build` succeeds.
   - Grep the repository for `/Users/` paths other than `/Users/dev/`, user names and token-like strings, and the fixtures and demo data for real session IDs. `.gitignore` does not list `.kiro`.
