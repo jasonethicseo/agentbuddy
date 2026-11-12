@@ -1,80 +1,25 @@
-// agentbuddy: the local relay. Listens on 127.0.0.1 only.
-
+// agentbuddy: the local relay command. Listens on 127.0.0.1 only.
+// The relay itself is startRelay(); this file only adds the command's messages,
+// exit codes and signal handling.
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RELAY_LIMITS, parsePort } from '../core/config';
-import { ensureHome, loadOrCreateToken } from './home';
-import { createRelayServer } from './server';
-import { createStore } from './store';
-import { createStream } from './stream';
-import { createProgressReader } from './tasks';
+import { parsePort } from '../core/config';
+import { PortInUseError, startRelay } from './start';
 
 const port = parsePort(process.env['AGENTBUDDY_PORT']);
-const dir = ensureHome();
-const token = loadOrCreateToken();
 // dist/relay.js serves the UI built into dist/ui.
 const uiDir = join(dirname(fileURLToPath(import.meta.url)), 'ui');
 
-const store = createStore({ dir, onLogError: (code) => console.error(`log write failed: ${code}`) });
-const stream = createStream(RELAY_LIMITS.heartbeatMs);
-
-let lastSent = '';
-function broadcastIfChanged(): void {
-  const views = store.views(Date.now());
-  const json = JSON.stringify(views);
-  if (json === lastSent) return;
-  lastSent = json;
-  stream.broadcast(views);
-}
-
-const refreshProgress = createProgressReader((key, progress) => {
-  if (store.setProgress(key, progress)) broadcastIfChanged();
-});
-
-const server = createRelayServer({
-  port,
-  token,
-  uiDir,
-  onEvent(event) {
-    const { buddy } = store.accept(event, Date.now());
-    broadcastIfChanged();
-    // Kiro progress: re-read tasks.md on task start, task done and stop (events.md trap 4).
-    if (event.agent === 'kiro' && (event.kind === 'task_start' || event.kind === 'task_done' || event.kind === 'stop')) {
-      const b = store.buddy(buddy);
-      if (b?.specPath !== undefined) void refreshProgress(b.key, b.specPath, b.cwd);
-    }
-  },
-  onStream(res) {
-    stream.add(res, store.views(Date.now()));
-  },
-});
-
-// Drives the 10- and 30-minute rules and the 24-hour session removal (Requirements 10.7, 23.8).
-const tick = setInterval(() => {
-  store.prune(Date.now());
-  broadcastIfChanged();
-}, RELAY_LIMITS.tickMs);
-
-// Restore the last 24 hours before accepting connections, then read Kiro progress once (Requirement 17).
-const restored = await store.restore(Date.now());
-for (const b of store.buddies()) if (b.specPath !== undefined) void refreshProgress(b.key, b.specPath, b.cwd);
-
-server.on('error', (err: NodeJS.ErrnoException) => {
-  console.error(err.code === 'EADDRINUSE' ? `port ${port} is in use (set AGENTBUDDY_PORT)` : `relay error: ${err.code ?? 'unknown'}`);
+try {
+  const relay = await startRelay({ port, uiDir, onMessage: (text) => console.error(text) });
+  console.log(`AgentBuddy relay: http://127.0.0.1:${port}/ (restored ${relay.restored} events from the last 24 hours)`);
+  const shutdown = () => {
+    relay.stop().finally(() => process.exit(0));
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+} catch (err) {
+  const code = (err as NodeJS.ErrnoException | null)?.code;
+  console.error(err instanceof PortInUseError ? `port ${port} is in use (set AGENTBUDDY_PORT)` : `relay error: ${code ?? 'unknown'}`);
   process.exit(1);
-});
-
-server.listen(port, '127.0.0.1', () => {
-  console.log(`AgentBuddy relay: http://127.0.0.1:${port}/ (restored ${restored} events from the last 24 hours)`);
-});
-
-function shutdown(): void {
-  clearInterval(tick);
-  stream.close();
-  server.close();
-  server.closeAllConnections();
-  store.flush().finally(() => process.exit(0));
 }
-
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);

@@ -49,13 +49,13 @@ How to work through this list:
   - All tests pass. `src/core` imports nothing outside `src/core` and no `node:` modules (check with a grep). Every file stays under about 200 lines.
   - Result (2026-11-12): 316 tests pass; `src/core` imports only `./` files, and uses no clock, timers, environment, file system, network or DOM (grep). Longest core file: `buddies.ts`, 187 lines. Test files that grew past 200 lines in this spec were split (`hook-helpers.ts`, `state-helpers.ts`, `session-end.test.ts`, `hidden.test.ts`, `inbox.prop.test.ts`). Three test files were already over 200 lines before this spec and are unchanged in size: `tests/fixtures/payloads.ts` (209), `tests/unit/relay.test.ts` (283), `tests/property/state.prop.test.ts` (291, one line more).
 
-- [ ] 6. `startRelay()` and shared UI file lookup
-  - [ ] 6.1 Base folder parameter in `home.ts`; create `src/relay/start.ts` (`startRelay`, `PortInUseError`, `stop()`); reduce `main.ts` to the command wrapper with the same messages and exit codes
+- [x] 6. `startRelay()` and shared UI file lookup
+  - [x] 6.1 Base folder parameter in `home.ts`; create `src/relay/start.ts` (`startRelay`, `PortInUseError`, `stop()`); reduce `main.ts` to the command wrapper with the same messages and exit codes
     - _Requirements: 3.1–3.6_
-  - [ ] 6.2 Create `src/relay/static.ts` (`resolveUiFile`, content types with `.ttf` and `.txt`); use it in `server.ts`
-  - [ ] 6.3 Tests: `startRelay` in-process with a temp home (start, `stop()`, port in use leaves nothing listening); the existing relay tests pass unchanged
+  - [x] 6.2 Create `src/relay/static.ts` (`resolveUiFile`, content types with `.ttf` and `.txt`); use it in `server.ts`
+  - [x] 6.3 Tests: `startRelay` in-process with a temp home (start, `stop()`, port in use leaves nothing listening); the existing relay tests pass unchanged
     - _Requirements: 3.3, 3.5, 17.1_
-  - [ ] 6.4 Steering: structure.md lists `src/relay/start.ts` and `static.ts`
+  - [x] 6.4 Steering: structure.md lists `src/relay/start.ts` and `static.ts`
 
 - [ ] 7. App main process: plain modules
   - [ ] 7.1 `src/app/config.ts`, `ipc.ts` (channels and validators), `window-options.ts`, `popup-layout.ts`, `icon.ts`; unit tests for the validators and the window flags; P22

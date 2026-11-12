@@ -23,9 +23,11 @@ inclusion: always
 │  ├─ hook/
 │  │  └─ cli.ts        agentbuddy-hook entry: read payload, normalize, POST, exit 0
 │  ├─ relay/
-│  │  ├─ main.ts       agentbuddy entry: token, restore, listen, clock tick
+│  │  ├─ main.ts       agentbuddy command: port, messages, exit codes, signals
+│  │  ├─ start.ts      startRelay(): token, restore, listen, clock tick, stop(); used by main.ts and the app
 │  │  ├─ home.ts       ~/.agentbuddy paths, token file, daily log names
 │  │  ├─ server.ts     HTTP on 127.0.0.1, token check, routes
+│  │  ├─ static.ts     UI file lookup shared by server.ts and the app's app:// protocol
 │  │  ├─ store.ts      in-memory state + daily events log append and restore
 │  │  ├─ stream.ts     Server-Sent Events
 │  │  └─ tasks.ts      reads tasks.md for Kiro progress

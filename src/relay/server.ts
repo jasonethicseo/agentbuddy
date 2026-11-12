@@ -5,10 +5,10 @@ import { timingSafeEqual } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
-import { extname, resolve, sep } from 'node:path';
 import { RELAY_LIMITS } from '../core/config';
 import { validateEvent } from '../core/event';
 import type { BuddyEvent } from '../core/event';
+import { resolveUiFile } from './static';
 
 export interface RelayDeps {
   port: number;
@@ -17,14 +17,6 @@ export interface RelayDeps {
   onEvent(event: BuddyEvent): void;
   onStream(res: ServerResponse): void;
 }
-
-const CONTENT_TYPES: Readonly<Record<string, string>> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.json': 'application/json; charset=utf-8',
-};
 
 const BASE_HEADERS = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 
@@ -84,23 +76,12 @@ async function handleEvent(req: IncomingMessage, res: ServerResponse, deps: Rela
 }
 
 async function serveStatic(path: string, res: ServerResponse, uiDir: string, head: boolean): Promise<void> {
-  let decoded: string;
+  const ui = resolveUiFile(uiDir, path);
+  if (ui === null) return send(res, 404);
   try {
-    decoded = decodeURIComponent(path === '/' ? '/index.html' : path);
-  } catch {
-    return send(res, 400);
-  }
-  const root = resolve(uiDir);
-  const file = resolve(root, `.${decoded}`);
-  if (decoded.includes('\0') || !file.startsWith(root + sep)) return send(res, 404);
-  try {
-    if (!(await stat(file)).isFile()) return send(res, 404);
-    const data = await readFile(file);
-    res.writeHead(200, {
-      ...BASE_HEADERS,
-      'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream',
-      'Content-Security-Policy': "default-src 'self'",
-    });
+    if (!(await stat(ui.file)).isFile()) return send(res, 404);
+    const data = await readFile(ui.file);
+    res.writeHead(200, { ...BASE_HEADERS, 'Content-Type': ui.type, 'Content-Security-Policy': "default-src 'self'" });
     res.end(head ? undefined : data);
   } catch {
     send(res, 404);

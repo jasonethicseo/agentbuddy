@@ -6,13 +6,16 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { HOME_DIR, TOKEN_FILE } from '../core/config';
 
+/** `~/.agentbuddy`. Every function below takes its folder as a parameter that defaults to this, so tests can use a temp folder. */
+export function defaultHome(): string {
+  return join(homedir(), HOME_DIR);
+}
 export function homePath(...parts: string[]): string {
-  return join(homedir(), HOME_DIR, ...parts);
+  return join(defaultHome(), ...parts);
 }
 
-/** Creates ~/.agentbuddy with mode 700 if needed and returns its path. */
-export function ensureHome(): string {
-  const dir = homePath();
+/** Creates the folder (default ~/.agentbuddy) with mode 700 if needed and returns its path. */
+export function ensureHome(dir: string = defaultHome()): string {
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   return dir;
 }
@@ -29,8 +32,8 @@ function readToken(file: string): string {
  * Reads the token, or creates one: 32 random bytes as hex, file mode 600.
  * `wx` makes creation atomic; if another relay created it first, that token wins.
  */
-export function loadOrCreateToken(): string {
-  const file = homePath(TOKEN_FILE);
+export function loadOrCreateToken(dir: string = defaultHome()): string {
+  const file = join(dir, TOKEN_FILE);
   const existing = readToken(file);
   if (existing !== '') {
     chmodSync(file, 0o600);
