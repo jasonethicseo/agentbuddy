@@ -60,7 +60,7 @@ How to work through this list:
 - [ ] 7. App main process: plain modules
   - [x] 7.1 `src/app/config.ts`, `ipc.ts` (channels and validators), `window-options.ts`, `popup-layout.ts`, `icon.ts`; unit tests for the validators and the window flags; P22
     - _Requirements: 5.8, 9.6, 15.1–15.3_
-  - [ ] 7.2 `sse.ts` (parser and `parseViews`); unit tests (chunk splits, comments, the 4 MB cap, malformed views dropped, a core-pipeline relay's list accepted)
+  - [x] 7.2 `sse.ts` (parser and `parseViews`); unit tests (chunk splits, comments, the 4 MB cap, malformed views dropped, a core-pipeline relay's list accepted)
     - _Requirements: 4.5_
   - [ ] 7.3 `jump.ts` (`planJump`, `runJump`); unit tests with a recording `exec` (running check first, not running, unknown ID, timeout, folder only under Req 12.7); P24
     - _Requirements: 12.1–12.12_
