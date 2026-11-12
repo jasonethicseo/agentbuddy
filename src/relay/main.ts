@@ -7,6 +7,7 @@ import { ensureHome, loadOrCreateToken } from './home';
 import { createRelayServer } from './server';
 import { createStore } from './store';
 import { createStream } from './stream';
+import { createProgressReader } from './tasks';
 
 const port = parsePort(process.env['AGENTBUDDY_PORT']);
 const dir = ensureHome();
@@ -26,13 +27,22 @@ function broadcastIfChanged(): void {
   stream.broadcast(views);
 }
 
+const refreshProgress = createProgressReader((key, progress) => {
+  if (store.setProgress(key, progress)) broadcastIfChanged();
+});
+
 const server = createRelayServer({
   port,
   token,
   uiDir,
   onEvent(event) {
-    store.accept(event, Date.now());
+    const { buddy } = store.accept(event, Date.now());
     broadcastIfChanged();
+    // Kiro progress: re-read tasks.md on task start, task done and stop (events.md trap 4).
+    if (event.agent === 'kiro' && (event.kind === 'task_start' || event.kind === 'task_done' || event.kind === 'stop')) {
+      const b = store.buddy(buddy);
+      if (b?.specPath !== undefined) void refreshProgress(b.key, b.specPath, b.cwd);
+    }
   },
   onStream(res) {
     stream.add(res, store.views(Date.now()));

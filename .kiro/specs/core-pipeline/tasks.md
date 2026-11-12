@@ -143,13 +143,13 @@ How to work through this list:
   - [x] 15.8 Claude settings: back up, show the diff that adds `agentbuddy-hook claude || true` (timeout 1) to `SessionEnd`, apply after approval.
 
 - [ ] 16. Kiro progress
-  - [ ] 16.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
+  - [x] 16.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
     - _Requirements: 11.1–11.7, 19.2_
-  - [ ] 16.2 Write property test P8 and `tests/unit/progress.test.ts` with marker cases (including those seen in task 11) and path cases (inside, sibling prefix, outside, wrong tail, nested)
+  - [x] 16.2 Write property test P8 and `tests/unit/progress.test.ts` with marker cases (including those seen in task 11) and path cases (inside, sibling prefix, outside, wrong tail, nested)
     - _Requirements: 11.2–11.7, 19.2_
-  - [ ] 16.3 Create `src/relay/tasks.ts` and wire it in `main.ts`: read on Kiro `task_start`, `task_done` and `stop` in any session when the buddy has a spec path, real paths inside the real `cwd`, regular file of at most 1 MB, newest read wins
+  - [x] 16.3 Create `src/relay/tasks.ts` and wire it in `main.ts`: read on Kiro `task_start`, `task_done` and `stop` in any session when the buddy has a spec path, real paths inside the real `cwd`, regular file of at most 1 MB, newest read wins
     - _Requirements: 19.1–19.6_
-  - [ ] 16.4 Add relay tests: a symlinked `tasks.md` pointing outside `cwd` gives progress unknown; a valid file gives `task n/m`
+  - [x] 16.4 Add relay tests: a symlinked `tasks.md` pointing outside `cwd` gives progress unknown; a valid file gives `task n/m`
     - _Requirements: 19.2–19.4_
   - [ ] 16.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done
 

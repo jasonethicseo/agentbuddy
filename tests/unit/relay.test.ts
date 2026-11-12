@@ -1,6 +1,6 @@
 // Relay end to end: the built dist/relay.js with a temp HOME
 // (Requirements 15.1–15.8, 16.1–16.5, 18.1–18.5).
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { networkInterfaces, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -165,6 +165,61 @@ describe('intake, log and stream', () => {
     // Rejected requests never reach the log.
     expect(lines.every((l) => l.kind !== 'nope' && !('pad' in l))).toBe(true);
     expect(readdirSync(join(home, '.agentbuddy')).filter((f) => f.startsWith('events-'))).toHaveLength(1);
+  });
+});
+
+describe('Kiro progress from tasks.md', () => {
+  // A temp project with a real spec, a spec symlinked to a file outside the project, and a too-large file.
+  let work: string;
+  let proj: string;
+  const kiro = (kind: string, spec: string, at = new Date().toISOString()) => ({
+    v: 1, agent: 'kiro', session: `sess_${spec}…`, kind, at, cwd: proj,
+    task: { name: '1. A', specPath: `${proj}/.kiro/specs/${spec}/tasks.md` },
+  });
+  async function current() {
+    const s = openStream(relay.port);
+    const list = (await s.next(1)) as Array<{ cwd: string; progress?: unknown }>;
+    s.close();
+    return list.find((b) => b.cwd === proj)?.progress;
+  }
+  async function eventually(expected: unknown) {
+    for (let i = 0; i < 40; i++) {
+      if (JSON.stringify(await current()) === JSON.stringify(expected)) return;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    expect(await current()).toEqual(expected);
+  }
+
+  beforeAll(() => {
+    work = mkdtempSync(join(tmpdir(), 'agentbuddy-spec-'));
+    proj = join(work, 'proj');
+    mkdirSync(join(proj, '.kiro/specs/good'), { recursive: true });
+    mkdirSync(join(proj, '.kiro/specs/evil'), { recursive: true });
+    mkdirSync(join(proj, '.kiro/specs/big'), { recursive: true });
+    mkdirSync(join(work, 'outside'));
+    writeFileSync(join(proj, '.kiro/specs/good/tasks.md'), '- [x] 1. A\n  - [x] 1.1 a\n- [-] 2. B\n- [ ] 3. C\n');
+    writeFileSync(join(work, 'outside/tasks.md'), '- [x] 1. secret\n');
+    symlinkSync(join(work, 'outside/tasks.md'), join(proj, '.kiro/specs/evil/tasks.md'));
+    writeFileSync(join(proj, '.kiro/specs/big/tasks.md'), '- [x] 1. A\n'.repeat(120_000));
+  });
+  afterAll(() => rmSync(work, { recursive: true, force: true }));
+
+  it('shows task n/m from a valid tasks.md, and updates on stop after the file changes', async () => {
+    expect((await post(JSON.stringify(kiro('task_start', 'good')))).status).toBe(204);
+    await eventually({ done: 1, total: 3 });
+    writeFileSync(join(proj, '.kiro/specs/good/tasks.md'), '- [x] 1. A\n- [x] 2. B\n- [ ] 3. C\n');
+    const stop = { v: 1, agent: 'kiro', session: 'sess_chat…', kind: 'stop', at: new Date().toISOString(), cwd: proj };
+    expect((await post(JSON.stringify(stop)))).toMatchObject({ status: 204 });
+    await eventually({ done: 2, total: 3 });
+  });
+
+  it('gives progress unknown for a tasks.md symlinked outside cwd, or larger than 1 MB', async () => {
+    expect((await post(JSON.stringify(kiro('task_start', 'evil')))).status).toBe(204);
+    await eventually(null);
+    expect((await post(JSON.stringify(kiro('task_start', 'good')))).status).toBe(204);
+    await eventually({ done: 2, total: 3 });
+    expect((await post(JSON.stringify(kiro('task_done', 'big')))).status).toBe(204);
+    await eventually(null);
   });
 });
 
