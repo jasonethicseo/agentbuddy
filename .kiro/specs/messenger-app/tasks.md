@@ -17,14 +17,15 @@ How to work through this list:
   - _Requirements: 5.9, 5.12, 8.7, 9.2, 9.3, 9.5, 16.5_
   - Result (2026-11-12): the pop-up takes no focus and its click arrives without activating the app; a tone plays with no gesture in a hidden window; a font loads from `app://` under the CSP; minimize sends the window into the Dock and it comes back. Two design changes: the request filter lets `app://ui/` through by prefix, and the app listens to `window-all-closed`. macOS notifications fail when Electron runs from source (`UNErrorDomain` error 1). Not checked here, moved to 8.5, 10.5, 10.7 and 11.
 
-- [ ] 2. Launcher fields on events
+- [x] 2. Launcher fields on events
   - [x] 2.1 Create `src/core/launcher.ts` (`isBundleId`, `isTermProgram`, `launcherFields`); add `bundleId` and `termProgram` to `BuddyEvent` and `validateEvent`; extend `normalize`'s `env`; read `__CFBundleIdentifier` and `TERM_PROGRAM` in `src/hook/cli.ts`
     - _Requirements: 1.1–1.5_
   - [x] 2.2 Add `latest` and `hasLauncher` to `history.ts`; keep `launcher` in `SessionRecord`; copy `bundleId` and `termProgram` into `SessionView`
     - _Requirements: 1.6–1.9_
   - [x] 2.3 Unit tests: launcher forms (observed values from events.md accepted; spaces, quotes, `;`, `=`, `$(`, leading `-` or `.`, one label, too long rejected); the hook spawned with the variables set and with malformed values. Property tests: P1 updated, P16
     - _Requirements: 17.1, 17.2_
-  - [ ] 2.4 After the build, the builder restarts the relay so it keeps the new fields. From then on the daily log collects launcher values from normal use (Kiro task runs, Claude app and CLI, Codex), read in task 11.
+  - [x] 2.4 After the build, the builder restarts the relay so it keeps the new fields. From then on the daily log collects launcher values from normal use (Kiro task runs, Claude app and CLI, Codex), read in task 11.
+  - Result (2026-11-12): the relay started at 14:08 had been running detached with no terminal, so it was restarted for the builder: stopped with SIGTERM, then started again from the new build in its own session (no terminal; output in `~/.agentbuddy/relay.log`, mode 600). It restored 146 events.
 
 - [ ] 3. Logged-off sessions, spec-task flag and status wording
   - [ ] 3.1 `displayState` returns `ENDED`; `RANK` with `OFFLINE` = `ENDED`; buddy state from the first sorted session; update P11, P12, P15
