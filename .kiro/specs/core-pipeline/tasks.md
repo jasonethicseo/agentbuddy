@@ -158,12 +158,12 @@ How to work through this list:
   - All tests pass. The buddy list showed this repository's Kiro sessions for tasks 12–16 with state and progress.
   - Note in the report any hook call that took longer than expected or left a line in the hook error log.
 
-- [ ] 18. Restore on start
+- [x] 18. Restore on start
   - [x] 18.1 Add `restore` to `src/relay/store.ts`: yesterday's then today's log, valid lines with `at` in the last 24 hours, same core functions, sequences in file order, then `pruneList`; then read progress for Kiro buddies with a spec path
     - _Requirements: 17.1–17.5, 23.8_
   - [x] 18.2 Add relay tests: two daily files with lines older than 24 hours, an invalid line and a cut-off last line; a missing file; sessions and session names come back
     - _Requirements: 17.1–17.5, 23.4_
-  - [ ] 18.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its sessions, state and progress
+  - [x] 18.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its sessions, state and progress
 
 - [ ] 19. README and final checkpoint
   - README: what the pipeline does, `npm run build` / `npm run relay`, `npm link`, the hook command per agent (with `|| true`), `AGENTBUDDY_PORT`, buddies and sessions, the third-party libraries, and the known limits from the design.
