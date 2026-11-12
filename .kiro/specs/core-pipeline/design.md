@@ -27,7 +27,7 @@ All decisions live in `src/core` as pure functions. The hook, relay and UI are t
 ## Architecture
 
 ```
-src/core     config  event  text  normalize  history  state  progress
+src/core     config  event  text  normalize  history  state  buddies  progress
                ▲        ▲      ▲       ▲          ▲       ▲       ▲
 src/hook     cli ──────────────────────┘ (normalize, truncate via normalize, config)
 src/relay    main → home, store (history, state), server (event), stream, tasks (progress)
@@ -45,7 +45,7 @@ Shared constants, so the hook, relay and tests never disagree.
 ```ts
 export const DEFAULT_PORT = 4343;
 export const TEXT_LIMIT = 120;              // code points
-export const WINDOW_SIZE = 50;              // events per buddy
+export const WINDOW_SIZE = 50;              // events per session
 export const IDLE_AFTER_MS = 10 * 60_000;
 export const OFFLINE_AFTER_MS = 30 * 60_000;
 export const HOOK_LIMITS = { stdinWaitMs: 500, postTimeoutMs: 300, hardExitMs: 900, maxStdinBytes: 1_048_576, maxErrorLogBytes: 1_048_576 };
@@ -60,7 +60,7 @@ export function parsePort(value: string | undefined): number; // /^\d+$/ and 1..
 export type AgentId = 'kiro' | 'claude' | 'codex';
 export type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop';
 export interface TaskInfo { name: string; specPath: string; success?: boolean }
-export interface BuddyEvent { v: 1; agent: AgentId; session: string; kind: EventKind; at: string; cwd: string; text?: string; task?: TaskInfo }
+export interface BuddyEvent { v: 1; agent: AgentId; session: string; kind: EventKind; at: string; cwd: string; text?: string; task?: TaskInfo; firstInput?: string }
 
 export const KIND_ORDER: Readonly<Record<EventKind, number>> =
   { prompt: 0, task_start: 1, permission: 2, task_done: 3, stop: 4, idle: 5 };
@@ -72,6 +72,7 @@ export function validateEvent(value: unknown): BuddyEvent | null;
 - `at` matches `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$` and `Date.parse(at)` is finite. `Date.parse` is pure; it does not read the clock.
 - `session`, `cwd` non-empty strings; `text` and `task.name` 1–120 code points; `task.specPath` non-empty; `task.success` boolean if present.
 - `task` present for `task_start` / `task_done` (Req 1.5). For other kinds `task` is dropped.
+- `firstInput` 1–120 code points if present; kept only on Codex `stop` events, dropped elsewhere (Req 1.6).
 
 It is wrapped in `try/catch` and returns `null` on any exception (getters on hostile objects, for example).
 
@@ -114,59 +115,58 @@ Per-agent mapping, exactly the events.md table:
 | claude | `Notification` + `permission_prompt` | `permission` |
 | claude | `Notification` + `idle_prompt` | `idle` |
 | claude | `Stop` | `stop`, text ← `last_assistant_message` |
-| codex | `type` = `agent-turn-complete`, no title signal | `stop`, session ← `thread-id`, text ← `last-assistant-message` |
+| codex | `type` = `agent-turn-complete`, no title signal | `stop`, session ← `thread-id`, text ← `last-assistant-message`, firstInput ← first `input-messages` item (truncated, omitted if blank) |
 | any | everything else | `null` |
 
 Codex title signals (either one drops the event):
 1. The last item of `input-messages` is a string whose `trimStart()` starts with `CODEX_TITLE_PREFIX`.
 2. `last-assistant-message` trimmed parses as JSON to a non-null, non-array object with an own `title` property.
 
-### `src/core/history.ts` (Req 8)
+### `src/core/history.ts` (Req 8, 23.1)
 
 ```ts
 export interface Stamped { event: BuddyEvent; seq: number; atMs: number }
 export function stamp(event: BuddyEvent, seq: number): Stamped;   // atMs = Date.parse(event.at)
-export function compareStamped(a: Stamped, b: Stamped): number;   // atMs, then KIND_ORDER, then seq
+export function compareStamped(a: Stamped, b: Stamped): number;   // atMs, KIND_ORDER, session, then seq
 export function buddyKey(agent: AgentId, cwd: string): string;    // JSON.stringify([agent, cwd])
+export function sessionKey(agent: AgentId, cwd: string, session: string): string; // JSON.stringify([agent, cwd, session])
 export function insertEvent(window: readonly Stamped[], item: Stamped, cap = WINDOW_SIZE): Stamped[];
 export function isTaskEvent(item: Stamped): boolean;                               // task_start or task_done
 export function laterTask(kept: Stamped | undefined, item: Stamped): Stamped | undefined;
+export function earlier(kept: Stamped | undefined, item: Stamped): Stamped;        // running minimum
 ```
 
 `insertEvent` returns a new array: `[...window, item].sort(compareStamped).slice(-cap)`. With 50 items, sorting each time costs nothing measurable, and it keeps the window a pure function of the set of events it has seen. An event older than the 50 kept ones sorts first and is cut off at once, which is the only way an event is left out (Req 8.3).
 
-`laterTask(kept, item)` keeps the latest task event (Req 8.6): it returns `item` if `item` is a task event and `kept` is undefined or `compareStamped(item, kept) > 0`, else `kept`. It is a running maximum under one total order, so the result depends only on the set of task events, not on arrival order (Req 8.7). It never looks at the window, so events leaving the window cannot remove it.
+`compareStamped` compares `session` (plain string order) before `seq`. Within one session this changes nothing. Across sessions of one buddy, it makes the latest task event independent of arrival order even when two sessions report the same `at` and kind (Req 8.7).
 
-`buddyKey` uses `JSON.stringify` so no `cwd` value can collide with another pair.
+`laterTask(kept, item)` is a running maximum of task events, and `earlier(kept, item)` is a running minimum. Both use the one total order `compareStamped`, so their results depend only on the set of events seen, not on arrival order (Req 8.7, 23.4). Neither looks at a window, so events leaving a window cannot change them.
 
-### `src/core/state.ts` (Req 7, 9, 10)
+`buddyKey` and `sessionKey` use `JSON.stringify` so no `cwd` or `session` value can collide with another tuple.
+
+### `src/core/state.ts`: sessions (Req 9, 10, 23.1–23.4)
 
 ```ts
 export type CoreState = 'WORKING' | 'WAITING_APPROVAL' | 'TURN_DONE' | 'IDLE';
 export type DisplayState = CoreState | 'STALE' | 'OFFLINE';
-export type Progress = { done: number; total: number } | null; // null = unknown
 
-export interface BuddyState {
-  key: string; agent: AgentId; cwd: string; name: string;
+/** Earliest events of a session, kept outside its window (Req 23.1). */
+export interface SessionFirsts { first: Stamped; prompt?: Stamped; input?: Stamped; task?: Stamped }
+
+export interface SessionState {
+  key: string; session: string;
   state: CoreState; statusText?: string;
-  lastAt: string; lastAtMs: number; session: string;
-  specPath?: string;            // Kiro only, from the latest task event (kept outside the window)
+  lastAt: string; lastAtMs: number;
+  title?: string;          // Req 23.2, at most 40 code points
+  startedAt: string;       // `at` of the earliest event (Req 23.3)
 }
-export interface BuddyRecord { window: Stamped[]; lastTask?: Stamped; state: BuddyState }
-export type BuddyList = ReadonlyMap<string, BuddyRecord>;
+export interface SessionRecord { window: Stamped[]; firsts: SessionFirsts; state: SessionState }
 
 export function nextState(prev: CoreState | undefined, kind: EventKind): CoreState;
-export function foldBuddy(window: readonly Stamped[], lastTask: Stamped | undefined): BuddyState; // window is non-empty
-export function applyEvent(list: BuddyList, event: BuddyEvent, seq: number): { list: BuddyList; key: string };
-export function displayState(b: BuddyState, nowMs: number): DisplayState;
-
-export interface BuddyView {
-  key: string; agent: AgentId; name: string; cwd: string;
-  state: DisplayState; statusText?: string; lastAt: string; session: string; // short id
-  progress?: Progress;          // present for Kiro buddies only
-}
-export function toView(b: BuddyState, progress: Progress, nowMs: number): BuddyView;
-export function toViews(list: BuddyList, progress: ReadonlyMap<string, Progress>, nowMs: number): BuddyView[]; // sorted by name, then cwd
+export function updateFirsts(firsts: SessionFirsts | undefined, item: Stamped): SessionFirsts;
+export function sessionTitle(firsts: SessionFirsts): string | undefined;
+export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): SessionState; // window non-empty
+export function displayState(s: SessionState, nowMs: number): DisplayState;
 ```
 
 `nextState(prev, kind)`:
@@ -181,11 +181,55 @@ export function toViews(list: BuddyList, progress: ReadonlyMap<string, Progress>
 
 This table is the whole state machine. `WAITING_APPROVAL` and `TURN_DONE` each appear in one row only (Req 9.7), and every exit from `WAITING_APPROVAL` that events.md requires is a row that does not return it (Req 9.8).
 
-`foldBuddy` walks the window in order: state via `nextState`, and status text from `text` or `task.name` when present (Req 9.9). `lastAt`, `lastAtMs` and `session` come from the last element. On Kiro buddies, `specPath` is `lastTask.event.task.specPath` (Req 9.10). Because the window is sorted and the fold restarts from its first element, arrival order cannot change the result except through `seq` on exact (`at`, kind) ties (Req 8.5).
+`updateFirsts` keeps four running minima: `first` (any event), `prompt` (a `prompt` with `text`), `input` (an event with `firstInput`), `task` (a task event). `sessionTitle` picks `prompt.text`, else `input.firstInput`, else `task.task.name`, and cuts it with `truncate(…, 40)`.
 
-`applyEvent(list, event, seq)`: `item = stamp(event, seq)`; `window = insertEvent(old?.window ?? [], item)`; `lastTask = laterTask(old?.lastTask, item)`; `state = foldBuddy(window, lastTask)`. It returns a new map and does not change the old one.
+`foldSession` walks the window in order: state via `nextState`, and status text from `text` or `task.name` when present (Req 9.9). `lastAt` and `lastAtMs` come from the last element; `title` and `startedAt` come from the firsts. Because the window is sorted and the fold restarts from its first element, arrival order cannot change the result except through `seq` on exact (`at`, kind) ties within one session (Req 8.5).
 
-`displayState(b, now)`: `age = max(0, now - lastAtMs)`; `age >= 30 min` → `OFFLINE`; else `age >= 10 min` → `IDLE` for `TURN_DONE`, `STALE` for `WORKING` / `WAITING_APPROVAL`, `IDLE` stays `IDLE`; else `b.state`.
+`displayState(s, now)`: `age = max(0, now - lastAtMs)`; `age >= 30 min` → `OFFLINE`; else `age >= 10 min` → `IDLE` for `TURN_DONE`, `STALE` for `WORKING` / `WAITING_APPROVAL`, `IDLE` stays `IDLE`; else `s.state`.
+
+### `src/core/buddies.ts`: buddies, urgency, removal, views (Req 7, 9.10, 18.6, 22, 23.5–23.7)
+
+```ts
+export const URGENCY: readonly DisplayState[] =
+  ['WAITING_APPROVAL', 'WORKING', 'STALE', 'TURN_DONE', 'IDLE', 'OFFLINE'];
+export type Progress = { done: number; total: number } | null; // null = unknown
+
+export interface BuddyRecord {
+  key: string; agent: AgentId; cwd: string; name: string;
+  sessions: ReadonlyMap<string, SessionRecord>;   // by session key
+  lastTask?: Stamped;                             // latest task event of all sessions (Req 8.6)
+  specPath?: string;                              // Kiro only, from lastTask (Req 9.10)
+}
+export type BuddyList = ReadonlyMap<string, BuddyRecord>;
+
+export function mostUrgent(states: readonly DisplayState[]): DisplayState;  // non-empty input
+export function applyEvent(list: BuddyList, event: BuddyEvent, seq: number): { list: BuddyList; buddy: string; session: string };
+export function pruneList(list: BuddyList, nowMs: number): BuddyList;
+
+export interface SessionView {
+  key: string; session: string;              // short id, first 8 code points
+  state: DisplayState; statusText?: string; lastAt: string;
+  title?: string; startedAt: string;
+}
+export interface BuddyView {
+  key: string; agent: AgentId; name: string; cwd: string;
+  state: DisplayState; statusText?: string; lastAt: string;
+  progress?: Progress;                       // Kiro buddies only
+  sessions: SessionView[];                   // urgency, then latest first, then key (Req 22.5)
+}
+export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): BuddyView | null; // null when no sessions
+export function toViews(list: BuddyList, progress: ReadonlyMap<string, Progress>, nowMs: number): BuddyView[]; // by name, then cwd
+```
+
+`applyEvent(list, event, seq)`: `item = stamp(event, seq)`; find or create the buddy and the session; `window = insertEvent(session.window, item)`; `firsts = updateFirsts(session.firsts, item)`; `state = foldSession(window, firsts)`; `lastTask = laterTask(buddy.lastTask, item)`; `specPath` from `lastTask` for Kiro. It returns new maps and changes nothing it was given (Req 7.4: only the event's own session is recomputed).
+
+`mostUrgent` returns the state with the lowest index in `URGENCY`. Since it picks one of its inputs and no input has a lower index, it is one of the sessions' states and none is more urgent (Req 22.2). `toBuddyView` computes each session's displayed state once, with the same `now`, sorts the sessions (Req 22.5), and takes the buddy's state and status text from the first sorted session (Req 22.3). The buddy's `lastAt` is the latest `lastAt` of its sessions (Req 22.4).
+
+`pruneList(list, now)` (Req 23.5–23.6): drop each session with `now - lastAtMs > SESSION_TTL_MS` (24 h); drop a buddy only if it has no sessions left and its `lastTask` is missing or older than 24 h. A removed session has been silent for over 24 h, so its displayed state is `OFFLINE`, the least urgent state; removing it cannot change any remaining buddy's state (Req 23.7). Because a session's `lastAt` is at least the `at` of every event it holds, a buddy whose latest task event is under 24 h old always still has that event's session, so in practice the two removal rules agree.
+
+### `src/core/config.ts` addition
+
+`SESSION_TTL_MS = 24 * 3_600_000`, shared by `pruneList` and the relay's restore window, so both use the same 24 hours.
 
 ### `src/core/progress.ts` (Req 11, 19.2)
 
@@ -243,18 +287,20 @@ Error log (Req 13.4–13.7): one line `<ISO time> <agent> <code>\n`, appended wi
 
 ```ts
 export interface Store {
-  accept(event: BuddyEvent, nowMs: number): string;   // returns buddy key
+  accept(event: BuddyEvent, nowMs: number): { buddy: string; session: string };
   restore(nowMs: number): Promise<number>;            // events replayed
-  record(key: string): BuddyRecord | undefined;
+  buddy(key: string): BuddyRecord | undefined;
+  prune(nowMs: number): boolean;                      // true if anything was removed
   setProgress(key: string, p: Progress): boolean;     // true if changed
   views(nowMs: number): BuddyView[];
 }
 export function createStore(opts: { dir: string }): Store;
 ```
 
-- Holds `list: BuddyList`, `progress: Map<string, Progress>`, and `seq`, a counter that increases on every accept and replay.
-- `accept`: `applyEvent(list, event, ++seq)`, then append `JSON.stringify(event) + '\n'` to `logFileName(new Date(nowMs))`. Appends are chained on one promise so lines keep their order. Each file is opened with `{ flag: 'a', mode: 0o600 }`, and the mode applies when the file is created. A failed append prints `log write failed: <errno code>` to the relay's stderr and changes nothing else (Req 16.5).
-- `restore(now)`: read yesterday's then today's file (Req 17.1). For each line: `JSON.parse` in `try`, `validateEvent`, keep if `now - 24h <= atMs`, then `applyEvent` with `++seq`. Missing or unreadable files are skipped.
+- Holds `list: BuddyList`, `progress: Map<string, Progress>` (by buddy key), and `seq`, a counter that increases on every accept and replay.
+- `accept`: `applyEvent(list, event, ++seq)`, then `pruneList(list, now)`, then append `JSON.stringify(event) + '\n'` to `logFileName(new Date(nowMs))`. Appends are chained on one promise so lines keep their order. Each file is opened with `{ flag: 'a', mode: 0o600 }`, and the mode applies when the file is created. A failed append prints `log write failed: <errno code>` to the relay's stderr and changes nothing else (Req 16.5).
+- `restore(now)`: read yesterday's then today's file (Req 17.1). For each line: `JSON.parse` in `try`, `validateEvent`, keep if `now - SESSION_TTL_MS <= atMs`, then `applyEvent` with `++seq`; `pruneList` once at the end. Missing or unreadable files are skipped.
+- `prune(now)`: `pruneList`; drops the progress of removed buddies.
 - `views(now)` → `toViews(list, progress, now)`. A Kiro buddy's progress is `progress.get(key) ?? null`, and it is `null` whenever the buddy has no spec path (Req 19.5).
 
 ### `src/relay/tasks.ts` (Req 19)
@@ -316,18 +362,20 @@ export function createStream(heartbeatMs: number): Stream;
 2. `store = createStore(...)`; `await store.restore(Date.now())`; then `readProgress` for every Kiro buddy with a spec path (Req 17.4).
 3. Wire `onEvent`: `store.accept` → maybe `readProgress` → `broadcastIfChanged()`.
 4. `broadcastIfChanged()`: compute `store.views(Date.now())`, compare its JSON with the last sent JSON, and broadcast only if different.
-5. `setInterval(broadcastIfChanged, 30_000)` drives the time-based states (Req 10.7).
+5. `setInterval(() => { store.prune(Date.now()); broadcastIfChanged(); }, 30_000)` drives the time-based states and session removal (Req 10.7, 23.8).
 6. `server.listen(port, '127.0.0.1')`. On `EADDRINUSE`, print `port <port> is in use (set AGENTBUDDY_PORT)` and exit 1. On success print `AgentBuddy relay: http://127.0.0.1:<port>/`.
 7. `SIGINT` / `SIGTERM`: close the stream and server, then exit.
 
 ### `src/ui` (Req 20)
 
-- `index.html` (project root, for Vite): a heading, `<p id="notice" hidden>relay disconnected</p>`, and an empty `<table id="buddies">` with header cells `Buddy`, `State`, `Status`, `Progress`, `Last event`, `Session`, `Folder`.
-- `src/ui/main.ts`: `new EventSource('/stream')`. On `buddies`, parse, check `Array.isArray`, render, and hide the notice. `onerror` shows the notice. `EventSource` retries by itself (Req 20.6). Only relay mode exists in this spec. Demo mode comes with the demo spec.
-- `src/ui/screens/list.ts`: `renderList(tbody, views)` clears the body and builds rows with `createElement` and `textContent` only (Req 20.5).
-  - State cell: `?` for `STALE`, else the state name.
-  - Progress cell: Kiro shows `task n/m` or `progress unknown`; Codex shows `Codex reports finished turns only`; Claude Code is empty.
-  - Last event: `new Date(lastAt).toLocaleTimeString('en-GB')`.
+- `index.html` (project root, for Vite): a heading, `<p id="notice" hidden>relay disconnected</p>`, and an empty `<table id="buddies">` with header cells `Buddy`, `State`, `Status`, `Progress`, `Last event`, `Sessions`, `Folder`.
+- `src/ui/main.ts`: `new EventSource('/stream')`. On `buddies`, parse, check `Array.isArray`, render, and hide the notice. `onerror` shows the notice. `EventSource` retries by itself, and an HTTP error reply starts a new connection after 3 s (Req 20.6). Only relay mode exists in this spec. Demo mode comes with the demo spec.
+- `src/ui/screens/list.ts`: `renderList(tbody, views, ui)` clears the body and builds rows with `createElement` and `textContent` only (Req 20.5). `ui` is a small in-memory `Map` of buddy key → `{ open, showHidden }`, kept across renders (Req 20.10).
+  - Buddy row: a toggle button (`+` / `−`) and the buddy cells. State cell: `?` for `STALE`, else the state name. Progress cell: Kiro shows `task n/m` or `progress unknown`; Codex shows `Codex reports finished turns only`; Claude Code is empty. Sessions cell: `3 sessions (2 hidden)`.
+  - When open, one row per visible session, indented with `↳`: name or `started HH:MM:SS`, state, status text, last event time, short session ID (Req 20.8).
+  - `IDLE` and `OFFLINE` sessions are hidden unless `showHidden`; a last row `show 2 idle/offline sessions` / `hide idle/offline sessions` toggles it (Req 20.9).
+  - Pure helpers (`rowCells`, `sessionCells`, `visibleSessions`) are unit-tested without a DOM.
+  - Times: `new Date(iso).toLocaleTimeString('en-GB')`.
 - No CSS file in this spec (Req 20.7).
 
 ## Data models
@@ -336,7 +384,7 @@ export function createStream(heartbeatMs: number): Stream;
 - **Daily log**: `~/.agentbuddy/events-YYYY-MM-DD.jsonl`, one `BuddyEvent` JSON per line, mode 600, local date when the event was accepted.
 - **Token**: `~/.agentbuddy/token`, 64 hex characters, mode 600.
 - **Hook error log**: `~/.agentbuddy/hook-errors.log`, lines `<ISO> <agent> <code>`, at most about 1 MB.
-- **BuddyView** (SSE payload): see `state.ts`. It carries only truncated text and paths the agent already reported.
+- **BuddyView** (SSE payload): see `buddies.ts`. Each buddy carries its sessions with stable session keys, so the notifications spec can compare sessions between lists. It carries only truncated text and paths the agent already reported.
 
 ## Correctness properties
 
@@ -347,13 +395,16 @@ Each property is a fast-check test in `tests/property/`.
 | P1 | For any string, and for any JSON value serialized to a string, `normalize` does not throw and returns either `null` or an event `e` with `validateEvent(e)` deep-equal to `e`. Any `text` / `task.name` is at most 120 code points. | 5.1–5.3, 6.1 |
 | P2 | For Codex payloads built from the observed example with the title signal in `input-messages`, in `last-assistant-message`, or both, `normalize` returns `null`. | 4.2–4.4 |
 | P3 | `truncate(s)` is at most 120 code points, contains no whitespace runs or edge whitespace, keeps every surrogate pair whole, and `truncate(truncate(s)) === truncate(s)`. | 6.1–6.4 |
-| P4 | For any list of events with unique (`at`, kind) per buddy, applying them in any permutation gives the same `BuddyState` for every buddy as applying them in event order. | 8.5 |
+| P4 | For any list of events with unique (`at`, kind) per session, applying them in any permutation gives the same session states and the same buddy views (at a fixed `now`) as applying them in event order. | 8.5 |
 | P5 | Folding any window, each step that produces `WAITING_APPROVAL` from a different state has kind `permission`, and each step that produces `TURN_DONE` from a different state has kind `stop`. | 9.7 |
 | P6 | From `WAITING_APPROVAL`, the next `idle`, `prompt` or `stop` gives a state other than `WAITING_APPROVAL`. | 9.8 |
 | P7 | After any sequence of `insertEvent` calls, the window has at most 50 items and equals the last 50 of all inserted items sorted by `compareStamped`. | 8.1–8.2 |
 | P8 | For any text, `parseProgress` gives integers with `0 <= done <= total`. | 11.7 |
-| P9 | For any Codex event list and any `now`, `displayState` is in {`TURN_DONE`, `IDLE`, `OFFLINE`}. | 10.8 |
-| P10 | For any event list with unique (`at`, kind) per buddy, every permutation gives the same `lastTask` per buddy, equal to the maximum task event under `compareStamped`. After that list is followed by 0–200 non-task events with later `at`, `lastTask` and the Kiro `specPath` are unchanged. | 8.6, 8.7, 9.10 |
+| P9 | For any Codex event list and any `now`, every Codex session's `displayState` is in {`TURN_DONE`, `IDLE`, `OFFLINE`}. | 10.8 |
+| P10 | For any event list with unique (`at`, kind) per session, every permutation gives the same `lastTask` per buddy, equal to the maximum task event under `compareStamped` across its sessions. After that list is followed by 0–200 non-task events with later `at`, `lastTask` and the Kiro `specPath` are unchanged. | 8.6, 8.7, 9.10 |
+| P11 | For any buddy and any `now`, the buddy state is the displayed state of one of its sessions, and no session of that buddy is more urgent (`mostUrgent` and `toBuddyView`). | 22.1, 22.2 |
+| P12 | For any list and any `now`, after `pruneList(list, now)` every remaining session has the same displayed state and every remaining buddy view has the same state as before; every removed session was older than 24 h; a buddy is removed only when it has no sessions and no `lastTask` within 24 h. | 23.5–23.7 |
+| P13 | For any event list, every permutation gives each session the same `title` and `startedAt`. | 23.4 |
 
 ## Error handling
 
@@ -374,12 +425,12 @@ Each property is a fast-check test in `tests/property/`.
 
 - **Fixtures** (`tests/fixtures/payloads.ts`): each fixture is `{ label: 'observed' | 'derived', agent, raw, expected }`. Observed fixtures are the events.md JSON lines copied character for character, including the `…` in shortened IDs. Claude `idle_prompt` is the Claude `Notification` example with the observed `message` and `notification_type`, labeled observed. Derived fixtures: Claude `Notification` with `notification_type: "auth_success"`, and "anything else" (`not json`, `[]`, `null`, Kiro `PreToolUse`, Codex `type: "other"`).
 - **Unit tests** (`tests/unit/`):
-  - `mapping.test.ts`: one test per events.md mapping row (12).
+  - `mapping.test.ts`: one test per events.md mapping row (12), plus the Codex `firstInput` edge cases.
   - `progress.test.ts`: marker cases (`[ ]`, `[x]`, `[X]`, `[-]`, `[~]`, `[ ]*`, `[x]*`, indented, CRLF) and `isAllowedSpecPath` cases (inside, sibling prefix, outside, wrong tail, nested `specs/a/b`).
-  - `state.test.ts`: Kiro `prompt` → `stop` keeps the prompt text; a late `prompt` lands in its place; Claude `permission` then `idle` (trap 3); thresholds at exactly 10 and 30 minutes.
+  - `state.test.ts`: Kiro `prompt` → `stop` keeps the prompt text; a late `prompt` lands in its place; Claude `permission` then `idle` (trap 3); thresholds at exactly 10 and 30 minutes; two sessions in one folder where one waits for approval and the other works; session names (prompt, Codex `firstInput` from the observed fixture, task, start time); removal at exactly 24 h.
   - `hook.test.ts`: spawns the built `dist/hook.js` with `HOME` set to a temp folder. Cases: exits 0 with empty stdout and stderr when the relay is down, when a fake relay never answers, and when stdin is left open, each within 1000 ms wall time; Codex with stdin left open exits without waiting.
   - `relay.test.ts`: starts the server on a free port with a temp `HOME`. Covers the status codes in the server table, token and log file modes 600, restore from yesterday's and today's files with the 24-hour cut, and a `tasks.md` symlink pointing outside `cwd` → progress unknown.
-- **Property tests** (`tests/property/`): P1–P10. Generators build events with `/Users/dev/...` paths and short fake IDs only.
+- **Property tests** (`tests/property/`): P1–P13. Generators build events with `/Users/dev/...` paths and short fake IDs only.
 - `os.homedir()` follows `HOME` on macOS and Linux, so tests never touch the real `~/.agentbuddy`.
 
 ## Build and project setup
@@ -394,10 +445,10 @@ Each property is a fast-check test in `tests/property/`.
 
 ## Known limits
 
-- Two windows of the same agent in the same folder merge into one buddy (Req 7.5).
 - `cwd` is compared as an exact string. Starting an agent in a subfolder makes a separate buddy.
 - Two projects with the same folder name share a display name. The UI also shows the full `cwd`.
 - After a relay restart, the latest task event is rebuilt from the last 24 hours of logs only. If the last task run is older than that, progress is unknown until the next task run.
 - Kiro never shows `WAITING_APPROVAL`. Codex shows only `TURN_DONE`, `IDLE` and `OFFLINE`.
+- A session cannot tell that its window was closed; it goes `OFFLINE` after 30 minutes and is removed after 24 hours.
 - Old daily logs are never deleted in this spec.
 - Paths are handled with `/` separators. macOS and Linux only.

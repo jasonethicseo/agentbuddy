@@ -15,8 +15,9 @@ inclusion: always
 │  │  ├─ config.ts     shared constants (limits, timings, port parsing)
 │  │  ├─ event.ts      BuddyEvent type and validation
 │  │  ├─ normalize.ts  raw payload -> BuddyEvent | null, one function per agent
-│  │  ├─ history.ts    per-buddy event window: ordering, 50-event cap
-│  │  ├─ state.ts      per-buddy state fold, time-based states, buddy view
+│  │  ├─ history.ts    event order, 50-event windows, kept earliest/latest events
+│  │  ├─ state.ts      per-session state fold, time-based states, session names
+│  │  ├─ buddies.ts    sessions grouped into buddies: urgency, removal, views
 │  │  ├─ progress.ts   tasks.md text -> { done, total }; spec path check
 │  │  └─ text.ts       truncation and status message wording
 │  ├─ hook/

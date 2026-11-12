@@ -24,14 +24,16 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 ## Glossary
 - **Raw payload**: the JSON an agent hands to the hook command (stdin for Kiro and Claude Code, last argv for Codex).
 - **BuddyEvent**: the normalized event defined in events.md ("Normalized event").
-- **Buddy**: one **agent + `cwd`** pair (events.md "Buddies"). All sessions of that agent in that exact `cwd` string feed one buddy.
+- **Buddy**: one **agent + `cwd`** pair (events.md "Buddies and sessions"). It groups the sessions of that agent in that exact `cwd` string.
+- **Session**: one conversation window, keyed by **agent + `cwd` + `session`** (Kiro/Claude `session_id`, Codex `thread-id`). Each session has its own state.
 - **Display name**: `<Agent> @ <folder name>`, with agent names `Kiro`, `Claude Code`, `Codex` and the folder name being the last segment of `cwd`.
-- **Session**: the `session` field of an event (Kiro/Claude `session_id`, Codex `thread-id`). Kept and logged, never used to split buddies.
-- **Event window**: the latest 50 events of one buddy, sorted by event order.
-- **Latest task event**: per buddy, the `task_start` or `task_done` event that is last in event order among all task events the buddy has received. Kept outside the event window.
-- **Event order**: sort by `at`, then by kind order `prompt`, `task_start`, `permission`, `task_done`, `stop`, `idle`, then by arrival order.
+- **Session name**: the session's first prompt text; for Codex, its first `firstInput`; else its first task name; else its start time. Cut to 40 code points.
+- **Urgency order**: `WAITING_APPROVAL` > `WORKING` > `STALE` > `TURN_DONE` > `IDLE` > `OFFLINE`.
+- **Event window**: the latest 50 events of one session, sorted by event order.
+- **Latest task event**: per buddy, the `task_start` or `task_done` event that is last in event order among all task events of all its sessions. Kept outside the event windows.
+- **Event order**: sort by `at`, then by kind order `prompt`, `task_start`, `permission`, `task_done`, `stop`, `idle`, then by `session`, then by arrival order.
 - **Arrival sequence**: a number the relay gives each accepted event in the order it accepts or replays it.
-- **Status text**: the text shown next to a buddy, from the latest event (in event order) that carries text.
+- **Status text**: the text shown for a session, from its latest event (in event order) that carries text.
 - **Relay**: the `agentbuddy` HTTP server.
 - **Port**: `AGENTBUDDY_PORT` if it is a valid port number, else `4343`.
 - **Spec path**: the `spec_name` value from a Kiro task event, an absolute path to a `tasks.md`.
@@ -44,12 +46,12 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 **User story:** As a developer of AgentBuddy, I want one validated event shape, so that the hook, relay and UI agree on what an event is.
 
 ### Acceptance criteria
-1. THE core SHALL define `BuddyEvent` exactly as in events.md: `v: 1`, `agent` in {`kiro`, `claude`, `codex`}, `session` (non-empty string), `kind` in {`prompt`, `task_start`, `task_done`, `permission`, `idle`, `stop`}, `at` (ISO 8601 time string), `cwd` (non-empty string), optional `text`, optional `task` = { `name`, `specPath`, optional `success` boolean }.
+1. THE core SHALL define `BuddyEvent` exactly as in events.md: `v: 1`, `agent` in {`kiro`, `claude`, `codex`}, `session` (non-empty string), `kind` in {`prompt`, `task_start`, `task_done`, `permission`, `idle`, `stop`}, `at` (ISO 8601 time string), `cwd` (non-empty string), optional `text`, optional `task` = { `name`, `specPath`, optional `success` boolean }, optional `firstInput`.
 2. THE core SHALL provide a validation function that takes any value and returns either a valid `BuddyEvent` or `null`, and never throws.
-3. WHEN `text` or `task.name` is longer than 120 code points, THE validation function SHALL reject the value.
+3. WHEN `text`, `task.name` or `firstInput` is longer than 120 code points, THE validation function SHALL reject the value.
 4. WHEN `at` does not parse as a time, THE validation function SHALL reject the value.
 5. WHEN `kind` is `task_start` or `task_done` and `task` is missing, THE validation function SHALL reject the value.
-6. WHEN a value has properties not listed in criterion 1, THE validation function SHALL return a `BuddyEvent` without them.
+6. WHEN a value has properties not listed in criterion 1, THE validation function SHALL return a `BuddyEvent` without them. `firstInput` SHALL be kept only on Codex `stop` events.
 
 ## Requirement 2: Kiro normalization
 
@@ -90,6 +92,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 5. THE Codex normalizer SHALL look only at the last item of `input-messages` (events.md trap 2). WHEN `input-messages` is missing or empty, only the signal in criterion 3 applies.
 6. WHEN `type` is any other value, THE Codex normalizer SHALL return `null`. (UNVERIFIED.)
 7. THE Codex normalizer SHALL never return kinds `prompt`, `task_start`, `task_done`, `permission` or `idle`.
+8. WHEN the first item of `input-messages` is a string that is not empty after truncation, THE Codex normalizer SHALL set `firstInput` to that item, truncated to 120 code points (events.md trap 2). Otherwise it SHALL omit `firstInput`. Title turns are still dropped by criteria 2–4.
 
 ## Requirement 5: Normalization safety
 
@@ -113,62 +116,62 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 2. THE truncation function SHALL replace each run of whitespace (including newlines and tabs) with one space and trim both ends.
 3. WHEN the result is longer than 120 code points, THE truncation function SHALL keep the first 119 code points and append `…` (U+2026).
 4. THE truncation function SHALL never split a surrogate pair.
-5. THE hook command SHALL apply truncation to `text` and `task.name` before the event leaves the process.
+5. THE hook command SHALL apply truncation to `text`, `task.name` and `firstInput` before the event leaves the process.
 
-## Requirement 7: Buddy identity
+## Requirement 7: Buddy and session identity
 
-**User story:** As a Kiro user, I want one buddy per agent and project folder, because Kiro starts a new session for every task run (events.md trap 6).
+**User story:** As a developer who runs several sessions of one agent in one folder, I want each session tracked on its own and grouped under one buddy per agent and folder, so that one session waiting for approval is never hidden by another that is working.
 
 ### Acceptance criteria
-1. THE core SHALL assign each event to the buddy identified by its `agent` and its exact `cwd` string.
-2. THE core SHALL NOT use `session` to split buddies.
-3. THE core SHALL derive the display name as `<Agent> @ <folder name>`, where the folder name is the last non-empty segment of `cwd`, or `cwd` itself when it has none (for example `/`).
-4. THE core SHALL keep, per buddy, the `session` of the latest event in event order.
-5. Known limit: two windows of the same agent in the same folder merge into one buddy and show whichever event is latest. THE README SHALL state this limit.
+1. THE core SHALL assign each event to the session identified by its `agent`, its exact `cwd` string and its `session`.
+2. THE core SHALL group sessions into the buddy identified by `agent` and exact `cwd`.
+3. THE core SHALL derive the buddy display name as `<Agent> @ <folder name>`, where the folder name is the last non-empty segment of `cwd`, or `cwd` itself when it has none (for example `/`).
+4. THE core SHALL never let an event of one session change the state, status text or name of another session.
+5. Kiro starts a new session for every task run (events.md trap 6), so a Kiro buddy collects many sessions; Requirement 23 keeps the list short.
 
 ## Requirement 8: Event window and ordering
 
 **User story:** As a user, I want out-of-order hook calls to give the same state as in-order ones, because each hook call is a separate process.
 
 ### Acceptance criteria
-1. THE core SHALL keep, per buddy, an event window of the latest 50 events in event order.
-2. WHEN an event arrives, THE core SHALL insert it at its place in event order, drop the earliest event if the window then holds more than 50, and recompute the buddy state from the start of the window.
-3. THE core SHALL never ignore an event for being older than an event already applied. An event is left out only when it falls outside the latest 50.
+1. THE core SHALL keep, per session, an event window of the latest 50 events in event order.
+2. WHEN an event arrives, THE core SHALL insert it at its place in its session's window, drop the earliest event if the window then holds more than 50, and recompute that session's state from the start of the window.
+3. THE core SHALL never ignore an event for being older than an event already applied. An event is left out of a window only when it falls outside the latest 50.
 4. THE core SHALL take the arrival sequence as a parameter and SHALL NOT read the clock.
-5. FOR any set of events in which no two events of one buddy share both `at` and kind, applying them in any arrival order SHALL give the same buddy state as applying them in event order.
-6. THE core SHALL keep, per buddy and outside the event window, the latest task event, and SHALL replace it only with a task event that is later in event order.
-7. FOR any set of events in which no two events of one buddy share both `at` and kind, the kept latest task event SHALL be the same in any arrival order, and SHALL stay after any number of later events, including after it has left the event window.
+5. FOR any set of events in which no two events of one session share both `at` and kind, applying them in any arrival order SHALL give the same session states and buddy states as applying them in event order.
+6. THE core SHALL keep, per buddy and outside the event windows, the latest task event of all its sessions, and SHALL replace it only with a task event that is later in event order.
+7. FOR any set of events in which no two events of one session share both `at` and kind, the kept latest task event SHALL be the same in any arrival order, and SHALL stay after any number of later events, including after it has left its session's window.
 
 ## Requirement 9: Event-driven state rules
 
-**User story:** As a user, I want each buddy's state to follow only what the agent reported, so that the list never shows a state that was not observed.
+**User story:** As a user, I want each session's state to follow only what the agent reported, so that the list never shows a state that was not observed.
 
 ### Acceptance criteria
-1. WHEN the fold reaches a `prompt` or `task_start` event, THE core SHALL set the state to `WORKING`.
-2. WHEN the fold reaches a `permission` event, THE core SHALL set the state to `WAITING_APPROVAL`.
-3. WHEN the fold reaches a `stop` event, THE core SHALL set the state to `TURN_DONE`.
-4. WHEN the fold reaches an `idle` event, THE core SHALL set the state to `IDLE`.
-5. WHEN the fold reaches a `task_done` event, THE core SHALL keep the state.
-6. WHEN the first event of the window is `task_done`, THE core SHALL set the state to `WORKING`.
+1. WHEN the fold of a session reaches a `prompt` or `task_start` event, THE core SHALL set the session state to `WORKING`.
+2. WHEN the fold reaches a `permission` event, THE core SHALL set the session state to `WAITING_APPROVAL`.
+3. WHEN the fold reaches a `stop` event, THE core SHALL set the session state to `TURN_DONE`.
+4. WHEN the fold reaches an `idle` event, THE core SHALL set the session state to `IDLE`.
+5. WHEN the fold reaches a `task_done` event, THE core SHALL keep the session state.
+6. WHEN the first event of a session's window is `task_done`, THE core SHALL set the session state to `WORKING`.
 7. THE core SHALL enter `WAITING_APPROVAL` only through `permission`, and `TURN_DONE` only through `stop`.
-8. WHEN the state is `WAITING_APPROVAL` and the fold reaches an `idle`, `prompt` or `stop` event, THE core SHALL leave `WAITING_APPROVAL` (events.md trap 3).
-9. THE core SHALL set the status text from the latest event in the window that carries text: `text`, or `task.name` for task events. Events without text keep the earlier status text, so a Kiro `stop` keeps the preceding prompt's text.
-10. FOR Kiro buddies, THE core SHALL set the buddy's spec path from the latest task event (Requirement 8.6), so long chats after a task run keep the spec path.
-11. THE fold SHALL be a pure function of the window and the latest task event.
+8. WHEN a session is `WAITING_APPROVAL` and its fold reaches an `idle`, `prompt` or `stop` event, THE core SHALL leave `WAITING_APPROVAL` (events.md trap 3).
+9. THE core SHALL set a session's status text from the latest event in its window that carries text: `text`, or `task.name` for task events. Events without text keep the earlier status text, so a Kiro `stop` keeps the preceding prompt's text.
+10. FOR Kiro buddies, THE core SHALL set the buddy's spec path from the buddy's latest task event (Requirement 8.6), so long chats and new task-run sessions keep the spec path.
+11. THE session fold SHALL be a pure function of the session's window and its kept earliest events (Requirement 23.1).
 
 ## Requirement 10: Time-based states
 
-**User story:** As a user, I want buddies that go quiet to show it, so that I notice stuck or finished agents I forgot about.
+**User story:** As a user, I want sessions that go quiet to show it, so that I notice stuck or finished agents I forgot about.
 
 ### Acceptance criteria
-1. THE core SHALL provide a pure function that takes a buddy state and the current time `now` and returns the displayed state.
-2. "Last event time" SHALL mean the latest `at` in the buddy's window.
-3. WHILE the state is `TURN_DONE` and the last event time is 10 minutes or more before `now`, THE function SHALL return `IDLE`.
-4. WHILE the state is `WORKING` or `WAITING_APPROVAL` and the last event time is 10 minutes or more before `now`, THE function SHALL return `STALE`.
-5. WHEN the last event time is 30 minutes or more before `now`, THE function SHALL return `OFFLINE`, whatever the state.
+1. THE core SHALL provide a pure function that takes a session state and the current time `now` and returns the session's displayed state.
+2. "Last event time" of a session SHALL mean the latest `at` in its window.
+3. WHILE a session is `TURN_DONE` and its last event time is 10 minutes or more before `now`, THE function SHALL return `IDLE`.
+4. WHILE a session is `WORKING` or `WAITING_APPROVAL` and its last event time is 10 minutes or more before `now`, THE function SHALL return `STALE`.
+5. WHEN a session's last event time is 30 minutes or more before `now`, THE function SHALL return `OFFLINE`, whatever the state.
 6. WHEN the last event time is later than `now`, THE function SHALL treat the age as zero.
 7. THE relay SHALL re-evaluate displayed states at least every 30 seconds and send changes to the UI.
-8. FOR Codex buddies, the reachable displayed states SHALL be only `TURN_DONE`, `IDLE` and `OFFLINE`.
+8. FOR Codex sessions, the reachable displayed states SHALL be only `TURN_DONE`, `IDLE` and `OFFLINE`.
 
 ## Requirement 11: Progress from tasks.md
 
@@ -182,7 +185,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 5. THE function SHALL ignore indented lines, so sub-tasks never count.
 6. THE function SHALL handle `\n` and `\r\n` line endings the same way.
 7. FOR any input text, the result SHALL satisfy `0 <= done <= total`.
-8. Observed in three sample specs on 2026-11-12: only `- [ ]` and `- [x]` at the top level and indented `- [x]` sub-tasks. Observed in this spec during a task run on 2026-11-12 (Kiro IDE 1.4.121): the running task was `- [-]`, finished tasks `- [x]`, not-started tasks `- [ ]`; all fit criteria 2–3. The marker of task 11 after it finished is PENDING, to be recorded at the start of task 12. `- [~]`, `X` and `*` are UNVERIFIED; criteria 2–4 cover them without special cases.
+8. Observed in three sample specs on 2026-11-12: only `- [ ]` and `- [x]` at the top level and indented `- [x]` sub-tasks. Observed in this spec during a task run on 2026-11-12 (Kiro IDE 1.4.121): the running task was `- [-]`, finished tasks `- [x]`, not-started tasks `- [ ]`; all fit criteria 2–3. The marker of task 11 after it finished was `- [x]`. `- [~]`, `X` and `*` are UNVERIFIED; criteria 2–4 cover them without special cases.
 
 ## Requirement 12: Hook command input
 
@@ -236,7 +239,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 ### Acceptance criteria
 1. WHEN `POST /events` passes Requirement 15, THE relay SHALL validate the body with the Requirement 1 validation and reply 400 if it is not a valid `BuddyEvent`.
 2. WHEN the body is a valid `BuddyEvent`, THE relay SHALL append it as one JSON line to `~/.agentbuddy/events-YYYY-MM-DD.jsonl`, where the date is the relay's local date when it accepts the event, apply it to the in-memory state, and reply 204.
-3. THE relay SHALL log every accepted event, including events that fall outside a buddy's window.
+3. THE relay SHALL log every accepted event, including events that fall outside a session's window or belong to a removed session.
 4. THE relay SHALL create each daily log with file mode 600.
 5. WHEN appending to the log fails, THE relay SHALL still apply the event to memory and keep running.
 
@@ -258,9 +261,10 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 ### Acceptance criteria
 1. THE relay SHALL offer a Server-Sent Events endpoint for the UI.
 2. WHEN a client connects, THE relay SHALL first send the full current buddy list.
-3. WHEN the buddy list changes (new event, progress update, or displayed-state change), THE relay SHALL send the full list to every connected client.
+3. WHEN the buddy list changes (new event, progress update, displayed-state change, or session removal), THE relay SHALL send the full list to every connected client.
 4. THE relay SHALL send a comment line to each client at least every 25 seconds.
 5. THE relay SHALL serve the built UI from the same origin.
+6. EACH buddy in the list SHALL carry its sessions, each with a stable session key and its displayed state, so that a later spec can notify per session.
 
 ## Requirement 19: Kiro progress reading
 
@@ -279,13 +283,16 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 **User story:** As the builder, I want a plain list that proves the pipeline works, before the messenger design spec.
 
 ### Acceptance criteria
-1. THE UI SHALL show one row per buddy with: display name, displayed state, status text, progress, last event time, latest session (first 8 code points), and full `cwd`.
+1. THE UI SHALL show one row per buddy with: display name, buddy state, status text of the session that set the buddy state, progress, last event time, number of sessions (and how many are hidden), and full `cwd`.
 2. FOR Kiro buddies, THE UI SHALL show `task n/m` when progress is known and `progress unknown` otherwise.
-3. FOR `STALE` buddies, THE UI SHALL show the state as `?`.
+3. FOR `STALE` buddies and sessions, THE UI SHALL show the state as `?`.
 4. FOR Codex buddies, THE UI SHALL show `Codex reports finished turns only`.
 5. THE UI SHALL insert all agent-provided text with `textContent`, never `innerHTML`.
 6. WHEN the stream disconnects, THE UI SHALL show `relay disconnected` and keep retrying; WHEN a new list arrives, it SHALL hide that notice.
 7. THE UI SHALL use no styling beyond browser defaults, and English text only.
+8. A buddy row SHALL be collapsed by default and SHALL expand to one row per session with: session name (or `started HH:MM:SS` when it has none), session state, status text, last event time, and short session ID (first 8 code points).
+9. WHEN a buddy is expanded, THE UI SHALL hide its `IDLE` and `OFFLINE` sessions by default and offer a control to show them.
+10. THE UI SHALL keep each buddy's expanded and show-hidden choices when a new list arrives.
 
 ## Requirement 21: Tests and fixtures
 
@@ -295,9 +302,34 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
    - observed, verbatim: Kiro `UserPromptSubmit`, `PreTaskExec`, `PostTaskExec`, `Stop`; Claude `UserPromptSubmit`, `Notification` `permission_prompt`, `Stop`; Codex `agent-turn-complete`; Codex title turn.
    - observed: Claude `Notification` `idle_prompt`, built from the Claude `Notification` example with the observed `message` and `notification_type` values.
    - derived: Claude `Notification` with another type, and "anything else" inputs (unparsable text, unknown event names).
-3. THE unit tests SHALL include one test per row of the events.md mapping table (12 rows).
+3. THE unit tests SHALL include one test per row of the events.md mapping table (12 rows), and one test that the observed Codex `agent-turn-complete` fixture names its session from `firstInput`.
 4. THE property tests SHALL cover every property under "Testing expectations" in tech.md.
 5. THE fixtures and tests SHALL contain no real home paths, user names, session IDs or tokens. Sample `tasks.md` texts in tests SHALL be written for this project, not copied from other projects.
+
+## Requirement 22: Buddy state from sessions
+
+**User story:** As a user, I want a buddy to show its most urgent session, so that a session waiting for my OK is never hidden by another session of the same agent.
+
+### Acceptance criteria
+1. THE core SHALL provide a pure function that takes the displayed states of a buddy's sessions and returns the buddy state: the most urgent one in urgency order (`WAITING_APPROVAL` > `WORKING` > `STALE` > `TURN_DONE` > `IDLE` > `OFFLINE`).
+2. FOR any non-empty set of sessions, the buddy state SHALL be the displayed state of one of them, and no session of that buddy SHALL be more urgent.
+3. THE buddy's status text SHALL be the status text of the most urgent session; among equally urgent sessions, the one with the latest last event time, then the smallest session key.
+4. THE buddy's last event time SHALL be the latest last event time of its sessions.
+5. THE core SHALL list a buddy's sessions by urgency, then latest last event time first, then session key.
+
+## Requirement 23: Session names and removal
+
+**User story:** As a user, I want each conversation window named after what I asked in it, and old ones cleared away, so that a buddy's session list stays readable.
+
+### Acceptance criteria
+1. THE core SHALL keep, per session and outside its window, its earliest event, its earliest `prompt` with text, its earliest event with `firstInput`, and its earliest task event, each replaced only by an event that is earlier in event order.
+2. THE core SHALL name a session from the first of these that exists: the earliest prompt's `text`; the earliest `firstInput` (Codex); the earliest task event's `task.name`. Each name SHALL be cut to 40 code points with the Requirement 6 function.
+3. WHEN none of them exists, THE session SHALL have no name and THE core SHALL give its start time (the earliest event's `at`) so the UI can show `started HH:MM:SS`.
+4. FOR any set of events, a session's name and start time SHALL be the same in any arrival order.
+5. THE core SHALL provide a pure function that takes the buddy list and `now` and removes every session whose last event time is more than 24 hours before `now`.
+6. THE same function SHALL remove a buddy only when it has no sessions left and its latest task event is missing or more than 24 hours before `now`. A buddy with no sessions SHALL not appear in the list sent to the UI.
+7. AFTER removal, every remaining session's displayed state and every remaining buddy's state at `now` SHALL be unchanged.
+8. THE relay SHALL apply removal after each accepted event, after restore, and on each 30-second tick.
 
 ---
 
@@ -318,9 +350,12 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 | `tasks.md` markers `- [-]`, `- [~]`, `- [X]`, `*` | not in samples | counted by the general rule in Requirement 11 |
 
 ## Decisions (confirmed 2026-11-12)
-- Buddy = agent + `cwd`; same-folder windows merge (known limit).
-- Per-buddy window of 50 events, recomputed from the start; late events are inserted, never ignored. Kind order breaks `at` ties, then arrival order.
-- Each buddy keeps its latest task event outside the window; the Kiro spec path comes from it. Only a later task event (in event order) replaces it.
+- Two levels: buddy = agent + `cwd`; session = agent + `cwd` + `session`. State, window and time rules are per session; the buddy shows its most urgent session. (Replaces the first decision, where sessions of one folder merged into one buddy.)
+- Per-session window of 50 events, recomputed from the start; late events are inserted, never ignored. Event order: `at`, kind, `session`, then arrival order.
+- Each buddy keeps its latest task event outside the windows; the Kiro spec path and progress belong to the buddy. Only a later task event (in event order) replaces it.
+- Session names: first prompt → Codex first input (`firstInput`) → first task → start time; cut to 40 code points. Codex stop events carry `firstInput`, the first `input-messages` item.
+- Sessions whose last event is more than 24 hours old are removed from memory; a buddy's latest task event is kept for 24 hours.
+- UI: buddies collapsed by default; `IDLE` and `OFFLINE` sessions hidden by default when expanded; the start time is formatted in the UI, not in core.
 - Hook timing: Codex reads argv only; stdin wait 500 ms; POST timeout 300 ms; forced exit at 900 ms.
 - Restore from the last 24 hours of daily logs `events-YYYY-MM-DD.jsonl`.
 - Port `4343`, overridable with `AGENTBUDDY_PORT`.

@@ -37,6 +37,7 @@ How to work through this list:
     - _Requirements: 4.2–4.4, 5.1–5.3_
 
 - [x] 4. Buddy history and state
+  - Note: the per-buddy model built here is replaced by per-session state under buddies in task 12 (buddy decision changed on 2026-11-12).
   - [x] 4.1 Create `src/core/history.ts`: `stamp`, `compareStamped`, `buddyKey`, `insertEvent`, `isTaskEvent`, `laterTask`
     - _Requirements: 7.1, 7.2, 8.1–8.4, 8.6_
   - [x] 4.2 Create `src/core/state.ts`: `nextState`, `foldBuddy`, `applyEvent`, `displayState`, `toView`, `toViews`
@@ -59,9 +60,10 @@ How to work through this list:
     - _Requirements: 12.3, 13.1–13.7_
 
 - [x] 7. Relay: intake and stream
+  - Note: `store.ts`, `main.ts` and the relay tests move to the session model in task 12.
   - [x] 7.1 Create `src/relay/home.ts`: home folder (mode 700), token create or load (mode 600), daily log names
     - _Requirements: 15.2, 16.2_
-  - [x] 7.2 Create `src/relay/store.ts` with `accept`, `views` and ordered daily log appends (mode 600). Restore comes in task 14.
+  - [x] 7.2 Create `src/relay/store.ts` with `accept`, `views` and ordered daily log appends (mode 600). Restore comes in task 16.
     - _Requirements: 16.2–16.5_
   - [x] 7.3 Create `src/relay/stream.ts`: SSE, full list on connect and on change, heartbeat every 25 s
     - _Requirements: 18.1–18.4_
@@ -73,12 +75,14 @@ How to work through this list:
     - _Requirements: 15.3–15.6, 16.1–16.4, 18.2, 18.3_
 
 - [x] 8. Minimal text-only UI
+  - Note: the flat buddy table becomes buddies with expandable sessions in task 13.
   - [x] 8.1 Create `index.html`, `src/ui/main.ts` and `src/ui/screens/list.ts`: table built with `textContent` only, `?` for `STALE`, Kiro and Codex progress cells, `relay disconnected` notice
     - _Requirements: 20.1–20.7_
   - [x] 8.2 Add `vite.config.ts` with output `dist/ui` and the dev proxy for `/stream` (`changeOrigin: true`)
     - _Requirements: 18.5_
 
 - [x] 9. Checkpoint: first end-to-end run
+  - Note: repeated with two sessions in one folder in task 13.
   - `npm run build`, start the relay, and pipe each observed fixture through `dist/hook.js` (stdin for Kiro and Claude, last argv for Codex).
   - Confirm in the browser that Kiro, Claude Code and Codex buddies appear and change state, and that the Codex title turn adds nothing.
   - Confirm `~/.agentbuddy/hook-errors.log` gets no new lines while the relay is up.
@@ -90,37 +94,60 @@ How to work through this list:
   - Confirm with the builder that a chat prompt shows `Kiro @ agentbuddy` as `WORKING` and then `TURN_DONE`, and that the hook error log stays empty.
   - _Requirements: 7.1, 12.1, 13.1_
 
-- [ ] 11. Confirm tasks.md markers during a task run (run this task with the task's run button)
+- [x] 11. Confirm tasks.md markers during a task run (run this task with the task's run button)
   - At the start of this task, while Kiro is running it, record the exact top-level lines of this `tasks.md` (`grep -n '^- \[' .kiro/specs/core-pipeline/tasks.md`) and note which marker the running task has.
   - At the start of task 12, record again how task 11 was marked after it finished.
   - Write the observed markers, with the date and Kiro version, into the progress line of `.kiro/steering/tech.md` and into Requirement 11.8.
   - If a marker does not fit the rule (one character between the brackets, done only for `x` / `X`), stop and propose a rule change to the builder before task 12.
   - _Requirements: 11.2–11.4, 11.8_
+  - Result: running task `- [-]`; after the run Kiro wrote `- [x]` (recorded on 2026-11-12, before the session model change).
 
-- [ ] 12. Kiro progress
-  - [ ] 12.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
+- [ ] 12. Sessions under buddies: core and relay
+  - [ ] 12.1 Add `firstInput` to `BuddyEvent` and `validateEvent` (Codex `stop` only), set it in `normalizeCodex` from the first `input-messages` item, and update the Codex fixture's expected event
+    - _Requirements: 1.1, 1.3, 1.6, 4.8, 6.5_
+  - [ ] 12.2 Update `src/core/history.ts`: `compareStamped` with `session` before `seq`, `sessionKey`, `earlier`; add `SESSION_TTL_MS` to `config.ts`
+    - _Requirements: 7.1, 8.1–8.4, 8.6, 23.1_
+  - [ ] 12.3 Rewrite `src/core/state.ts` for sessions (`updateFirsts`, `sessionTitle`, `foldSession`, `displayState`) and create `src/core/buddies.ts` (`mostUrgent`, `applyEvent`, `pruneList`, `toBuddyView`, `toViews`)
+    - _Requirements: 7.1–7.4, 9.1–9.11, 10.1–10.6, 22.1–22.5, 23.1–23.7_
+  - [ ] 12.4 Update property tests P4, P7, P9, P10 for sessions and add P11 (buddy state), P12 (removal), P13 (session names)
+    - _Requirements: 8.5, 8.7, 10.8, 22.2, 23.4, 23.7_
+  - [ ] 12.5 Update `tests/unit/state.test.ts`: two sessions in one folder (one waiting for approval, one working), session names (prompt, Codex `firstInput` from the observed fixture, task, start time), removal at 24 h, latest task event kept across sessions
+    - _Requirements: 7.4, 21.3, 22.3, 23.2, 23.3, 23.5_
+  - [ ] 12.6 Move `src/relay/store.ts` and `main.ts` to the new core API: prune after accept and on the 30-second tick; progress stays per buddy; update the relay tests
+    - _Requirements: 16.3, 18.3, 18.6, 23.8_
+
+- [ ] 13. Sessions under buddies: UI and browser check
+  - [ ] 13.1 Rewrite `src/ui/screens/list.ts`: buddy rows collapsed by default, session rows when expanded, `IDLE` / `OFFLINE` sessions hidden behind a toggle, choices kept across updates; `Sessions` column in `index.html`
+    - _Requirements: 20.1, 20.3, 20.8–20.10_
+  - [ ] 13.2 Update `tests/unit/ui-list.test.ts` for buddy cells, session cells and hidden sessions
+    - _Requirements: 20.1, 20.8, 20.9_
+  - [ ] 13.3 Browser check with the builder: two sessions in one folder (one waiting for approval, one working) show the buddy as `WAITING_APPROVAL` with both sessions listed; an idle session is hidden until shown
+    - _Requirements: 22.2, 20.9_
+
+- [ ] 14. Kiro progress
+  - [ ] 14.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
     - _Requirements: 11.1–11.7, 19.2_
-  - [ ] 12.2 Write property test P8 and `tests/unit/progress.test.ts` with marker cases (including those seen in task 11) and path cases (inside, sibling prefix, outside, wrong tail, nested)
+  - [ ] 14.2 Write property test P8 and `tests/unit/progress.test.ts` with marker cases (including those seen in task 11) and path cases (inside, sibling prefix, outside, wrong tail, nested)
     - _Requirements: 11.2–11.7, 19.2_
-  - [ ] 12.3 Create `src/relay/tasks.ts` and wire it in `main.ts`: read on Kiro `task_start`, `task_done` and `stop` when the buddy has a spec path, real paths inside the real `cwd`, regular file of at most 1 MB, newest read wins
+  - [ ] 14.3 Create `src/relay/tasks.ts` and wire it in `main.ts`: read on Kiro `task_start`, `task_done` and `stop` in any session when the buddy has a spec path, real paths inside the real `cwd`, regular file of at most 1 MB, newest read wins
     - _Requirements: 19.1–19.6_
-  - [ ] 12.4 Add relay tests: a symlinked `tasks.md` pointing outside `cwd` gives progress unknown; a valid file gives `task n/m`
+  - [ ] 14.4 Add relay tests: a symlinked `tasks.md` pointing outside `cwd` gives progress unknown; a valid file gives `task n/m`
     - _Requirements: 19.2–19.4_
-  - [ ] 12.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done
+  - [ ] 14.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done
 
-- [ ] 13. Checkpoint: watched work
-  - All tests pass. The buddy list showed this session's tasks 11–12 with state and progress.
+- [ ] 15. Checkpoint: watched work
+  - All tests pass. The buddy list showed this repository's Kiro sessions for tasks 12–14 with state and progress.
   - Note in the report any hook call that took longer than expected or left a line in the hook error log.
 
-- [ ] 14. Restore on start
-  - [ ] 14.1 Add `restore` to `src/relay/store.ts`: yesterday's then today's log, valid lines with `at` in the last 24 hours, same core functions, sequences in file order; then read progress for Kiro buddies with a spec path
-    - _Requirements: 17.1–17.5_
-  - [ ] 14.2 Add relay tests: two daily files with lines older than 24 hours, an invalid line and a cut-off last line; a missing file
-    - _Requirements: 17.1–17.5_
-  - [ ] 14.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its state and progress
+- [ ] 16. Restore on start
+  - [ ] 16.1 Add `restore` to `src/relay/store.ts`: yesterday's then today's log, valid lines with `at` in the last 24 hours, same core functions, sequences in file order, then `pruneList`; then read progress for Kiro buddies with a spec path
+    - _Requirements: 17.1–17.5, 23.8_
+  - [ ] 16.2 Add relay tests: two daily files with lines older than 24 hours, an invalid line and a cut-off last line; a missing file; sessions and session names come back
+    - _Requirements: 17.1–17.5, 23.4_
+  - [ ] 16.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its sessions, state and progress
 
-- [ ] 15. README and final checkpoint
-  - README: what the pipeline does, `npm run build` / `npm run relay`, `npm link`, the hook command per agent, `AGENTBUDDY_PORT`, the third-party libraries, and the known limits from the design (including same-folder windows merging into one buddy).
+- [ ] 17. README and final checkpoint
+  - README: what the pipeline does, `npm run build` / `npm run relay`, `npm link`, the hook command per agent (with `|| true`), `AGENTBUDDY_PORT`, buddies and sessions, the third-party libraries, and the known limits from the design.
   - All tests pass and `npm run build` succeeds.
   - Grep the repository for `/Users/` paths other than `/Users/dev/`, real session IDs and token-like strings. `.gitignore` does not list `.kiro`.
-  - _Requirements: 7.5, 21.5_
+  - _Requirements: 21.5_
