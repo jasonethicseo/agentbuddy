@@ -31,11 +31,12 @@ function makeEvent(
   cwd: string,
   kind: EventKind,
   at: string,
-  extra: { text?: string | undefined; task?: TaskInfo | undefined } = {},
+  extra: { text?: string | undefined; task?: TaskInfo | undefined; firstInput?: string | undefined } = {},
 ): BuddyEvent {
   const event: BuddyEvent = { v: 1, agent, session, kind, at, cwd };
   if (extra.text !== undefined) event.text = extra.text;
   if (extra.task !== undefined) event.task = extra.task;
+  if (extra.firstInput !== undefined) event.firstInput = extra.firstInput;
   return event;
 }
 
@@ -108,13 +109,25 @@ export function isCodexTitleTurn(p: Payload): boolean {
   return isTitleReply(p['last-assistant-message']);
 }
 
+/** First `input-messages` item: the thread's first user request (trap 2). Truncated; undefined if blank. */
+function codexFirstInput(p: Payload): string | undefined {
+  const messages = p['input-messages'];
+  const first: unknown = Array.isArray(messages) ? messages[0] : undefined;
+  if (typeof first !== 'string') return undefined;
+  const text = truncate(first);
+  return text === '' ? undefined : text;
+}
+
 export const normalizeCodex: Normalizer = (p, at) => {
   if (p['type'] !== 'agent-turn-complete') return null;
   const session = str(p, 'thread-id');
   const cwd = str(p, 'cwd');
   if (session === undefined || cwd === undefined) return null;
   if (isCodexTitleTurn(p)) return null;
-  return makeEvent('codex', session, cwd, 'stop', at, { text: shortText(p, 'last-assistant-message') });
+  return makeEvent('codex', session, cwd, 'stop', at, {
+    text: shortText(p, 'last-assistant-message'),
+    firstInput: codexFirstInput(p),
+  });
 };
 
 const NORMALIZERS: Readonly<Record<AgentId, Normalizer>> = {

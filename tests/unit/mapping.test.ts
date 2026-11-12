@@ -80,6 +80,16 @@ describe('edge cases around the mapping', () => {
     expect(normalize('codex', codex({ 'input-messages': msgs, 'last-assistant-message': 'Done.' }), AT)).not.toBeNull();
   });
 
+  it('takes firstInput from the first Codex input message, truncated', () => {
+    const first = (msgs: unknown) => normalize('codex', codex({ 'input-messages': msgs, 'last-assistant-message': 'Done.' }), AT);
+    expect(first(['delete hello.txt', 'make hello.txt again'])?.firstInput).toBe('delete hello.txt');
+    expect(Array.from(first(['x'.repeat(300)])?.firstInput ?? '')).toHaveLength(120);
+    expect(first(['  \n ', 'later'])).not.toHaveProperty('firstInput');
+    expect(first([42, 'later'])).not.toHaveProperty('firstInput');
+    expect(first([])).not.toHaveProperty('firstInput');
+    expect(first('delete hello.txt')).not.toHaveProperty('firstInput');
+  });
+
   it('rejects an unknown agent or a bad time', () => {
     const raw = FIXTURES[0]!.raw;
     expect(normalize('cursor' as never, raw, AT)).toBeNull();

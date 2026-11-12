@@ -1,7 +1,7 @@
 // Server-Sent Events: the full buddy list on connect and on every change.
 
 import type { ServerResponse } from 'node:http';
-import type { BuddyView } from '../core/state';
+import type { BuddyView } from '../core/buddies';
 
 export interface Stream {
   add(res: ServerResponse, list: BuddyView[]): void;

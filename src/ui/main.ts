@@ -1,6 +1,6 @@
 // UI entry. Relay mode only in this spec; demo mode arrives with the demo spec.
 
-import type { BuddyView } from '../core/state';
+import type { BuddyView } from '../core/buddies';
 import { renderList } from './screens/list';
 
 const RETRY_MS = 3000;

@@ -137,7 +137,14 @@ export const FIXTURES: readonly Fixture[] = [
     verbatim: true,
     agent: 'codex',
     raw: String.raw`{"type":"agent-turn-complete","thread-id":"01a1…","turn-id":"01a1…","cwd":"/Users/dev/demo","client":"codex-tui","input-messages":["delete hello.txt","make hello.txt again"],"last-assistant-message":"Created hello.txt."}`,
-    expected: { agent: 'codex', session: '01a1…', kind: 'stop', cwd: '/Users/dev/demo', text: 'Created hello.txt.' },
+    expected: {
+      agent: 'codex',
+      session: '01a1…',
+      kind: 'stop',
+      cwd: '/Users/dev/demo',
+      text: 'Created hello.txt.',
+      firstInput: 'delete hello.txt',
+    },
   },
   {
     id: 'codex-title-turn',

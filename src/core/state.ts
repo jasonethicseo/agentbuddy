@@ -1,53 +1,44 @@
-// Buddy state: the fold over a buddy's event window, time-based states,
-// and the view sent to the UI (events.md "State rules").
+// Session state: the fold over a session's event window, time-based states,
+// and the session name (events.md "State rules", "Buddies and sessions").
 // Pure: no file system, network, timers or clock. `now` is passed in.
 
-import { IDLE_AFTER_MS, OFFLINE_AFTER_MS } from './config';
-import type { AgentId, BuddyEvent, EventKind } from './event';
-import { buddyKey, insertEvent, laterTask, stamp } from './history';
+import { IDLE_AFTER_MS, OFFLINE_AFTER_MS, SESSION_TITLE_LIMIT } from './config';
+import type { BuddyEvent, EventKind } from './event';
+import { earlier, isTaskEvent, sessionKey } from './history';
 import type { Stamped } from './history';
-import { displayName, shortId } from './text';
+import { truncate } from './text';
 
 export type CoreState = 'WORKING' | 'WAITING_APPROVAL' | 'TURN_DONE' | 'IDLE';
 export type DisplayState = CoreState | 'STALE' | 'OFFLINE';
 
-/** Kiro spec progress; null means unknown. */
-export type Progress = { done: number; total: number } | null;
+/** Earliest events of a session, kept outside its window for its name and start time. */
+export interface SessionFirsts {
+  first: Stamped;
+  /** Earliest `prompt` that has text. */
+  prompt?: Stamped;
+  /** Earliest event with `firstInput` (Codex). */
+  input?: Stamped;
+  /** Earliest task event. */
+  task?: Stamped;
+}
 
-export interface BuddyState {
+export interface SessionState {
   key: string;
-  agent: AgentId;
-  cwd: string;
-  name: string;
+  session: string;
   state: CoreState;
   statusText?: string;
   lastAt: string;
   lastAtMs: number;
-  session: string;
-  /** Kiro only: spec path of the kept latest task event. */
-  specPath?: string;
+  /** First prompt, Codex first input, or first task name; at most 40 code points. */
+  title?: string;
+  /** `at` of the earliest event. */
+  startedAt: string;
 }
 
-export interface BuddyRecord {
+export interface SessionRecord {
   window: Stamped[];
-  lastTask?: Stamped;
-  state: BuddyState;
-}
-
-export type BuddyList = ReadonlyMap<string, BuddyRecord>;
-
-export interface BuddyView {
-  key: string;
-  agent: AgentId;
-  name: string;
-  cwd: string;
-  state: DisplayState;
-  statusText?: string;
-  lastAt: string;
-  /** First 8 code points of the latest session. */
-  session: string;
-  /** Kiro buddies only. */
-  progress?: Progress;
+  firsts: SessionFirsts;
+  state: SessionState;
 }
 
 /**
@@ -70,15 +61,31 @@ export function nextState(prev: CoreState | undefined, kind: EventKind): CoreSta
   }
 }
 
+/** Add one event to the kept earliest events. Each is a running minimum, so arrival order never matters. */
+export function updateFirsts(firsts: SessionFirsts | undefined, item: Stamped): SessionFirsts {
+  const { event } = item;
+  const next: SessionFirsts = { ...firsts, first: earlier(firsts?.first, item) };
+  if (event.kind === 'prompt' && event.text !== undefined) next.prompt = earlier(firsts?.prompt, item);
+  if (event.firstInput !== undefined) next.input = earlier(firsts?.input, item);
+  if (isTaskEvent(item)) next.task = earlier(firsts?.task, item);
+  return next;
+}
+
+/** First prompt, then Codex first input, then first task name; cut to 40 code points. */
+export function sessionTitle(firsts: SessionFirsts): string | undefined {
+  const text = firsts.prompt?.event.text ?? firsts.input?.event.firstInput ?? firsts.task?.event.task?.name;
+  return text === undefined ? undefined : truncate(text, SESSION_TITLE_LIMIT);
+}
+
 /** Text an event contributes to the status text, if any. */
 function eventText(event: BuddyEvent): string | undefined {
   return event.text ?? event.task?.name;
 }
 
-/** Recompute a buddy from the start of its window. `window` must be non-empty and sorted. */
-export function foldBuddy(window: readonly Stamped[], lastTask: Stamped | undefined): BuddyState {
+/** Recompute a session from the start of its window. `window` must be non-empty and sorted. */
+export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): SessionState {
   const last = window.at(-1);
-  if (last === undefined) throw new Error('foldBuddy: empty window');
+  if (last === undefined) throw new Error('foldSession: empty window');
 
   let state: CoreState | undefined;
   let statusText: string | undefined;
@@ -87,66 +94,28 @@ export function foldBuddy(window: readonly Stamped[], lastTask: Stamped | undefi
     statusText = eventText(event) ?? statusText;
   }
 
-  const { agent, cwd } = last.event;
-  const result: BuddyState = {
-    key: buddyKey(agent, cwd),
-    agent,
-    cwd,
-    name: displayName(agent, cwd),
+  const { agent, cwd, session } = last.event;
+  const result: SessionState = {
+    key: sessionKey(agent, cwd, session),
+    session,
     state: state ?? 'WORKING',
     lastAt: last.event.at,
     lastAtMs: last.atMs,
-    session: last.event.session,
+    startedAt: firsts.first.event.at,
   };
   if (statusText !== undefined) result.statusText = statusText;
-  const specPath = lastTask?.event.task?.specPath;
-  if (agent === 'kiro' && specPath !== undefined) result.specPath = specPath;
+  const title = sessionTitle(firsts);
+  if (title !== undefined) result.title = title;
   return result;
 }
 
-/** Add one accepted event. Returns a new list; the old one is not changed. */
-export function applyEvent(list: BuddyList, event: BuddyEvent, seq: number): { list: BuddyList; key: string } {
-  const key = buddyKey(event.agent, event.cwd);
-  const old = list.get(key);
-  const item = stamp(event, seq);
-  const window = insertEvent(old?.window ?? [], item);
-  const lastTask = laterTask(old?.lastTask, item);
-  const record: BuddyRecord = { window, state: foldBuddy(window, lastTask) };
-  if (lastTask !== undefined) record.lastTask = lastTask;
-  const next = new Map(list);
-  next.set(key, record);
-  return { list: next, key };
-}
-
 /** State shown at time `nowMs`, after the 10- and 30-minute rules. */
-export function displayState(b: BuddyState, nowMs: number): DisplayState {
-  const age = Math.max(0, nowMs - b.lastAtMs);
+export function displayState(s: SessionState, nowMs: number): DisplayState {
+  const age = Math.max(0, nowMs - s.lastAtMs);
   if (age >= OFFLINE_AFTER_MS) return 'OFFLINE';
   if (age >= IDLE_AFTER_MS) {
-    if (b.state === 'TURN_DONE' || b.state === 'IDLE') return 'IDLE';
+    if (s.state === 'TURN_DONE' || s.state === 'IDLE') return 'IDLE';
     return 'STALE';
   }
-  return b.state;
-}
-
-export function toView(b: BuddyState, progress: Progress, nowMs: number): BuddyView {
-  const view: BuddyView = {
-    key: b.key,
-    agent: b.agent,
-    name: b.name,
-    cwd: b.cwd,
-    state: displayState(b, nowMs),
-    lastAt: b.lastAt,
-    session: shortId(b.session),
-  };
-  if (b.statusText !== undefined) view.statusText = b.statusText;
-  if (b.agent === 'kiro') view.progress = b.specPath === undefined ? null : progress;
-  return view;
-}
-
-/** All buddies, sorted by display name, then cwd. */
-export function toViews(list: BuddyList, progress: ReadonlyMap<string, Progress>, nowMs: number): BuddyView[] {
-  return [...list.values()]
-    .map((r) => toView(r.state, progress.get(r.state.key) ?? null, nowMs))
-    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.cwd < b.cwd ? -1 : a.cwd > b.cwd ? 1 : 0));
+  return s.state;
 }

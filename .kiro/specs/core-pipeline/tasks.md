@@ -102,18 +102,18 @@ How to work through this list:
   - _Requirements: 11.2–11.4, 11.8_
   - Result: running task `- [-]`; after the run Kiro wrote `- [x]` (recorded on 2026-11-12, before the session model change).
 
-- [ ] 12. Sessions under buddies: core and relay
-  - [ ] 12.1 Add `firstInput` to `BuddyEvent` and `validateEvent` (Codex `stop` only), set it in `normalizeCodex` from the first `input-messages` item, and update the Codex fixture's expected event
+- [x] 12. Sessions under buddies: core and relay
+  - [x] 12.1 Add `firstInput` to `BuddyEvent` and `validateEvent` (Codex `stop` only), set it in `normalizeCodex` from the first `input-messages` item, and update the Codex fixture's expected event
     - _Requirements: 1.1, 1.3, 1.6, 4.8, 6.5_
-  - [ ] 12.2 Update `src/core/history.ts`: `compareStamped` with `session` before `seq`, `sessionKey`, `earlier`; add `SESSION_TTL_MS` to `config.ts`
+  - [x] 12.2 Update `src/core/history.ts`: `compareStamped` with `session` before `seq`, `sessionKey`, `earlier`; add `SESSION_TTL_MS` to `config.ts`
     - _Requirements: 7.1, 8.1–8.4, 8.6, 23.1_
-  - [ ] 12.3 Rewrite `src/core/state.ts` for sessions (`updateFirsts`, `sessionTitle`, `foldSession`, `displayState`) and create `src/core/buddies.ts` (`mostUrgent`, `applyEvent`, `pruneList`, `toBuddyView`, `toViews`)
+  - [x] 12.3 Rewrite `src/core/state.ts` for sessions (`updateFirsts`, `sessionTitle`, `foldSession`, `displayState`) and create `src/core/buddies.ts` (`mostUrgent`, `applyEvent`, `pruneList`, `toBuddyView`, `toViews`)
     - _Requirements: 7.1–7.4, 9.1–9.11, 10.1–10.6, 22.1–22.5, 23.1–23.7_
-  - [ ] 12.4 Update property tests P4, P7, P9, P10 for sessions and add P11 (buddy state), P12 (removal), P13 (session names)
+  - [x] 12.4 Update property tests P4, P7, P9, P10 for sessions and add P11 (buddy state), P12 (removal), P13 (session names)
     - _Requirements: 8.5, 8.7, 10.8, 22.2, 23.4, 23.7_
-  - [ ] 12.5 Update `tests/unit/state.test.ts`: two sessions in one folder (one waiting for approval, one working), session names (prompt, Codex `firstInput` from the observed fixture, task, start time), removal at 24 h, latest task event kept across sessions
+  - [x] 12.5 Update `tests/unit/state.test.ts`: two sessions in one folder (one waiting for approval, one working), session names (prompt, Codex `firstInput` from the observed fixture, task, start time), removal at 24 h, latest task event kept across sessions
     - _Requirements: 7.4, 21.3, 22.3, 23.2, 23.3, 23.5_
-  - [ ] 12.6 Move `src/relay/store.ts` and `main.ts` to the new core API: prune after accept and on the 30-second tick; progress stays per buddy; update the relay tests
+  - [x] 12.6 Move `src/relay/store.ts` and `main.ts` to the new core API: prune after accept and on the 30-second tick; progress stays per buddy; update the relay tests
     - _Requirements: 16.3, 18.3, 18.6, 23.8_
 
 - [ ] 13. Sessions under buddies: UI and browser check

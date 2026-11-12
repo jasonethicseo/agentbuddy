@@ -39,8 +39,11 @@ const server = createRelayServer({
   },
 });
 
-// Drives the 10- and 30-minute rules (Requirement 10.7).
-const tick = setInterval(broadcastIfChanged, RELAY_LIMITS.tickMs);
+// Drives the 10- and 30-minute rules and the 24-hour session removal (Requirements 10.7, 23.8).
+const tick = setInterval(() => {
+  store.prune(Date.now());
+  broadcastIfChanged();
+}, RELAY_LIMITS.tickMs);
 
 server.on('error', (err: NodeJS.ErrnoException) => {
   console.error(err.code === 'EADDRINUSE' ? `port ${port} is in use (set AGENTBUDDY_PORT)` : `relay error: ${err.code ?? 'unknown'}`);

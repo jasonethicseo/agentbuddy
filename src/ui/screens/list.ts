@@ -1,6 +1,6 @@
 // Minimal text-only buddy list. Agent text is inserted with textContent only.
 
-import type { BuddyView } from '../../core/state';
+import type { BuddyView } from '../../core/buddies';
 
 /** Progress cell: Kiro shows task n/m, Codex explains what it reports, Claude Code is empty. */
 export function progressText(view: BuddyView): string {
@@ -28,7 +28,7 @@ export function rowCells(view: BuddyView): string[] {
     view.statusText ?? '',
     progressText(view),
     timeText(view.lastAt),
-    view.session,
+    view.sessions[0]?.session ?? "", // until task 13: session of the most urgent session
     view.cwd,
   ].map((cell) => String(cell ?? ''));
 }

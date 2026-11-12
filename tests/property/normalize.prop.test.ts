@@ -49,6 +49,10 @@ function checkOutput(out: BuddyEvent | null) {
   expect(validateEvent(out)).toEqual(out);
   if (out.text !== undefined) expect(codePointLength(out.text)).toBeLessThanOrEqual(TEXT_LIMIT);
   if (out.task !== undefined) expect(codePointLength(out.task.name)).toBeLessThanOrEqual(TEXT_LIMIT);
+  if (out.firstInput !== undefined) {
+    expect(codePointLength(out.firstInput)).toBeLessThanOrEqual(TEXT_LIMIT);
+    expect([out.agent, out.kind]).toEqual(['codex', 'stop']);
+  }
 }
 
 describe('P1 normalize', () => {

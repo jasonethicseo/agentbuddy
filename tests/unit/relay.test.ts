@@ -140,15 +140,28 @@ describe('intake, log and stream', () => {
 
     const claude = { ...event, agent: 'claude', session: 'e697…', kind: 'permission', text: undefined };
     expect((await post(JSON.stringify(claude))).status).toBe(204);
-    const list = (await stream.next(2)) as Array<{ name: string; state: string }>;
-    expect(list.find((b) => b.name === 'Claude Code @ demo')?.state).toBe('WAITING_APPROVAL');
+    const list = (await stream.next(2)) as Array<{ name: string; state: string; sessions: Array<{ key: string; state: string }> }>;
+    const buddy = list.find((b) => b.name === 'Claude Code @ demo');
+    expect(buddy?.state).toBe('WAITING_APPROVAL');
+    expect(buddy?.sessions).toEqual([
+      expect.objectContaining({ key: JSON.stringify(['claude', '/Users/dev/demo', 'e697…']), state: 'WAITING_APPROVAL' }),
+    ]);
+
+    // A second session in the same folder shows up as its own session; the buddy stays WAITING_APPROVAL.
+    const other = { ...event, agent: 'claude', session: 'e9a4…', kind: 'prompt', text: 'run ls', at: new Date().toISOString() };
+    expect((await post(JSON.stringify(other))).status).toBe(204);
+    const list2 = (await stream.next(3)) as typeof list;
+    const buddy2 = list2.find((b) => b.name === 'Claude Code @ demo');
+    expect(buddy2?.state).toBe('WAITING_APPROVAL');
+    expect(buddy2?.sessions.map((s) => s.state)).toEqual(['WAITING_APPROVAL', 'WORKING']);
     stream.close();
 
     await new Promise((r) => setTimeout(r, 100));
     const file = join(home, '.agentbuddy', logFileName(new Date()));
     expect(mode(file)).toBe(0o600);
     const lines = readFileSync(file, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
-    expect(lines.at(-1)).toEqual({ v: 1, agent: 'claude', session: 'e697…', kind: 'permission', at: event.at, cwd: '/Users/dev/demo' });
+    expect(lines.at(-2)).toEqual({ v: 1, agent: 'claude', session: 'e697…', kind: 'permission', at: event.at, cwd: '/Users/dev/demo' });
+    expect(lines.at(-1)).toMatchObject({ agent: 'claude', session: 'e9a4…', kind: 'prompt', text: 'run ls' });
     // Rejected requests never reach the log.
     expect(lines.every((l) => l.kind !== 'nope' && !('pad' in l))).toBe(true);
     expect(readdirSync(join(home, '.agentbuddy')).filter((f) => f.startsWith('events-'))).toHaveLength(1);

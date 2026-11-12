@@ -6,8 +6,14 @@ export const DEFAULT_PORT = 4343;
 /** Maximum length of `text` and `task.name`, in Unicode code points. */
 export const TEXT_LIMIT = 120;
 
-/** Events kept per buddy in its event window. */
+/** Events kept per session in its event window. */
 export const WINDOW_SIZE = 50;
+
+/** Session names are cut to this many code points. */
+export const SESSION_TITLE_LIMIT = 40;
+
+/** Sessions silent for longer than this are removed; restore reads the same span. */
+export const SESSION_TTL_MS = 24 * 3_600_000;
 
 export const IDLE_AFTER_MS = 10 * 60_000;
 export const OFFLINE_AFTER_MS = 30 * 60_000;
@@ -25,7 +31,7 @@ export const RELAY_LIMITS = {
   tickMs: 30_000,
   heartbeatMs: 25_000,
   maxTasksFileBytes: 1_048_576,
-  restoreWindowMs: 24 * 3_600_000,
+  restoreWindowMs: SESSION_TTL_MS,
 } as const;
 
 /** Folder under the user's home directory, and file names inside it. */

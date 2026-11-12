@@ -22,6 +22,8 @@ export interface BuddyEvent {
   cwd: string;
   text?: string;
   task?: TaskInfo;
+  /** Codex `stop` only: the thread's first user input (first `input-messages` item). */
+  firstInput?: string;
 }
 
 export const AGENTS: readonly AgentId[] = ['kiro', 'claude', 'codex'];
@@ -75,16 +77,17 @@ function validateTask(value: unknown): TaskInfo | null {
 
 /**
  * Returns a new, valid `BuddyEvent` built from the known fields of `value`,
- * or `null`. Never throws. Unknown properties are left out, and `task` is
- * kept only for `task_start` and `task_done`.
+ * or `null`. Never throws. Unknown properties are left out, `task` is kept
+ * only for `task_start` and `task_done`, and `firstInput` only for Codex `stop`.
  */
 export function validateEvent(value: unknown): BuddyEvent | null {
   try {
     if (!isRecord(value)) return null;
-    const { v, agent, session, kind, at, cwd, text, task } = value;
+    const { v, agent, session, kind, at, cwd, text, task, firstInput } = value;
     if (v !== 1 || !isAgentId(agent) || !isKind(kind)) return null;
     if (!isNonEmptyString(session) || !isNonEmptyString(cwd) || !isIsoTime(at)) return null;
     if (text !== undefined && !isShortText(text)) return null;
+    if (firstInput !== undefined && !isShortText(firstInput)) return null;
 
     const event: BuddyEvent = { v: 1, agent, session, kind, at, cwd };
     if (text !== undefined) event.text = text;
@@ -94,6 +97,7 @@ export function validateEvent(value: unknown): BuddyEvent | null {
       if (checked === null) return null;
       event.task = checked;
     }
+    if (firstInput !== undefined && agent === 'codex' && kind === 'stop') event.firstInput = firstInput;
     return event;
   } catch {
     return null;

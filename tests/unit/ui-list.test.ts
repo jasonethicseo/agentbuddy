@@ -1,6 +1,6 @@
 // Cell texts of the minimal buddy list (Requirements 20.1–20.4).
 import { describe, expect, it } from 'vitest';
-import type { BuddyView } from '../../src/core/state';
+import type { BuddyView } from '../../src/core/buddies';
 import { rowCells } from '../../src/ui/screens/list';
 
 const base: BuddyView = {
@@ -11,8 +11,10 @@ const base: BuddyView = {
   state: 'WORKING',
   statusText: 'fix login',
   lastAt: '2026-11-12T01:02:03.000Z',
-  session: 'sess_ce1',
   progress: { done: 4, total: 12 },
+  sessions: [
+    { key: '["kiro","/Users/dev/demo","sess_ce19…"]', session: 'sess_ce1', state: 'WORKING', lastAt: '2026-11-12T01:02:03.000Z', startedAt: '2026-11-12T01:00:00.000Z' },
+  ],
 };
 
 describe('rowCells', () => {

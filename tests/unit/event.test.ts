@@ -40,6 +40,15 @@ describe('validateEvent', () => {
     expect(validateEvent({ ...base, kind: 'task_done', task: { ...task, success: 'yes' } })).toBeNull();
   });
 
+  it('keeps firstInput only on Codex stop events, at most 120 code points', () => {
+    const codexStop = { ...base, agent: 'codex', session: '01a1…', firstInput: 'delete hello.txt' };
+    expect(validateEvent(codexStop)?.firstInput).toBe('delete hello.txt');
+    expect(validateEvent({ ...base, firstInput: 'x' })).not.toHaveProperty('firstInput');
+    expect(validateEvent({ ...codexStop, kind: 'prompt' })).not.toHaveProperty('firstInput');
+    expect(validateEvent({ ...codexStop, firstInput: 'a'.repeat(121) })).toBeNull();
+    expect(validateEvent({ ...codexStop, firstInput: 7 })).toBeNull();
+  });
+
   it('limits text and task.name to 120 code points', () => {
     expect(validateEvent({ ...base, text: '😀'.repeat(120) })).not.toBeNull();
     expect(validateEvent({ ...base, text: 'a'.repeat(121) })).toBeNull();

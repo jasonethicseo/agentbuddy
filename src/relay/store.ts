@@ -2,15 +2,17 @@
 
 import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { applyEvent, pruneList, toViews } from '../core/buddies';
+import type { BuddyList, BuddyRecord, BuddyView, Progress } from '../core/buddies';
 import type { BuddyEvent } from '../core/event';
-import { applyEvent, toViews } from '../core/state';
-import type { BuddyList, BuddyRecord, BuddyView, Progress } from '../core/state';
 import { logFileName } from './home';
 
 export interface Store {
-  /** Applies an accepted event and appends it to today's log. Returns the buddy key. */
-  accept(event: BuddyEvent, nowMs: number): string;
-  record(key: string): BuddyRecord | undefined;
+  /** Applies an accepted event, removes old sessions, and appends the event to today's log. */
+  accept(event: BuddyEvent, nowMs: number): { buddy: string; session: string };
+  buddy(key: string): BuddyRecord | undefined;
+  /** Removes sessions older than 24 hours; true if anything changed. */
+  prune(nowMs: number): boolean;
   /** Sets a buddy's progress; true if it changed. */
   setProgress(key: string, progress: Progress): boolean;
   views(nowMs: number): BuddyView[];
@@ -39,14 +41,24 @@ export function createStore(opts: StoreOptions): Store {
       .catch((err: NodeJS.ErrnoException) => opts.onLogError?.(err.code ?? 'unknown'));
   }
 
+  function prune(nowMs: number): boolean {
+    const next = pruneList(list, nowMs);
+    if (next === list) return false;
+    list = next;
+    for (const key of progress.keys()) if (!list.has(key)) progress.delete(key);
+    return true;
+  }
+
   return {
     accept(event, nowMs) {
       const result = applyEvent(list, event, ++seq);
       list = result.list;
+      prune(nowMs);
       append(event, nowMs);
-      return result.key;
+      return { buddy: result.buddy, session: result.session };
     },
-    record: (key) => list.get(key),
+    buddy: (key) => list.get(key),
+    prune,
     setProgress(key, next) {
       const prev = progress.get(key) ?? null;
       progress.set(key, next);
