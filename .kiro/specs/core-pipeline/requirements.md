@@ -192,7 +192,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 5. THE function SHALL ignore indented lines, so sub-tasks never count.
 6. THE function SHALL handle `\n` and `\r\n` line endings the same way.
 7. FOR any input text, the result SHALL satisfy `0 <= done <= total`.
-8. Observed in three sample specs on 2026-11-12: only `- [ ]` and `- [x]` at the top level and indented `- [x]` sub-tasks. Observed in this spec during a task run on 2026-11-12 (Kiro IDE 1.4.121): the running task was `- [-]`, finished tasks `- [x]`, not-started tasks `- [ ]`; all fit criteria 2–3. The marker of task 11 after it finished was `- [x]`. `- [~]`, `X` and `*` are UNVERIFIED; criteria 2–4 cover them without special cases.
+8. Observed in three sample specs on 2026-11-12: only `- [ ]` and `- [x]` at the top level and indented `- [x]` sub-tasks. Observed in this spec during a task run on 2026-11-12 (Kiro IDE 1.4.121): the running task was `- [-]`, finished tasks `- [x]`, not-started tasks `- [ ]`; all fit criteria 2–3. The marker of task 11 after it finished was `- [x]`. A running sub-task is marked `[-]` on its own line only; when the last sub-task of task 16 finished, the sub-task and task 16 were both `[x]`. `- [~]`, `X` and `*` are UNVERIFIED; criteria 2–4 cover them without special cases.
 
 ## Requirement 12: Hook command input
 

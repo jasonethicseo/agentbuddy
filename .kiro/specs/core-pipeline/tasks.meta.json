@@ -12,6 +12,25 @@
         "chatSessionId": "sess_45ebc8b8-e5a9-4a5a-b5b0-af515e1bb758",
         "timestamp": 1794453323932
       }
+    ],
+    "16.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done": [
+      {
+        "executionId": "6905c62a-271f-4171-b937-f8c2f4f28a27",
+        "chatSessionId": "sess_b74c6ef3-d04f-479d-a7b5-04c620949ff5",
+        "timestamp": 1794458580174
+      },
+      {
+        "executionId": "6905c62a-271f-4171-b937-f8c2f4f28a27",
+        "chatSessionId": "sess_b74c6ef3-d04f-479d-a7b5-04c620949ff5",
+        "timestamp": 1794458919781
+      }
+    ],
+    "16. Kiro progress": [
+      {
+        "executionId": "6905c62a-271f-4171-b937-f8c2f4f28a27",
+        "chatSessionId": "sess_b74c6ef3-d04f-479d-a7b5-04c620949ff5",
+        "timestamp": 1794458919811
+      }
     ]
   }
 }
