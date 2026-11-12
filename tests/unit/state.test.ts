@@ -1,37 +1,13 @@
+// Core session and buddy state (Requirements 7–10, 22, 23; messenger-app Requirement 7.2).
+// Session end: session-end.test.ts.
 import { describe, expect, it } from 'vitest';
-import { applyEvent, groupBuddies, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
-import type { BuddyRecord, BuddyView, SessionList } from '../../src/core/buddies';
-import type { AgentId, BuddyEvent, EventKind } from '../../src/core/event';
+import { groupBuddies, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
+import type { BuddyEvent, EventKind } from '../../src/core/event';
 import { buddyKey } from '../../src/core/history';
 import { normalize } from '../../src/core/normalize';
 import { displayState } from '../../src/core/state';
 import { FIXTURES } from '../fixtures/payloads';
-
-const T0 = Date.parse('2026-11-12T01:00:00.000Z');
-const MIN = 60_000;
-const HOUR = 60 * MIN;
-const at = (minute: number) => new Date(T0 + minute * MIN).toISOString();
-const SPEC = '/Users/dev/demo/.kiro/specs/hello-file/tasks.md';
-
-function ev(kind: EventKind, minute: number, extra: Partial<BuddyEvent> = {}): BuddyEvent {
-  const e: BuddyEvent = { v: 1, agent: 'kiro', session: 'sess_ce19…', kind, at: at(minute), cwd: '/Users/dev/demo', ...extra };
-  if ((kind === 'task_start' || kind === 'task_done') && !e.task) e.task = { name: '2. Change the line in hello.txt', specPath: SPEC };
-  return e;
-}
-
-function run(events: BuddyEvent[]): SessionList {
-  let list: SessionList = new Map();
-  events.forEach((e, i) => (list = applyEvent(list, e, i + 1).list));
-  return list;
-}
-
-function buddy(list: SessionList, agent: AgentId = 'kiro', cwd = '/Users/dev/demo'): BuddyRecord {
-  return groupBuddies(list).get(buddyKey(agent, cwd))!;
-}
-
-function view(list: SessionList, nowMs = T0, agent: AgentId = 'kiro', cwd = '/Users/dev/demo'): BuddyView {
-  return toBuddyView(buddy(list, agent, cwd), null, nowMs);
-}
+import { T0, MIN, HOUR, at, SPEC, ev, run, buddy, view } from './state-helpers';
 
 describe('session state', () => {
   it('marks a Kiro session as in a spec task while its status text comes from a task event', () => {
@@ -153,46 +129,6 @@ describe('session names', () => {
     const claude = view(run([ev('permission', 3, { agent: 'claude', session: 'e697…' }), ev('stop', 4, { agent: 'claude', session: 'e697…' })]), T0, 'claude');
     expect(claude.sessions[0]!.title).toBeUndefined();
     expect(claude.sessions[0]!.startedAt).toBe(at(3));
-  });
-});
-
-describe('session end', () => {
-  it('turns the observed Claude SessionEnd into end, and the session logged off (ENDED) at once', () => {
-    const fixture = FIXTURES.find((f) => f.id === 'claude-app-session-end')!;
-    const end = normalize('claude', fixture.raw, at(5))!;
-    expect(end).toMatchObject({ agent: 'claude', kind: 'end', session: 'aba1…' });
-    const prompt = ev('prompt', 0, { agent: 'claude', session: 'aba1…', text: 'hello' });
-    const v = view(run([prompt, end]), T0 + 5 * MIN, 'claude');
-    expect([v.state, v.sessions[0]!.state, v.statusText]).toEqual(['ENDED', 'ENDED', 'hello']);
-    // Still ENDED long after, until the 24-hour removal.
-    expect(view(run([prompt, end]), T0 + 20 * HOUR, 'claude').state).toBe('ENDED');
-  });
-
-  it('keeps the buddy as urgent as its other sessions', () => {
-    const c = (session: string, kind: EventKind, m: number) => ev(kind, m, { agent: 'claude', session });
-    const v = view(run([c('aba1…', 'prompt', 0), c('aba1…', 'end', 1), c('81fd…', 'permission', 2)]), T0 + 3 * MIN, 'claude');
-    expect(v.state).toBe('WAITING_APPROVAL');
-    expect(v.sessions.map((s) => s.state)).toEqual(['WAITING_APPROVAL', 'ENDED']);
-  });
-
-  it('ranks OFFLINE and ENDED the same, so the later of the two sets the buddy state', () => {
-    const c = (session: string, kind: EventKind, m: number) => ev(kind, m, { agent: 'claude', session });
-    const now = T0 + 3 * HOUR; // the quiet session is OFFLINE by the 30-minute rule
-    const endedLater = view(run([c('81fd…', 'prompt', 0), c('aba1…', 'prompt', 10), c('aba1…', 'end', 20)]), now, 'claude');
-    expect([endedLater.state, endedLater.sessions.map((s) => s.state)]).toEqual(['ENDED', ['ENDED', 'OFFLINE']]);
-    const quietLater = view(run([c('aba1…', 'prompt', 0), c('aba1…', 'end', 1), c('81fd…', 'prompt', 20)]), now, 'claude');
-    expect([quietLater.state, quietLater.sessions.map((s) => s.state)]).toEqual(['OFFLINE', ['OFFLINE', 'ENDED']]);
-  });
-
-  it('removing a 24-hour-old OFFLINE session leaves an ENDED buddy unchanged', () => {
-    const c = (session: string, kind: EventKind, m: number) => ev(kind, m, { agent: 'claude', session });
-    const list = run([c('81fd…', 'prompt', 0), c('aba1…', 'prompt', 26 * 60), c('aba1…', 'end', 26 * 60 + 1)]);
-    const now = T0 + 26 * HOUR + 30 * MIN;
-    const before = view(list, now, 'claude');
-    const after = toBuddyView(buddy(pruneList(list, now), 'claude'), null, now);
-    expect(before.state).toBe('ENDED');
-    expect(after.state).toBe('ENDED');
-    expect(after.sessions).toHaveLength(1);
   });
 });
 

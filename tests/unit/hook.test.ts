@@ -1,110 +1,11 @@
 // agentbuddy-hook end to end: spawns the built dist/hook.js with a temp HOME
-// (Requirements 12.1–12.6, 13.1–13.7, 14.1–14.3).
-import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer } from 'node:http';
-import type { IncomingHttpHeaders, Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
-import { tmpdir } from 'node:os';
+// (Requirements 12.1–12.6, 13.1–13.7, 14.1–14.3; messenger-app Requirement 1.1, 1.2).
+import { readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FIXTURES } from '../fixtures/payloads';
+import { describe, expect, it } from 'vitest';
+import { TOKEN, errorLog, expectQuietExit, fakeRelay, fixture, freePort, homeDir, run, useTempHome } from './hook-helpers';
 
-const ROOT = join(import.meta.dirname, '../..');
-const HOOK = join(ROOT, 'dist/hook.js');
-const TOKEN = 'test-token-0123456789abcdef';
-const fixture = (id: string) => FIXTURES.find((f) => f.id === id)!.raw;
-
-interface RunResult {
-  code: number | null;
-  ms: number;
-  stdout: string;
-  stderr: string;
-}
-
-interface RunOptions {
-  stdin?: string;
-  keepStdinOpen?: boolean;
-  port: number;
-  env?: Record<string, string>;
-}
-
-let home: string;
-
-function run(args: string[], opts: RunOptions): Promise<RunResult> {
-  return new Promise((resolve) => {
-    const started = performance.now();
-    const child = spawn(process.execPath, [HOOK, ...args], {
-      env: { PATH: process.env['PATH'] ?? '', HOME: home, AGENTBUDDY_PORT: String(opts.port), ...opts.env },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', (d) => (stdout += d));
-    child.stderr.on('data', (d) => (stderr += d));
-    child.stdin.on('error', () => {}); // the hook may close stdin first
-    if (opts.stdin !== undefined) child.stdin.write(opts.stdin);
-    if (!opts.keepStdinOpen) child.stdin.end();
-    child.on('exit', (code) => {
-      child.stdin.destroy();
-      resolve({ code, ms: performance.now() - started, stdout, stderr });
-    });
-  });
-}
-
-const errorLog = () => {
-  const file = join(home, '.agentbuddy/hook-errors.log');
-  return existsSync(file) ? readFileSync(file, 'utf8').trim().split('\n') : [];
-};
-
-const listen = (server: Server) =>
-  new Promise<number>((resolve) => server.listen(0, '127.0.0.1', () => resolve((server.address() as AddressInfo).port)));
-
-async function freePort(): Promise<number> {
-  const server = createServer();
-  const port = await listen(server);
-  await new Promise((r) => server.close(r));
-  return port;
-}
-
-interface Received {
-  headers: IncomingHttpHeaders;
-  body: string;
-}
-
-/** Fake relay. `answer: false` accepts the request and never replies. */
-async function fakeRelay(answer: boolean | number) {
-  const received: Received[] = [];
-  const server = createServer((req, res) => {
-    let body = '';
-    req.on('data', (d) => (body += d));
-    req.on('end', () => {
-      received.push({ headers: req.headers, body });
-      if (answer !== false) res.writeHead(answer === true ? 204 : answer).end();
-    });
-  });
-  const port = await listen(server);
-  const close = () => {
-    server.closeAllConnections();
-    return new Promise((r) => server.close(r));
-  };
-  return { port, received, close };
-}
-
-beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), 'agentbuddy-hook-'));
-  mkdirSync(join(home, '.agentbuddy'));
-  writeFileSync(join(home, '.agentbuddy/token'), `${TOKEN}\n`);
-});
-
-afterEach(() => rmSync(home, { recursive: true, force: true }));
-
-function expectQuietExit(r: RunResult, maxMs = 1000) {
-  expect(r.code).toBe(0);
-  expect(r.stdout).toBe('');
-  expect(r.stderr).toBe('');
-  expect(r.ms).toBeLessThan(maxMs);
-}
+useTempHome();
 
 describe('agentbuddy-hook', () => {
   it('POSTs the normalized event with the token, and logs nothing on success', async () => {
@@ -220,7 +121,7 @@ describe('agentbuddy-hook', () => {
 
   it('logs a missing token, an unknown agent, a missing Codex payload and oversized stdin', async () => {
     const port = await freePort();
-    rmSync(join(home, '.agentbuddy/token'));
+    rmSync(join(homeDir(), '.agentbuddy/token'));
     expectQuietExit(await run(['kiro'], { stdin: fixture('kiro-stop'), port }));
     expectQuietExit(await run(['cursor'], { stdin: '{}', port }));
     expectQuietExit(await run([], { port }));
@@ -239,7 +140,7 @@ describe('agentbuddy-hook', () => {
     const port = await freePort();
     await run(['claude'], { stdin: fixture('claude-stop'), port });
     await run(['kiro'], { stdin: fixture('kiro-pre-task-exec'), port });
-    const log = readFileSync(join(home, '.agentbuddy/hook-errors.log'), 'utf8');
+    const log = readFileSync(join(homeDir(), '.agentbuddy/hook-errors.log'), 'utf8');
     for (const line of log.trim().split('\n')) {
       expect(line).toMatch(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z (kiro|claude|codex|-) [a-z]+(_[A-Za-z0-9]+)*$/);
     }
@@ -247,7 +148,7 @@ describe('agentbuddy-hook', () => {
   });
 
   it('creates the home folder for the log when it does not exist', async () => {
-    rmSync(join(home, '.agentbuddy'), { recursive: true });
+    rmSync(join(homeDir(), '.agentbuddy'), { recursive: true });
     expectQuietExit(await run(['kiro'], { stdin: fixture('kiro-stop'), port: await freePort() }));
     expect(errorLog()).toEqual([expect.stringMatching(/ kiro no_token$/)]);
   });

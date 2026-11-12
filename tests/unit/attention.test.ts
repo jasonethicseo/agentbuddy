@@ -1,19 +1,18 @@
-// Inbox records, acknowledgements, the menu bar count and hidden sessions
-// (messenger-app Requirements 5.3, 10, 11.1, 11.2, 11.4, 13, 17.1).
+// Inbox records, acknowledgements and the menu bar count
+// (messenger-app Requirements 5.3, 10, 11.1, 11.2, 11.4, 13.2, 13.4, 17.1). Hidden marks: hidden.test.ts.
 import { describe, expect, it } from 'vitest';
 import type { BuddyView } from '../../src/core/buddies';
 import {
-  ackRecords, foldInbox, hide, isHidden, menuCount, pingRecord, refreshHidden, unackedSessions, validateInboxRecord,
+  ackRecords, foldInbox, hide, isHidden, menuCount, pingRecord, unackedSessions, validateInboxRecord,
 } from '../../src/core/attention';
 import type { InboxRecord } from '../../src/core/attention';
 import { detectPings } from '../../src/core/pings';
 import type { DisplayState } from '../../src/core/state';
-import { T0, buddyView, iso, key, sessionView } from '../fixtures/views';
+import { T0, buddyView, iso, key } from '../fixtures/views';
 
 const A = key('claude', 'e697…');
 const B = key('claude', '81fd…');
 const K = key('kiro', 'sess_ce19…');
-const HOUR = 3_600_000;
 
 const claude = (a: DisplayState, b: DisplayState): BuddyView[] => [
   buddyView('claude', '/Users/dev/demo', [{ key: A, state: a, title: 'fix login' }, { key: B, state: b }]),
@@ -183,24 +182,5 @@ describe('inbox file lines', () => {
     }
     const hostile = Object.defineProperty({}, 't', { get: () => { throw new Error('boom'); }, enumerable: true });
     expect(validateInboxRecord(hostile)).toBeNull();
-  });
-});
-
-describe('hidden sessions', () => {
-  const s = (last: number) => sessionView({ key: A, state: 'TURN_DONE', last });
-  const list = (last: number) => [buddyView('claude', '/Users/dev/demo', [{ key: A, state: 'TURN_DONE', last }])];
-
-  it('stay hidden until the session has a later event, then show again', () => {
-    const hidden = hide(new Map(), s(60), T0 + 61_000);
-    expect(isHidden(hidden, s(60))).toBe(true);
-    expect(refreshHidden(hidden, list(60), T0 + 120_000)).toBe(hidden);
-    expect(isHidden(hidden, s(61))).toBe(false);
-    expect(refreshHidden(hidden, list(61), T0 + 120_000).size).toBe(0);
-  });
-
-  it('drop a mark after 24 hours, but keep it while its session is missing from the list', () => {
-    const hidden = hide(new Map(), s(60), T0);
-    expect(refreshHidden(hidden, [], T0 + 23 * HOUR).has(A)).toBe(true);
-    expect(refreshHidden(hidden, [], T0 + 24 * HOUR + 1).has(A)).toBe(false);
   });
 });

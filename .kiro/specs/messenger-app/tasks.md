@@ -45,8 +45,9 @@ How to work through this list:
     - _Requirements: 5.3, 10.1–10.9, 11.1, 13.1–13.5_
   - [x] 4.3 Create `src/core/snapshot.ts` (types only)
 
-- [ ] 5. Checkpoint: core
+- [x] 5. Checkpoint: core
   - All tests pass. `src/core` imports nothing outside `src/core` and no `node:` modules (check with a grep). Every file stays under about 200 lines.
+  - Result (2026-11-12): 316 tests pass; `src/core` imports only `./` files, and uses no clock, timers, environment, file system, network or DOM (grep). Longest core file: `buddies.ts`, 187 lines. Test files that grew past 200 lines in this spec were split (`hook-helpers.ts`, `state-helpers.ts`, `session-end.test.ts`, `hidden.test.ts`, `inbox.prop.test.ts`). Three test files were already over 200 lines before this spec and are unchanged in size: `tests/fixtures/payloads.ts` (209), `tests/unit/relay.test.ts` (283), `tests/property/state.prop.test.ts` (291, one line more).
 
 - [ ] 6. `startRelay()` and shared UI file lookup
   - [ ] 6.1 Base folder parameter in `home.ts`; create `src/relay/start.ts` (`startRelay`, `PortInUseError`, `stop()`); reduce `main.ts` to the command wrapper with the same messages and exit codes
