@@ -252,3 +252,39 @@ describe('P14 a session stays in one buddy when its cwd changes', () => {
     expect(moved).toBeGreaterThan(200); // generator sanity: sessions really change cwd
   });
 });
+
+describe('P15 session end', () => {
+  // One session's events, then its end at a fixed time, with the earlier events arriving after the end.
+  const before = fc.array(eventArb({ agent: 'claude', sessions: ['e697…'], kinds: ['prompt', 'permission', 'stop', 'idle'], minutes: 20 }), {
+    maxLength: 80,
+    size: 'max',
+  });
+  const END_MS = BASE_MS + 20 * 60_000; // no earlier event is later than this
+  const end: BuddyEvent = { v: 1, agent: 'claude', session: 'e697…', kind: 'end', at: isoAt(END_MS), cwd: '/Users/dev/demo' };
+  const key = sessionKey('claude', 'e697…');
+
+  it('stays OFFLINE when earlier or same-time events of the session arrive after the end', () => {
+    fc.assert(
+      fc.property(before, fc.boolean(), fc.integer({ min: 0, max: 5 * 3_600_000 }), (events, sameTime, offset) => {
+        const late = sameTime ? [...events, { ...events[0] ?? end, kind: 'prompt' as const, at: end.at }] : events;
+        const list = applyAll([end, ...late]);
+        const s = list.get(key)!;
+        expect(s.state.state).toBe('ENDED');
+        expect(displayState(s.state, END_MS + offset)).toBe('OFFLINE');
+        expect(toViews(list, new Map(), END_MS + offset)[0]!.state).toBe('OFFLINE');
+      }),
+      { numRuns: 300 },
+    );
+  });
+
+  it('comes back with a later event of the same session', () => {
+    fc.assert(
+      fc.property(before, fc.constantFrom('prompt', 'permission', 'stop', 'idle') as fc.Arbitrary<'prompt' | 'permission' | 'stop' | 'idle'>, (events, kind) => {
+        const later: BuddyEvent = { ...end, kind, at: isoAt(END_MS + 60_000) };
+        const s = applyAll([end, ...events, later]).get(key)!;
+        expect(s.state.state).toBe(nextState('ENDED', kind));
+        expect(displayState(s.state, END_MS + 60_000)).not.toBe('OFFLINE');
+      }),
+    );
+  });
+});

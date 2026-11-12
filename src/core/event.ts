@@ -5,7 +5,7 @@ import { TEXT_LIMIT } from './config';
 import { codePointLength } from './text';
 
 export type AgentId = 'kiro' | 'claude' | 'codex';
-export type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop';
+export type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop' | 'end';
 
 export interface TaskInfo {
   name: string;
@@ -29,7 +29,7 @@ export interface BuddyEvent {
 }
 
 export const AGENTS: readonly AgentId[] = ['kiro', 'claude', 'codex'];
-export const KINDS: readonly EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'idle', 'stop'];
+export const KINDS: readonly EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'idle', 'stop', 'end'];
 
 /** Tie-break order for events of one buddy with the same `at` (events.md). */
 export const KIND_ORDER: Readonly<Record<EventKind, number>> = {
@@ -39,6 +39,8 @@ export const KIND_ORDER: Readonly<Record<EventKind, number>> = {
   task_done: 3,
   stop: 4,
   idle: 5,
+  // Last, so an event at the same `at` as a session end never revives the session.
+  end: 6,
 };
 
 const ISO_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/;

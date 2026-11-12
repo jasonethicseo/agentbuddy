@@ -11,9 +11,9 @@ function expectedEvent(f: Fixture) {
 }
 
 describe('events.md mapping table', () => {
-  it('covers all 12 rows', () => {
+  it('covers all 13 rows', () => {
     const rows = new Set([...FIXTURES, ...ANYTHING_ELSE].map((f) => f.row));
-    expect(rows.size).toBe(12);
+    expect(rows.size).toBe(13);
   });
 
   it.each(FIXTURES.map((f) => [f.row, f] as const))('%s', (_row, f) => {

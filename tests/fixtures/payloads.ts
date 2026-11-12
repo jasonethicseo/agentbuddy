@@ -127,13 +127,13 @@ export const FIXTURES: readonly Fixture[] = [
   },
   {
     id: 'claude-app-session-end',
-    row: 'Anything else or unparsable',
+    row: 'Claude SessionEnd',
     label: 'observed',
     verbatim: true,
     agent: 'claude',
     raw: String.raw`{"session_id":"aba1…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/aba1….jsonl","cwd":"/Users/dev/demo","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/aba1…/scratchpad","hook_event_name":"SessionEnd","reason":"other"}`,
-    expected: null,
-    note: 'Claude app SessionEnd, observed on 2026-11-12; not mapped, so dropped',
+    expected: { agent: 'claude', session: 'aba1…', kind: 'end', cwd: '/Users/dev/demo' },
+    note: 'Claude app SessionEnd, observed on 2026-11-12',
   },
   {
     id: 'claude-stop',

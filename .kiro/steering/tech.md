@@ -39,6 +39,7 @@ inclusion: always
   - state: removing sessions older than 24 hours leaves every remaining session's state and every remaining buddy's state unchanged.
   - state: a session's name is the same in any arrival order.
   - state: a session whose `cwd` changes mid-session stays in exactly one buddy (agent + its fixed folder), in any arrival order.
+  - state: after a session's `end`, its earlier or same-time events arriving late keep it `OFFLINE`; a later event of the same session brings it back.
   - state: `WAITING_APPROVAL` is only entered by `permission`; `TURN_DONE` only by `stop`.
   - state: a buddy stuck in `WAITING_APPROVAL` leaves it on the next `idle`, `prompt` or `stop`.
   - progress: `0 <= done <= total` for any `tasks.md` text.

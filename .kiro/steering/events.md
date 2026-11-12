@@ -85,7 +85,7 @@ Claude app `SessionEnd` (stdin):
 - The app sends extra fields (`transcript_path`, `scratchpad_dir`, `prompt_id`), and `permission_mode` was `auto`. The fields the mapping reads are the same, so app prompts normalize like CLI prompts (seen in the relay log). No mapping change.
 - In the app, the previous session's `SessionEnd` (`reason: "other"`) arrived 0.7 s before the next session's first prompt.
 - Claude app `Stop` arrives after every turn (04:13:42, 04:15:28, 04:17:01 UTC for one session). After the session ran `cd`, its `Stop` and later prompts carried the subfolder as `cwd`; with `cwd` in the session key this split the session into two buddies and its `Stop` looked missing from the first one. Fixed by keying sessions on agent + `session` only.
-- `SessionEnd` is not mapped; `agentbuddy-hook` drops it. Using it as "OFFLINE at once" is a later decision.
+- `SessionEnd` is mapped to `end` from 2026-11-12 (the session goes `OFFLINE` at once). Kiro CLI V3 also has a `SessionEnd` trigger, but no payload has been observed, so Kiro `SessionEnd` stays unmapped.
 - `CLAUDE_PROJECT_DIR` is set for hooks by both the app (`claude-desktop`, seen from 04:19 UTC) and the CLI (`cli`, seen at 04:28 UTC). It stays at the project root while `cwd` follows `cd` into a subfolder.
 - Claude Code CLI (2.1.322, run in a VS Code terminal: `CLAUDE_CODE_ENTRYPOINT=cli`, `TERM_PROGRAM=vscode`): `UserPromptSubmit` and `Stop` observed at 04:28 UTC. Prompts carry `scratchpad_dir`, `prompt_id`, `permission_mode`; `Stop` also carries `effort`, `stop_hook_active`, `background_tasks`, `session_crons`; app prompts after the first one carry `session_title`. None of these is read by the mapping.
 - Replaying all of today's Claude events through the fixed core gives one buddy per session folder: the app session (11 events, 2 different `cwd`) and the CLI session (2 events, 2 different `cwd`).
@@ -101,7 +101,7 @@ The hook command turns every raw payload into one shape, or drops it:
 
 ```ts
 type AgentId = 'kiro' | 'claude' | 'codex';
-type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop';
+type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop' | 'end';
 
 interface BuddyEvent {
   v: 1;
@@ -128,6 +128,7 @@ interface BuddyEvent {
 | Claude `Notification` + `idle_prompt` | `idle` |
 | Claude `Notification` + any other type | dropped |
 | Claude `Stop` | `stop`, text = `last_assistant_message` |
+| Claude `SessionEnd` (any `reason`) | `end` |
 | Codex `agent-turn-complete` | `stop`, text = `last-assistant-message`, firstInput = first `input-messages` item |
 | Codex internal title turn (trap 1) | dropped |
 | Anything else or unparsable | dropped, never thrown |
@@ -162,11 +163,13 @@ All Claude rows also set `projectDir` from the hook process's `CLAUDE_PROJECT_DI
 | `IDLE` | `idle`, or no event for 10 minutes while `TURN_DONE` |
 | `OFFLINE` | no event for 30 minutes in any state |
 | `STALE` | no event for 10 minutes while `WORKING` or `WAITING_APPROVAL` (shown as "?") |
+| `ENDED` | `end`; shown as `OFFLINE` at once, whatever the time |
 
 - `task_done` keeps the state and updates progress.
+- `end` (Claude `SessionEnd`) ends that session_id whatever the reason; `/clear` and `/resume` continue under another session_id. Earlier events of the session that arrive late do not bring it back, because `end` is later in event order (and last on `at` ties). A later event with the same session_id does bring it back, by the normal rules: Claude `--resume <id>` continues a session under its old session_id.
 - State is computed per session. Each session keeps its latest 50 events sorted by `at`, and its state is recomputed from the start of that list on every new event. A late event is inserted in its place, never ignored. The time rules (10 and 30 minutes) apply per session.
 - Each session also keeps, outside the 50-event list, its earliest event, earliest prompt with text, earliest `firstInput`, earliest task event and earliest `projectDir`, for its name and folder. Each session keeps its latest task event too.
 - Each buddy keeps its latest task event (`task_start` or `task_done`, from any of its sessions) outside the lists. It is replaced only by a task event that is later in the same order, so arrival order never changes it. The Kiro spec path comes from this event, so long chats and new task-run sessions keep progress.
-- Event order: `at`, then kind (`prompt`, `task_start`, `permission`, `task_done`, `stop`, `idle`), then `session`, then arrival order. Within one session only arrival order can break a full tie.
+- Event order: `at`, then kind (`prompt`, `task_start`, `permission`, `task_done`, `stop`, `idle`, `end`), then `session`, then arrival order. Within one session only arrival order can break a full tie.
 - Status text of a session comes from its latest event that carries text (`text`, or `task.name` for task events). Events without text keep the earlier text, so a Kiro `stop` keeps the preceding prompt's text.
 - Codex sessions only ever reach `TURN_DONE`, `IDLE`, `OFFLINE`. The UI says "Codex reports finished turns only".

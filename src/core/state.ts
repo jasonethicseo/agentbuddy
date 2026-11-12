@@ -9,7 +9,8 @@ import { earlier, isTaskEvent, sessionKey } from './history';
 import type { Stamped } from './history';
 import { truncate } from './text';
 
-export type CoreState = 'WORKING' | 'WAITING_APPROVAL' | 'TURN_DONE' | 'IDLE';
+/** `ENDED`: the agent reported the session closed (Claude `SessionEnd`); shown as `OFFLINE`. */
+export type CoreState = 'WORKING' | 'WAITING_APPROVAL' | 'TURN_DONE' | 'IDLE' | 'ENDED';
 export type DisplayState = CoreState | 'STALE' | 'OFFLINE';
 
 /** Earliest events of a session, kept outside its window, for its name, start time and folder. */
@@ -64,6 +65,8 @@ export function nextState(prev: CoreState | undefined, kind: EventKind): CoreSta
       return 'TURN_DONE';
     case 'idle':
       return 'IDLE';
+    case 'end':
+      return 'ENDED';
     case 'task_done':
       return prev ?? 'WORKING';
   }
@@ -127,6 +130,7 @@ export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): 
 
 /** State shown at time `nowMs`, after the 10- and 30-minute rules. */
 export function displayState(s: SessionState, nowMs: number): DisplayState {
+  if (s.state === 'ENDED') return 'OFFLINE';
   const age = Math.max(0, nowMs - s.lastAtMs);
   if (age >= OFFLINE_AFTER_MS) return 'OFFLINE';
   if (age >= IDLE_AFTER_MS) {

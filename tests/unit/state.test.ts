@@ -146,6 +146,24 @@ describe('session names', () => {
   });
 });
 
+describe('session end', () => {
+  it('turns the observed Claude SessionEnd into end, and the session OFFLINE at once', () => {
+    const fixture = FIXTURES.find((f) => f.id === 'claude-app-session-end')!;
+    const end = normalize('claude', fixture.raw, at(5))!;
+    expect(end).toMatchObject({ agent: 'claude', kind: 'end', session: 'aba1…' });
+    const prompt = ev('prompt', 0, { agent: 'claude', session: 'aba1…', text: 'hello' });
+    const v = view(run([prompt, end]), T0 + 5 * MIN, 'claude');
+    expect([v.state, v.sessions[0]!.state, v.statusText]).toEqual(['OFFLINE', 'OFFLINE', 'hello']);
+  });
+
+  it('keeps the buddy as urgent as its other sessions', () => {
+    const c = (session: string, kind: EventKind, m: number) => ev(kind, m, { agent: 'claude', session });
+    const v = view(run([c('aba1…', 'prompt', 0), c('aba1…', 'end', 1), c('81fd…', 'permission', 2)]), T0 + 3 * MIN, 'claude');
+    expect(v.state).toBe('WAITING_APPROVAL');
+    expect(v.sessions.map((s) => s.state)).toEqual(['WAITING_APPROVAL', 'OFFLINE']);
+  });
+});
+
 describe('time-based states', () => {
   const one = (kind: EventKind) => run([ev(kind, 0)]).values().next().value!.state;
 

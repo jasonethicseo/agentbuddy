@@ -5,7 +5,7 @@ import { KIND_ORDER } from '../../src/core/event';
 import { sessionKey } from '../../src/core/history';
 
 export const BASE_MS = Date.parse('2026-11-12T00:00:00.000Z');
-export const KINDS: EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'idle', 'stop'];
+export const KINDS: EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'idle', 'stop', 'end'];
 export const CWDS = ['/Users/dev/demo', '/Users/dev/demo/research/live', '/Users/dev/app'];
 /** Claude `CLAUDE_PROJECT_DIR` per session, as Claude Code keeps it fixed for a session. */
 export const PROJECT_OF: Readonly<Record<string, string>> = { 'sess_aa…': '/Users/dev/demo', 'sess_bb…': '/Users/dev/app', 'e697…': '/Users/dev/demo' };

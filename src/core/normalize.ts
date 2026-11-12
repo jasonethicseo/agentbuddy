@@ -85,6 +85,9 @@ export const normalizeClaude: Normalizer = (p, at) => {
       return null;
     case 'Stop':
       return makeEvent('claude', session, cwd, 'stop', at, { text: shortText(p, 'last_assistant_message') });
+    case 'SessionEnd':
+      // Any reason ends this session_id; /clear and /resume continue under another one.
+      return makeEvent('claude', session, cwd, 'end', at);
     default:
       return null;
   }

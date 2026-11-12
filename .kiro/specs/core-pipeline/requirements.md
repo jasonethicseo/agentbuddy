@@ -47,7 +47,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 **User story:** As a developer of AgentBuddy, I want one validated event shape, so that the hook, relay and UI agree on what an event is.
 
 ### Acceptance criteria
-1. THE core SHALL define `BuddyEvent` exactly as in events.md: `v: 1`, `agent` in {`kiro`, `claude`, `codex`}, `session` (non-empty string), `kind` in {`prompt`, `task_start`, `task_done`, `permission`, `idle`, `stop`}, `at` (ISO 8601 time string), `cwd` (non-empty string), optional `text`, optional `task` = { `name`, `specPath`, optional `success` boolean }, optional `firstInput`.
+1. THE core SHALL define `BuddyEvent` exactly as in events.md: `v: 1`, `agent` in {`kiro`, `claude`, `codex`}, `session` (non-empty string), `kind` in {`prompt`, `task_start`, `task_done`, `permission`, `idle`, `stop`, `end`}, `at` (ISO 8601 time string), `cwd` (non-empty string), optional `text`, optional `task` = { `name`, `specPath`, optional `success` boolean }, optional `firstInput`.
 2. THE core SHALL provide a validation function that takes any value and returns either a valid `BuddyEvent` or `null`, and never throws.
 3. WHEN `text`, `task.name` or `firstInput` is longer than 120 code points, THE validation function SHALL reject the value.
 4. WHEN `at` does not parse as a time, THE validation function SHALL reject the value.
@@ -79,7 +79,8 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 4. WHEN `hook_event_name` = `Notification` and `notification_type` is any other value or missing, THE Claude normalizer SHALL return `null`.
 5. WHEN `hook_event_name` = `Stop`, THE Claude normalizer SHALL return kind `stop` with `text` = truncated `last_assistant_message`, whatever the value of `stop_hook_active`. (UNVERIFIED: only `false` was observed.)
 6. THE Claude normalizer SHALL set `session` from `session_id` and `cwd` from `cwd`.
-7. WHEN `hook_event_name` is any other value (for example `PreToolUse`, `SessionStart`, `SessionEnd`), THE Claude normalizer SHALL return `null`. (UNVERIFIED.)
+7. WHEN `hook_event_name` is any other value (for example `PreToolUse`, `SessionStart`), THE Claude normalizer SHALL return `null`. (UNVERIFIED.)
+8. WHEN `hook_event_name` = `SessionEnd`, THE Claude normalizer SHALL return kind `end`, whatever the `reason` (observed: `other`).
 
 ## Requirement 4: Codex normalization
 
@@ -161,6 +162,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 9. THE core SHALL set a session's status text from the latest event in its window that carries text: `text`, or `task.name` for task events. Events without text keep the earlier status text, so a Kiro `stop` keeps the preceding prompt's text.
 10. FOR Kiro buddies, THE core SHALL set the buddy's spec path from the buddy's latest task event (Requirement 8.6), so long chats and new task-run sessions keep the spec path.
 11. THE session fold SHALL be a pure function of the session's window and its kept earliest events (Requirement 23.1).
+12. WHEN the fold of a session reaches an `end` event, THE core SHALL set the session state to `ENDED`. Events after it in event order apply by the rules above, so a later event of the same session brings it back; earlier or same-time events never do, because `end` sorts last on `at` ties.
 
 ## Requirement 10: Time-based states
 
@@ -175,6 +177,8 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 6. WHEN the last event time is later than `now`, THE function SHALL treat the age as zero.
 7. THE relay SHALL re-evaluate displayed states at least every 30 seconds and send changes to the UI.
 8. FOR Codex sessions, the reachable displayed states SHALL be only `TURN_DONE`, `IDLE` and `OFFLINE`.
+9. WHEN a session is `ENDED`, THE function SHALL return `OFFLINE`, whatever the time.
+10. FOR any session whose events include an `end`, every event of that session with an `at` no later than the `end` SHALL leave its displayed state `OFFLINE`, in any arrival order.
 
 ## Requirement 11: Progress from tasks.md
 
@@ -305,7 +309,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
    - observed, verbatim: Kiro `UserPromptSubmit`, `PreTaskExec`, `PostTaskExec`, `Stop`; Claude `UserPromptSubmit`, `Notification` `permission_prompt`, `Stop`; Codex `agent-turn-complete`; Codex title turn.
    - observed: Claude `Notification` `idle_prompt`, built from the Claude `Notification` example with the observed `message` and `notification_type` values.
    - derived: Claude `Notification` with another type, and "anything else" inputs (unparsable text, unknown event names).
-3. THE unit tests SHALL include one test per row of the events.md mapping table (12 rows), and one test that the observed Codex `agent-turn-complete` fixture names its session from `firstInput`.
+3. THE unit tests SHALL include one test per row of the events.md mapping table (13 rows), and one test that the observed Codex `agent-turn-complete` fixture names its session from `firstInput`.
 4. THE property tests SHALL cover every property under "Testing expectations" in tech.md.
 5. THE fixtures and tests SHALL contain no real home paths, user names, session IDs or tokens. Sample `tasks.md` texts in tests SHALL be written for this project, not copied from other projects.
 
@@ -347,7 +351,8 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 | Kiro hook events other than the four | not recorded | dropped |
 | Claude `Stop` with `stop_hook_active: true` | only `false` observed | normalized like any `Stop` |
 | Claude `Notification` types other than the two | not recorded | dropped (events.md rule) |
-| Claude `PreToolUse`, `SessionStart`, `SessionEnd`, others | not recorded | dropped |
+| Claude `PreToolUse`, `SessionStart`, others | not recorded | dropped |
+| Kiro `SessionEnd` (CLI V3) | not observed | dropped |
 | Codex `notify` types other than `agent-turn-complete` | not recorded | dropped |
 | Session end ("logging off") for any agent | not recorded | `OFFLINE` only by the 30-minute rule |
 | `tasks.md` markers `- [-]`, `- [~]`, `- [X]`, `*` | not in samples | counted by the general rule in Requirement 11 |
