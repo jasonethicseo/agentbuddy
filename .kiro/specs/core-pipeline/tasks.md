@@ -14,16 +14,16 @@ How to work through this list:
   - First commit includes `.kiro/steering/` and this spec.
   - _Requirements: 12.7, 21.5_
 
-- [ ] 2. Core event and text
-  - [ ] 2.1 Create `src/core/config.ts` with the constants and `parsePort`
+- [x] 2. Core event and text
+  - [x] 2.1 Create `src/core/config.ts` with the constants and `parsePort`
     - _Requirements: 13.2, 13.3, 15.1, 15.6_
-  - [ ] 2.2 Create `src/core/event.ts`: types, `KIND_ORDER`, `validateEvent`
+  - [x] 2.2 Create `src/core/event.ts`: types, `KIND_ORDER`, `validateEvent`
     - _Requirements: 1.1–1.6_
-  - [ ] 2.3 Create `src/core/text.ts`: `truncate`, `codePointLength`, `AGENT_NAMES`, `folderName`, `displayName`, `shortId`
+  - [x] 2.3 Create `src/core/text.ts`: `truncate`, `codePointLength`, `AGENT_NAMES`, `folderName`, `displayName`, `shortId`
     - _Requirements: 6.1–6.4, 7.3_
-  - [ ] 2.4 Write property test P3 (truncation) in `tests/property/text.prop.test.ts`
+  - [x] 2.4 Write property test P3 (truncation) in `tests/property/text.prop.test.ts`
     - _Requirements: 6.1–6.4_
-  - [ ] 2.5 Write unit tests for `validateEvent`, `parsePort` and `displayName`
+  - [x] 2.5 Write unit tests for `validateEvent`, `parsePort` and `displayName`
     - _Requirements: 1.3–1.6, 7.3_
 
 - [ ] 3. Normalization and fixtures
