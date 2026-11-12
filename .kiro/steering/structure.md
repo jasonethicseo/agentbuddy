@@ -52,5 +52,6 @@ inclusion: always
 - Time is always passed in as a parameter to core functions.
 - Keep each file under about 200 lines; split when it grows.
 - Never add `/.kiro` or any of its subfolders to `.gitignore` (submission requirement).
-- Never commit real home paths, user names, session IDs or tokens. Fixtures and demo events use `/Users/dev/...` and shortened IDs.
+- Never commit real home paths, user names or tokens anywhere.
+- Test fixtures and demo data never contain real session IDs; they use `/Users/dev/...` and shortened IDs. Kiro's own files under `.kiro/` (for example `tasks.meta.json`) may keep Kiro's internal session and execution IDs.
 - This is a new project. Do not copy code from other repositories (including the builder's earlier projects). Third-party libraries are listed in README.

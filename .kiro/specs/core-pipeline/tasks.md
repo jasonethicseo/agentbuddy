@@ -149,5 +149,5 @@ How to work through this list:
 - [ ] 17. README and final checkpoint
   - README: what the pipeline does, `npm run build` / `npm run relay`, `npm link`, the hook command per agent (with `|| true`), `AGENTBUDDY_PORT`, buddies and sessions, the third-party libraries, and the known limits from the design.
   - All tests pass and `npm run build` succeeds.
-  - Grep the repository for `/Users/` paths other than `/Users/dev/`, real session IDs and token-like strings. `.gitignore` does not list `.kiro`.
+  - Grep the repository for `/Users/` paths other than `/Users/dev/`, user names and token-like strings, and the fixtures and demo data for real session IDs. `.gitignore` does not list `.kiro`.
   - _Requirements: 21.5_
