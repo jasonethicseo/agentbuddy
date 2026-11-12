@@ -135,6 +135,8 @@ interface BuddyEvent {
   task?: { name: string; specPath: string; success?: boolean };
   firstInput?: string;  // Codex stop only: first `input-messages` item, at most 120 code points
   projectDir?: string;  // Claude only: CLAUDE_PROJECT_DIR from the hook's environment
+  bundleId?: string;    // every agent: __CFBundleIdentifier from the hook's environment, reverse-domain form only
+  termProgram?: string; // every agent: TERM_PROGRAM from the hook's environment
 }
 ```
 
@@ -155,6 +157,28 @@ interface BuddyEvent {
 | Anything else or unparsable | dropped, never thrown |
 
 All Claude rows also set `projectDir` from the hook process's `CLAUDE_PROJECT_DIR` environment variable when it is set (Claude Code sets it for hooks: the project root where the session started).
+
+All rows of every agent also set `bundleId` from the hook process's `__CFBundleIdentifier` and `termProgram` from its `TERM_PROGRAM`, each only when the variable is set and well-formed. A malformed value is left out and the event is kept. Well-formed:
+- `bundleId`: two or more labels joined by `.`; each label starts with an ASCII letter or digit, followed by ASCII letters, digits or `-`; at most 255 characters.
+- `termProgram`: starts with an ASCII letter or digit, followed by up to 63 ASCII letters, digits, `.`, `_`, `+` or `-`.
+
+Added on 2026-11-12 for the messenger-app spec, so the app can bring forward the app an agent runs in. The hook sends these fields once that spec is implemented. The variables come from the environment the agent passes to its hook process, not from the payload.
+
+Launcher values seen so far:
+
+| Agent / launcher | `__CFBundleIdentifier` | `TERM_PROGRAM` | Source |
+|---|---|---|---|
+| Claude app (`claude-desktop`) hook | `com.anthropic.claudefordesktop` | not recorded | probe, 2026-11-12 (see "Observed after connecting") |
+| Claude Code CLI hook, in a VS Code terminal | `com.microsoft.VSCode` | `vscode` | probe, 2026-11-12. The bundle ID is from the builder's reading of the probe file, which was deleted afterwards; `vscode` is recorded above. |
+| Kiro IDE agent command shell (not a hook process) | `dev.kiro.desktop` | `kiro` (`TERM_PROGRAM_VERSION=1.4.154`) | the Kiro agent's own shell, Kiro IDE 1.4.154, 2026-11-12 |
+| Kiro IDE chat hook (`Stop`, `UserPromptSubmit`) | `dev.kiro.desktop` | unset | temporary launcher probe hooks, Kiro IDE 1.4.154, 2026-11-12 (05:50 and 06:42 UTC, one call each); removed afterwards |
+| Kiro IDE task-run hook (`PreTaskExec`, `PostTaskExec`) | unverified | unverified | |
+| Shell in a VS Code terminal (not a hook process) | `com.microsoft.VSCode` | `vscode` | the builder's own shell check, 2026-11-12 |
+| Shell in Terminal (not a hook process) | `com.apple.Terminal` | `Apple_Terminal` | the builder's own shell check, 2026-11-12 |
+| Kiro CLI hook | unverified | unverified | |
+| Codex CLI, Codex in the ChatGPT app | unverified (no `notify` call observed yet) | unverified | |
+| Shell inside a private `tmux` server started from the Kiro agent's shell (not a hook process) | `dev.kiro.desktop` (inherited from the shell that started the server) | `tmux` | tmux 3.5a, 2026-11-12 |
+| Inside `screen` | unverified | unverified | |
 
 ## Known traps (observed)
 1. **Codex title turns.** For each user prompt, Codex also runs a hidden turn that writes a short title. It fires `agent-turn-complete` with a different `thread-id`. Its last `input-messages` item starts with `Generate a concise, single-line task title`, and its `last-assistant-message` is JSON like `{"title":"…"}`. Drop the event if **either** signal matches.
