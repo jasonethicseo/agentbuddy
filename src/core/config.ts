@@ -13,6 +13,8 @@ export const WINDOW_SIZE = 50;
 export const SESSION_TITLE_LIMIT = 40;
 /** The status text excerpt after a status phrase is cut to this many code points. */
 export const STATUS_TEXT_LIMIT = 40;
+/** Longest session key, buddy name, title or folder accepted from the app's files and windows, in characters. */
+export const KEY_MAX = 1024;
 
 /** Sessions silent for longer than this are removed; restore reads the same span. */
 export const SESSION_TTL_MS = 24 * 3_600_000;

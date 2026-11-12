@@ -38,12 +38,12 @@ How to work through this list:
   - [x] 3.5 Steering: events.md "State rules" and "Buddies and sessions" (`ENDED` shown as `logged off`, urgency `OFFLINE` = `ENDED`, hidden by default) and the matching tech.md property line
     - _Requirements: C5, C6, C9_
 
-- [ ] 4. Pings and acknowledgements in the core
-  - [ ] 4.1 Create `src/core/pings.ts` (`detectPings`); unit tests (baseline, the same list twice, `TURN_DONE` → `WORKING` → `TURN_DONE`, a new Codex session first seen in `TURN_DONE`, several pings in one list); P17, P18
+- [x] 4. Pings and acknowledgements in the core
+  - [x] 4.1 Create `src/core/pings.ts` (`detectPings`); unit tests (baseline, the same list twice, `TURN_DONE` → `WORKING` → `TURN_DONE`, a new Codex session first seen in `TURN_DONE`, several pings in one list); P17, P18
     - _Requirements: 8.1–8.3_
-  - [ ] 4.2 Create `src/core/attention.ts`: inbox records and their validation, `foldInbox`, `ackRecords`, `unackedSessions`, `menuCount`, hidden marks; unit tests (each way of acknowledging, `Mark all read`, a new turn, a baseline `TURN_DONE`, a hidden `WAITING_APPROVAL`); P19, P20, P23, and the inbox half of P25
+  - [x] 4.2 Create `src/core/attention.ts`: inbox records and their validation, `foldInbox`, `ackRecords`, `unackedSessions`, `menuCount`, hidden marks; unit tests (each way of acknowledging, `Mark all read`, a new turn, a baseline `TURN_DONE`, a hidden `WAITING_APPROVAL`); P19, P20, P23, and the inbox half of P25
     - _Requirements: 5.3, 10.1–10.9, 11.1, 13.1–13.5_
-  - [ ] 4.3 Create `src/core/snapshot.ts` (types only)
+  - [x] 4.3 Create `src/core/snapshot.ts` (types only)
 
 - [ ] 5. Checkpoint: core
   - All tests pass. `src/core` imports nothing outside `src/core` and no `node:` modules (check with a grep). Every file stays under about 200 lines.
