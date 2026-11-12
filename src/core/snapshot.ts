@@ -19,6 +19,9 @@ export interface PublicSettings {
   closedGroups: string[];
 }
 
+/** The five on/off settings a window may change. */
+export type SettingKey = Exclude<keyof PublicSettings, 'closedGroups'>;
+
 export interface AppSnapshot {
   mode: RelayMode;
   port: number;

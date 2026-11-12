@@ -58,7 +58,7 @@ How to work through this list:
   - [x] 6.4 Steering: structure.md lists `src/relay/start.ts` and `static.ts`
 
 - [ ] 7. App main process: plain modules
-  - [ ] 7.1 `src/app/config.ts`, `ipc.ts` (channels and validators), `window-options.ts`, `popup-layout.ts`, `icon.ts`; unit tests for the validators and the window flags; P22
+  - [x] 7.1 `src/app/config.ts`, `ipc.ts` (channels and validators), `window-options.ts`, `popup-layout.ts`, `icon.ts`; unit tests for the validators and the window flags; P22
     - _Requirements: 5.8, 9.6, 15.1–15.3_
   - [ ] 7.2 `sse.ts` (parser and `parseViews`); unit tests (chunk splits, comments, the 4 MB cap, malformed views dropped, a core-pipeline relay's list accepted)
     - _Requirements: 4.5_
