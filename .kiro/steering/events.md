@@ -69,6 +69,30 @@ Codex internal title turn `agent-turn-complete` (last argv, see trap 1):
 {"type":"agent-turn-complete","thread-id":"01a1…","turn-id":"01a1…","cwd":"/Users/dev/demo","client":"codex-tui","input-messages":["Generate a concise, single-line task title of at most 36 characters and under five words where possible. Start with an imperative verb. ...\n\nUser prompt:\nrun ls"],"last-assistant-message":"{\"title\":\"Run ls\"}"}
 ```
 
+## Observed after connecting (normal use, 2026-11-12)
+Connected on 2026-11-12: Claude Code through `~/.claude/settings.json` hooks (`UserPromptSubmit`, `Notification`, `Stop`, plus a raw-payload probe on those and on `SessionEnd`), Codex through `notify` → `codex-notify.sh`, and a probe on Kiro CLI `SessionEnd`. Versions: Claude Code CLI 2.1.322, Claude app 5.1231.2, Codex CLI 0.165.0, Codex in the ChatGPT app 26.1103.60933, Kiro IDE 1.4.121, Kiro CLI 3.2.1.
+
+Claude app `UserPromptSubmit` (stdin; launched with `__CFBundleIdentifier=com.anthropic.claudefordesktop`, `CLAUDE_CODE_ENTRYPOINT=claude-desktop`):
+```json
+{"session_id":"81fd…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/81fd….jsonl","cwd":"/Users/dev/demo","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/81fd…/scratchpad","prompt_id":"c0de…","permission_mode":"auto","hook_event_name":"UserPromptSubmit","prompt":"hello"}
+```
+
+Claude app `SessionEnd` (stdin):
+```json
+{"session_id":"aba1…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/aba1….jsonl","cwd":"/Users/dev/demo","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/aba1…/scratchpad","hook_event_name":"SessionEnd","reason":"other"}
+```
+
+- The app sends extra fields (`transcript_path`, `scratchpad_dir`, `prompt_id`), and `permission_mode` was `auto`. The fields the mapping reads are the same, so app prompts normalize like CLI prompts (seen in the relay log). No mapping change.
+- In the app, the previous session's `SessionEnd` (`reason: "other"`) arrived 0.7 s before the next session's first prompt.
+- `SessionEnd` is not mapped; `agentbuddy-hook` drops it. Using it as "OFFLINE at once" is a later decision.
+
+Not yet observed after connecting:
+- Claude Code CLI: no event yet.
+- Claude app: `Stop` and `Notification` (`permission_prompt`, `idle_prompt`). The one app prompt so far (04:09:56 UTC) has no `Stop` after it yet.
+- Claude `SessionEnd` with a reason other than `other` (`clear`, `resume`, `logout`, `prompt_input_exit`).
+- Codex CLI and Codex in the ChatGPT app: no `notify` call yet.
+- Kiro CLI `SessionEnd`: no call yet.
+
 ## Normalized event
 The hook command turns every raw payload into one shape, or drops it:
 
