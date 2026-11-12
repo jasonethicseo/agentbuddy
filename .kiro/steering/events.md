@@ -84,11 +84,12 @@ Claude app `SessionEnd` (stdin):
 
 - The app sends extra fields (`transcript_path`, `scratchpad_dir`, `prompt_id`), and `permission_mode` was `auto`. The fields the mapping reads are the same, so app prompts normalize like CLI prompts (seen in the relay log). No mapping change.
 - In the app, the previous session's `SessionEnd` (`reason: "other"`) arrived 0.7 s before the next session's first prompt.
+- Claude app `Stop` arrives after every turn (04:13:42, 04:15:28, 04:17:01 UTC for one session). After the session ran `cd`, its `Stop` and later prompts carried the subfolder as `cwd`; with `cwd` in the session key this split the session into two buddies and its `Stop` looked missing from the first one. Fixed by keying sessions on agent + `session` only.
 - `SessionEnd` is not mapped; `agentbuddy-hook` drops it. Using it as "OFFLINE at once" is a later decision.
 
 Not yet observed after connecting:
 - Claude Code CLI: no event yet.
-- Claude app: `Stop` and `Notification` (`permission_prompt`, `idle_prompt`). The one app prompt so far (04:09:56 UTC) has no `Stop` after it yet.
+- Claude app: `Notification` (`permission_prompt`, `idle_prompt`). Whether the app sets `CLAUDE_PROJECT_DIR` for hooks (the probe records it from 2026-11-12 04:3x UTC on).
 - Claude `SessionEnd` with a reason other than `other` (`clear`, `resume`, `logout`, `prompt_input_exit`).
 - Codex CLI and Codex in the ChatGPT app: no `notify` call yet.
 - Kiro CLI `SessionEnd`: no call yet.
@@ -110,6 +111,7 @@ interface BuddyEvent {
   text?: string;        // prompt or last reply, at most 120 code points
   task?: { name: string; specPath: string; success?: boolean };
   firstInput?: string;  // Codex stop only: first `input-messages` item, at most 120 code points
+  projectDir?: string;  // Claude only: CLAUDE_PROJECT_DIR from the hook's environment
 }
 ```
 
@@ -128,6 +130,8 @@ interface BuddyEvent {
 | Codex internal title turn (trap 1) | dropped |
 | Anything else or unparsable | dropped, never thrown |
 
+All Claude rows also set `projectDir` from the hook process's `CLAUDE_PROJECT_DIR` environment variable when it is set (Claude Code sets it for hooks: the project root where the session started).
+
 ## Known traps (observed)
 1. **Codex title turns.** For each user prompt, Codex also runs a hidden turn that writes a short title. It fires `agent-turn-complete` with a different `thread-id`. Its last `input-messages` item starts with `Generate a concise, single-line task title`, and its `last-assistant-message` is JSON like `{"title":"…"}`. Drop the event if **either** signal matches.
 2. **Codex `input-messages` accumulates** within a thread. Use only the last item for the title-turn check. The first item is the thread's first user request (observed: `["delete hello.txt","make hello.txt again"]`), so it names the Codex session.
@@ -137,11 +141,12 @@ interface BuddyEvent {
 6. **Kiro starts a new `session_id` for every task run.** Each press of a task's run button produced a new session (`sess_dcdb…`, `sess_0bcd…`), separate from the chat session (`sess_ce19…`). Progress and the spec path therefore belong to the buddy, not to a session (see Buddies and sessions).
 
 ## Buddies and sessions
-- Two levels. A **buddy** is one **agent + `cwd`** pair. Under it, each **session** (agent + `cwd` + `session`) is one conversation window. Several sessions of the same agent in the same folder at once are normal; each keeps its own state.
+- Two levels. A **buddy** is one **agent + session folder** pair. Under it, each **session** (agent + `session`) is one conversation window. Several sessions of the same agent in the same folder at once are normal; each keeps its own state.
+- A **session's folder is fixed**: Claude's `CLAUDE_PROJECT_DIR` (sent as `projectDir`) when the session reports it, else the `cwd` of the session's earliest event. `cwd` is not part of the session key, so a session that runs `cd` stays in its buddy (observed: a Claude app session moved into a subfolder and its `Stop` events carried the subfolder as `cwd`).
 - Display name of a buddy: `<Agent> @ <folder name>`, where the folder name is the last segment of `cwd` (for example `Kiro @ demo`).
 - **Buddy state** is the most urgent displayed state among its sessions: `WAITING_APPROVAL` > `WORKING` > `STALE` > `TURN_DONE` > `IDLE` > `OFFLINE`. The buddy row shows the status text of that session (if tied, the one with the latest event).
 - **Session name**: the session's first prompt text; for Codex, its `firstInput`; else its first task name; else its start time (the earliest `at`). Names are cut to 40 code points.
-- Per buddy, not per session: the kept latest task event, the Kiro spec path, and progress.
+- Per buddy, not per session: the latest task event (the latest of its sessions' latest task events), the Kiro spec path, and progress.
 - `IDLE` and `OFFLINE` sessions are hidden by default when a buddy is expanded. The buddy itself stays.
 - A session whose last event is more than 24 hours old is removed from memory (the same 24 hours as the restore window). A buddy's latest task event is kept for 24 hours even when no session of that buddy is left.
 - Notifications (later spec) are per session.
@@ -158,7 +163,7 @@ interface BuddyEvent {
 
 - `task_done` keeps the state and updates progress.
 - State is computed per session. Each session keeps its latest 50 events sorted by `at`, and its state is recomputed from the start of that list on every new event. A late event is inserted in its place, never ignored. The time rules (10 and 30 minutes) apply per session.
-- Each session also keeps, outside the 50-event list, its earliest event, earliest prompt with text, earliest `firstInput` and earliest task event, for its name.
+- Each session also keeps, outside the 50-event list, its earliest event, earliest prompt with text, earliest `firstInput`, earliest task event and earliest `projectDir`, for its name and folder. Each session keeps its latest task event too.
 - Each buddy keeps its latest task event (`task_start` or `task_done`, from any of its sessions) outside the lists. It is replaced only by a task event that is later in the same order, so arrival order never changes it. The Kiro spec path comes from this event, so long chats and new task-run sessions keep progress.
 - Event order: `at`, then kind (`prompt`, `task_start`, `permission`, `task_done`, `stop`, `idle`), then `session`, then arrival order. Within one session only arrival order can break a full tie.
 - Status text of a session comes from its latest event that carries text (`text`, or `task.name` for task events). Events without text keep the earlier text, so a Kiro `stop` keeps the preceding prompt's text.

@@ -1,5 +1,6 @@
-// Buddies (agent + cwd) grouping sessions: buddy state by urgency, removal of
-// old sessions, and the views sent to the UI (events.md "Buddies and sessions").
+// Sessions (agent + session id) grouped into buddies (agent + session folder):
+// buddy state by urgency, removal of old sessions, and the views sent to the UI
+// (events.md "Buddies and sessions").
 // Pure: no file system, network, timers or clock. `now` is passed in.
 
 import { SESSION_TTL_MS } from './config';
@@ -16,20 +17,21 @@ export const URGENCY: readonly DisplayState[] = ['WAITING_APPROVAL', 'WORKING', 
 /** Kiro spec progress; null means unknown. */
 export type Progress = { done: number; total: number } | null;
 
+/** All tracked sessions, by session key. Buddies are derived from it, never stored. */
+export type SessionList = ReadonlyMap<string, SessionRecord>;
+
 export interface BuddyRecord {
   key: string;
   agent: AgentId;
+  /** The sessions' fixed folder. */
   cwd: string;
   name: string;
-  /** By session key. */
-  sessions: ReadonlyMap<string, SessionRecord>;
-  /** Latest task event of all sessions. */
+  sessions: readonly SessionRecord[];
+  /** Latest task event of all its sessions. */
   lastTask?: Stamped;
   /** Kiro only: spec path of `lastTask`. */
   specPath?: string;
 }
-
-export type BuddyList = ReadonlyMap<string, BuddyRecord>;
 
 export interface SessionView {
   key: string;
@@ -65,58 +67,60 @@ export function mostUrgent(states: readonly DisplayState[]): DisplayState {
   return states.reduce((best, s) => (rank(s) < rank(best) ? s : best), first);
 }
 
-function withTask(buddy: Omit<BuddyRecord, 'lastTask' | 'specPath'>, lastTask: Stamped | undefined): BuddyRecord {
-  const record: BuddyRecord = { ...buddy };
-  if (lastTask === undefined) return record;
-  record.lastTask = lastTask;
-  const specPath = lastTask.event.task?.specPath;
-  if (buddy.agent === 'kiro' && specPath !== undefined) record.specPath = specPath;
-  return record;
+/** Add one accepted event to its session. Only that session is recomputed. Returns a new map. */
+export function applyEvent(list: SessionList, event: BuddyEvent, seq: number): { list: SessionList; session: string; buddy: string } {
+  const key = sessionKey(event.agent, event.session);
+  const item = stamp(event, seq);
+  const old = list.get(key);
+  const window = insertEvent(old?.window ?? [], item);
+  const firsts = updateFirsts(old?.firsts, item);
+  const record: SessionRecord = { window, firsts, state: foldSession(window, firsts) };
+  const lastTask = laterTask(old?.lastTask, item);
+  if (lastTask !== undefined) record.lastTask = lastTask;
+  const next = new Map(list);
+  next.set(key, record);
+  return { list: next, session: key, buddy: buddyKey(event.agent, record.state.folder) };
 }
 
-/** Add one accepted event. Only the event's own session is recomputed. Returns new maps. */
-export function applyEvent(
-  list: BuddyList,
-  event: BuddyEvent,
-  seq: number,
-): { list: BuddyList; buddy: string; session: string } {
-  const bKey = buddyKey(event.agent, event.cwd);
-  const sKey = sessionKey(event.agent, event.cwd, event.session);
-  const item = stamp(event, seq);
-  const old = list.get(bKey);
-  const oldSession = old?.sessions.get(sKey);
-
-  const window = insertEvent(oldSession?.window ?? [], item);
-  const firsts = updateFirsts(oldSession?.firsts, item);
-  const sessions = new Map(old?.sessions);
-  sessions.set(sKey, { window, firsts, state: foldSession(window, firsts) });
-
-  const base = { key: bKey, agent: event.agent, cwd: event.cwd, name: displayName(event.agent, event.cwd), sessions };
-  const next = new Map(list);
-  next.set(bKey, withTask(base, laterTask(old?.lastTask, item)));
-  return { list: next, buddy: bKey, session: sKey };
+/** Group sessions by agent + fixed folder. Each session is in exactly one buddy. */
+export function groupBuddies(list: SessionList): Map<string, BuddyRecord> {
+  const buddies = new Map<string, BuddyRecord>();
+  for (const s of list.values()) {
+    const { agent, folder } = s.state;
+    const key = buddyKey(agent, folder);
+    const b = buddies.get(key) ?? { key, agent, cwd: folder, name: displayName(agent, folder), sessions: [] };
+    const lastTask = s.lastTask ? laterTask(b.lastTask, s.lastTask) : b.lastTask;
+    const next: BuddyRecord = { key, agent, cwd: folder, name: b.name, sessions: [...b.sessions, s] };
+    if (lastTask !== undefined) {
+      next.lastTask = lastTask;
+      const specPath = lastTask.event.task?.specPath;
+      if (agent === 'kiro' && specPath !== undefined) next.specPath = specPath;
+    }
+    buddies.set(key, next);
+  }
+  return buddies;
 }
 
 /**
- * Remove sessions silent for more than 24 hours, and a buddy's latest task
- * event once it is older than that. A buddy goes only when it has neither.
- * Returns `list` itself when nothing changes.
+ * Remove sessions silent for more than 24 hours, and drop a session's latest
+ * task event once it is older than that. Returns `list` itself when nothing changes.
  */
-export function pruneList(list: BuddyList, nowMs: number): BuddyList {
+export function pruneList(list: SessionList, nowMs: number): SessionList {
   const alive = (atMs: number) => nowMs - atMs <= SESSION_TTL_MS;
   let changed = false;
-  const next = new Map<string, BuddyRecord>();
-  for (const [key, b] of list) {
-    const sessions = new Map([...b.sessions].filter(([, s]) => alive(s.state.lastAtMs)));
-    const lastTask = b.lastTask && alive(b.lastTask.atMs) ? b.lastTask : undefined;
-    if (sessions.size === b.sessions.size && lastTask === b.lastTask) {
-      next.set(key, b);
+  const next = new Map<string, SessionRecord>();
+  for (const [key, s] of list) {
+    if (!alive(s.state.lastAtMs)) {
+      changed = true;
       continue;
     }
-    changed = true;
-    if (sessions.size === 0 && lastTask === undefined) continue;
-    const { lastTask: _t, specPath: _p, ...base } = b;
-    next.set(key, withTask({ ...base, sessions }, lastTask));
+    if (s.lastTask && !alive(s.lastTask.atMs)) {
+      const { lastTask: _t, ...rest } = s;
+      next.set(key, rest);
+      changed = true;
+      continue;
+    }
+    next.set(key, s);
   }
   return changed ? next : list;
 }
@@ -125,9 +129,9 @@ function compareSessions(a: SessionView & { ms: number }, b: SessionView & { ms:
   return rank(a.state) - rank(b.state) || b.ms - a.ms || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 }
 
-/** Buddy view at `nowMs`, or null when the buddy has no sessions left. */
-export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): BuddyView | null {
-  const sessions = [...b.sessions.values()]
+/** Buddy view at `nowMs`. A buddy from `groupBuddies` always has at least one session. */
+export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): BuddyView {
+  const sessions = b.sessions
     .map(({ state: s }) => {
       const view: SessionView & { ms: number } = {
         key: s.key, session: shortId(s.session), state: displayState(s, nowMs),
@@ -139,7 +143,7 @@ export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): 
     })
     .sort(compareSessions);
   const top = sessions[0];
-  if (top === undefined) return null;
+  if (top === undefined) throw new Error('toBuddyView: buddy without sessions');
 
   const latest = sessions.reduce((a, s) => (s.ms > a.ms ? s : a), top);
   const view: BuddyView = {
@@ -153,12 +157,9 @@ export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): 
   return view;
 }
 
-/** All buddies that have sessions, sorted by display name, then cwd. */
-export function toViews(list: BuddyList, progress: ReadonlyMap<string, Progress>, nowMs: number): BuddyView[] {
+/** All buddies, sorted by display name, then folder. */
+export function toViews(list: SessionList, progress: ReadonlyMap<string, Progress>, nowMs: number): BuddyView[] {
   const order = (a: BuddyView, b: BuddyView) =>
     a.name < b.name ? -1 : a.name > b.name ? 1 : a.cwd < b.cwd ? -1 : a.cwd > b.cwd ? 1 : 0;
-  return [...list.values()]
-    .map((b) => toBuddyView(b, progress.get(b.key) ?? null, nowMs))
-    .filter((v): v is BuddyView => v !== null)
-    .sort(order);
+  return [...groupBuddies(list).values()].map((b) => toBuddyView(b, progress.get(b.key) ?? null, nowMs)).sort(order);
 }

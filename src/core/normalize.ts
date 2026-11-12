@@ -139,14 +139,18 @@ const NORMALIZERS: Readonly<Record<AgentId, Normalizer>> = {
 /**
  * Parse `raw` as JSON and normalize it for `agent`. Returns a validated
  * BuddyEvent, or null for anything unparsable, unrecorded or malformed.
+ * `env.projectDir` is Claude's `CLAUDE_PROJECT_DIR`, passed in by the hook
+ * (core reads no environment); it is kept on Claude events only.
  */
-export function normalize(agent: AgentId, raw: string, at: string): BuddyEvent | null {
+export function normalize(agent: AgentId, raw: string, at: string, env: { projectDir?: string | undefined } = {}): BuddyEvent | null {
   try {
     if (!isAgentId(agent) || typeof raw !== 'string') return null;
     const payload: unknown = JSON.parse(raw);
     if (!isRecord(payload)) return null;
     const event = NORMALIZERS[agent](payload, at);
-    return event === null ? null : validateEvent(event);
+    if (event === null) return null;
+    if (agent === 'claude' && typeof env.projectDir === 'string' && env.projectDir !== '') event.projectDir = env.projectDir;
+    return validateEvent(event);
   } catch {
     return null;
   }

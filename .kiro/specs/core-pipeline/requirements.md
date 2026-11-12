@@ -24,8 +24,9 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 ## Glossary
 - **Raw payload**: the JSON an agent hands to the hook command (stdin for Kiro and Claude Code, last argv for Codex).
 - **BuddyEvent**: the normalized event defined in events.md ("Normalized event").
-- **Buddy**: one **agent + `cwd`** pair (events.md "Buddies and sessions"). It groups the sessions of that agent in that exact `cwd` string.
-- **Session**: one conversation window, keyed by **agent + `cwd` + `session`** (Kiro/Claude `session_id`, Codex `thread-id`). Each session has its own state.
+- **Buddy**: one **agent + session folder** pair (events.md "Buddies and sessions"). It groups the sessions of that agent whose fixed folder is that exact string.
+- **Session**: one conversation window, keyed by **agent + `session`** (Kiro/Claude `session_id`, Codex `thread-id`). Each session has its own state.
+- **Session folder**: fixed per session: Claude `projectDir` (`CLAUDE_PROJECT_DIR`) if the session reports it, else the `cwd` of its earliest event.
 - **Display name**: `<Agent> @ <folder name>`, with agent names `Kiro`, `Claude Code`, `Codex` and the folder name being the last segment of `cwd`.
 - **Session name**: the session's first prompt text; for Codex, its first `firstInput`; else its first task name; else its start time. Cut to 40 code points.
 - **Urgency order**: `WAITING_APPROVAL` > `WORKING` > `STALE` > `TURN_DONE` > `IDLE` > `OFFLINE`.
@@ -123,11 +124,13 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 **User story:** As a developer who runs several sessions of one agent in one folder, I want each session tracked on its own and grouped under one buddy per agent and folder, so that one session waiting for approval is never hidden by another that is working.
 
 ### Acceptance criteria
-1. THE core SHALL assign each event to the session identified by its `agent`, its exact `cwd` string and its `session`.
-2. THE core SHALL group sessions into the buddy identified by `agent` and exact `cwd`.
-3. THE core SHALL derive the buddy display name as `<Agent> @ <folder name>`, where the folder name is the last non-empty segment of `cwd`, or `cwd` itself when it has none (for example `/`).
+1. THE core SHALL assign each event to the session identified by its `agent` and its `session`; `cwd` SHALL NOT be part of the session key.
+2. THE core SHALL fix each session's folder: the `projectDir` of its earliest event that has one (Claude), else the `cwd` of its earliest event; and SHALL group sessions into the buddy identified by `agent` and that folder.
+3. THE core SHALL derive the buddy display name as `<Agent> @ <folder name>`, where the folder name is the last non-empty segment of the folder, or the folder itself when it has none (for example `/`).
 4. THE core SHALL never let an event of one session change the state, status text or name of another session.
 5. Kiro starts a new session for every task run (events.md trap 6), so a Kiro buddy collects many sessions; Requirement 23 keeps the list short.
+6. FOR any set of events, every session SHALL belong to exactly one buddy, the one of its fixed folder, in any arrival order, even when its `cwd` changes mid-session.
+7. WHEN the Claude hook process has `CLAUDE_PROJECT_DIR` set, THE hook command SHALL send it as `projectDir` on the event; THE validation function SHALL keep `projectDir` on Claude events only.
 
 ## Requirement 8: Event window and ordering
 
@@ -350,7 +353,7 @@ The contract is `.kiro/steering/events.md`. Every mapping here comes from that f
 | `tasks.md` markers `- [-]`, `- [~]`, `- [X]`, `*` | not in samples | counted by the general rule in Requirement 11 |
 
 ## Decisions (confirmed 2026-11-12)
-- Two levels: buddy = agent + `cwd`; session = agent + `cwd` + `session`. State, window and time rules are per session; the buddy shows its most urgent session. (Replaces the first decision, where sessions of one folder merged into one buddy.)
+- Two levels: buddy = agent + session folder; session = agent + `session`. A session's folder is fixed (Claude `CLAUDE_PROJECT_DIR`, else its first `cwd`), so `cd` never splits a session. State, window and time rules are per session; the buddy shows its most urgent session. (Replaces the first decision, where sessions of one folder merged into one buddy, and the second, where `cwd` was part of the session key.)
 - Per-session window of 50 events, recomputed from the start; late events are inserted, never ignored. Event order: `at`, kind, `session`, then arrival order.
 - Each buddy keeps its latest task event outside the windows; the Kiro spec path and progress belong to the buddy. Only a later task event (in event order) replaces it.
 - Session names: first prompt → Codex first input (`firstInput`) → first task → start time; cut to 40 code points. Codex stop events carry `firstInput`, the first `input-messages` item.

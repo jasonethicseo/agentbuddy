@@ -6,7 +6,9 @@ import { sessionKey } from '../../src/core/history';
 
 export const BASE_MS = Date.parse('2026-11-12T00:00:00.000Z');
 export const KINDS: EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'idle', 'stop'];
-export const CWDS = ['/Users/dev/demo', '/Users/dev/app'];
+export const CWDS = ['/Users/dev/demo', '/Users/dev/demo/research/live', '/Users/dev/app'];
+/** Claude `CLAUDE_PROJECT_DIR` per session, as Claude Code keeps it fixed for a session. */
+export const PROJECT_OF: Readonly<Record<string, string>> = { 'sess_aa…': '/Users/dev/demo', 'sess_bb…': '/Users/dev/app', 'e697…': '/Users/dev/demo' };
 export const SESSIONS = ['sess_aa…', 'sess_bb…', 'e697…'];
 
 export const isoAt = (ms: number) => new Date(ms).toISOString();
@@ -33,9 +35,10 @@ export function eventArb(shape: EventShape = {}): fc.Arbitrary<BuddyEvent> {
       text: fc.option(fc.constantFrom('hello', 'fix login', 'Done.', 'run ls', 'x'.repeat(60)), { nil: undefined }),
       input: fc.option(fc.constantFrom('delete hello.txt', 'make it again'), { nil: undefined }),
       spec: fc.constantFrom('a', 'b'),
+      withProject: fc.boolean(),
       success: fc.option(fc.boolean(), { nil: undefined }),
     })
-    .map(({ agent, cwd, session, kind, sec, text, input, spec, success }) => {
+    .map(({ agent, cwd, session, kind, sec, text, input, spec, success, withProject }) => {
       const e: BuddyEvent = { v: 1, agent, session, kind, at: isoAt(BASE_MS + sec * 1000), cwd };
       if (text !== undefined && kind !== 'task_start' && kind !== 'task_done') e.text = text;
       if (kind === 'task_start' || kind === 'task_done') {
@@ -43,6 +46,7 @@ export function eventArb(shape: EventShape = {}): fc.Arbitrary<BuddyEvent> {
         if (kind === 'task_done' && success !== undefined) e.task.success = success;
       }
       if (agent === 'codex' && kind === 'stop' && input !== undefined) e.firstInput = input;
+      if (agent === 'claude' && withProject && PROJECT_OF[session]) e.projectDir = PROJECT_OF[session];
       return e;
     });
 }
@@ -52,7 +56,7 @@ export function uniqueEventsArb(shape: EventShape = {}, maxLength = 150): fc.Arb
   return fc.uniqueArray(eventArb(shape), {
     maxLength,
     size: 'max',
-    selector: (e) => `${sessionKey(e.agent, e.cwd, e.session)}|${e.at}|${e.kind}`,
+    selector: (e) => `${sessionKey(e.agent, e.session)}|${e.at}|${e.kind}`,
   });
 }
 

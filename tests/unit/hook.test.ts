@@ -26,6 +26,7 @@ interface RunOptions {
   stdin?: string;
   keepStdinOpen?: boolean;
   port: number;
+  env?: Record<string, string>;
 }
 
 let home: string;
@@ -34,7 +35,7 @@ function run(args: string[], opts: RunOptions): Promise<RunResult> {
   return new Promise((resolve) => {
     const started = performance.now();
     const child = spawn(process.execPath, [HOOK, ...args], {
-      env: { PATH: process.env['PATH'] ?? '', HOME: home, AGENTBUDDY_PORT: String(opts.port) },
+      env: { PATH: process.env['PATH'] ?? '', HOME: home, AGENTBUDDY_PORT: String(opts.port), ...opts.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     let stdout = '';
@@ -120,6 +121,14 @@ describe('agentbuddy-hook', () => {
     expect(event).toMatchObject({ v: 1, agent: 'kiro', kind: 'prompt', session: 'sess_ce19…', text: 'hello' });
     expect(Date.parse(event.at)).toBeGreaterThan(Date.now() - 5000);
     expect(errorLog()).toEqual([]);
+  });
+
+  it('passes CLAUDE_PROJECT_DIR on as projectDir', async () => {
+    const relay = await fakeRelay(true);
+    const r = await run(['claude'], { stdin: fixture('claude-stop'), port: relay.port, env: { CLAUDE_PROJECT_DIR: '/Users/dev/demo' } });
+    await relay.close();
+    expectQuietExit(r);
+    expect(JSON.parse(relay.received[0]!.body)).toMatchObject({ agent: 'claude', kind: 'stop', projectDir: '/Users/dev/demo' });
   });
 
   it('reads the Codex payload from the last argv item without waiting for stdin', async () => {

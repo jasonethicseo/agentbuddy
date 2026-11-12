@@ -2,8 +2,8 @@
 
 import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { applyEvent, pruneList, toViews } from '../core/buddies';
-import type { BuddyList, BuddyRecord, BuddyView, Progress } from '../core/buddies';
+import { applyEvent, groupBuddies, pruneList, toViews } from '../core/buddies';
+import type { BuddyRecord, BuddyView, Progress, SessionList } from '../core/buddies';
 import type { BuddyEvent } from '../core/event';
 import { logFileName } from './home';
 
@@ -27,7 +27,7 @@ export interface StoreOptions {
 }
 
 export function createStore(opts: StoreOptions): Store {
-  let list: BuddyList = new Map();
+  let list: SessionList = new Map();
   const progress = new Map<string, Progress>();
   let seq = 0;
   let writing: Promise<void> = Promise.resolve();
@@ -45,7 +45,8 @@ export function createStore(opts: StoreOptions): Store {
     const next = pruneList(list, nowMs);
     if (next === list) return false;
     list = next;
-    for (const key of progress.keys()) if (!list.has(key)) progress.delete(key);
+    const buddies = groupBuddies(list);
+    for (const key of progress.keys()) if (!buddies.has(key)) progress.delete(key);
     return true;
   }
 
@@ -57,7 +58,7 @@ export function createStore(opts: StoreOptions): Store {
       append(event, nowMs);
       return { buddy: result.buddy, session: result.session };
     },
-    buddy: (key) => list.get(key),
+    buddy: (key) => groupBuddies(list).get(key),
     prune,
     setProgress(key, next) {
       const prev = progress.get(key) ?? null;

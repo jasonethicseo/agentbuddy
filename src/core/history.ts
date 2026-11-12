@@ -33,9 +33,9 @@ export function buddyKey(agent: AgentId, cwd: string): string {
   return JSON.stringify([agent, cwd]);
 }
 
-/** One session per agent + exact cwd + session id. */
-export function sessionKey(agent: AgentId, cwd: string, session: string): string {
-  return JSON.stringify([agent, cwd, session]);
+/** One session per agent + session id. Its folder is not part of the key, so a `cd` never splits it. */
+export function sessionKey(agent: AgentId, session: string): string {
+  return JSON.stringify([agent, session]);
 }
 
 /**

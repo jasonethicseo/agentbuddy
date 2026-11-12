@@ -144,7 +144,7 @@ describe('intake, log and stream', () => {
     const buddy = list.find((b) => b.name === 'Claude Code @ demo');
     expect(buddy?.state).toBe('WAITING_APPROVAL');
     expect(buddy?.sessions).toEqual([
-      expect.objectContaining({ key: JSON.stringify(['claude', '/Users/dev/demo', 'e697…']), state: 'WAITING_APPROVAL' }),
+      expect.objectContaining({ key: JSON.stringify(['claude', 'e697…']), state: 'WAITING_APPROVAL' }),
     ]);
 
     // A second session in the same folder shows up as its own session; the buddy stays WAITING_APPROVAL.

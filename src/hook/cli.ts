@@ -133,7 +133,7 @@ async function main(): Promise<void> {
   }
   if (raw === undefined) finish('no_payload');
 
-  const event = normalize(agentArg, raw, at);
+  const event = normalize(agentArg, raw, at, { projectDir: process.env['CLAUDE_PROJECT_DIR'] });
   if (event === null) finish(); // dropped by design, not an error (Requirement 12.6)
 
   let token: string;

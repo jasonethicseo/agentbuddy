@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { applyEvent, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
-import type { BuddyList, BuddyView } from '../../src/core/buddies';
+import { applyEvent, groupBuddies, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
+import type { BuddyRecord, BuddyView, SessionList } from '../../src/core/buddies';
 import type { AgentId, BuddyEvent, EventKind } from '../../src/core/event';
 import { buddyKey } from '../../src/core/history';
 import { normalize } from '../../src/core/normalize';
@@ -19,14 +19,18 @@ function ev(kind: EventKind, minute: number, extra: Partial<BuddyEvent> = {}): B
   return e;
 }
 
-function run(events: BuddyEvent[]): BuddyList {
-  let list: BuddyList = new Map();
+function run(events: BuddyEvent[]): SessionList {
+  let list: SessionList = new Map();
   events.forEach((e, i) => (list = applyEvent(list, e, i + 1).list));
   return list;
 }
 
-function view(list: BuddyList, nowMs = T0, agent: AgentId = 'kiro', cwd = '/Users/dev/demo'): BuddyView {
-  return toBuddyView(list.get(buddyKey(agent, cwd))!, null, nowMs)!;
+function buddy(list: SessionList, agent: AgentId = 'kiro', cwd = '/Users/dev/demo'): BuddyRecord {
+  return groupBuddies(list).get(buddyKey(agent, cwd))!;
+}
+
+function view(list: SessionList, nowMs = T0, agent: AgentId = 'kiro', cwd = '/Users/dev/demo'): BuddyView {
+  return toBuddyView(buddy(list, agent, cwd), null, nowMs);
 }
 
 describe('session state', () => {
@@ -70,7 +74,7 @@ describe('sessions under one buddy', () => {
       c('e9a4…', 'prompt', 4, 'and again'),
     ]);
     const v = view(list, T0 + 5 * MIN, 'claude');
-    expect(list.size).toBe(1);
+    expect(groupBuddies(list).size).toBe(1);
     expect(v.state).toBe('WAITING_APPROVAL');
     expect(v.statusText).toBe('delete hello.txt');
     expect(v.lastAt).toBe(at(4));
@@ -83,15 +87,40 @@ describe('sessions under one buddy', () => {
   it('keeps the spec path across sessions and after 60 chat events push the task out of every window', () => {
     const chat = Array.from({ length: 60 }, (_, i) => ev(i % 2 ? 'stop' : 'prompt', 10 + i, { text: `turn ${i}` }));
     const list = run([ev('task_start', 0, { session: 'sess_0bcd…' }), ev('task_done', 1, { session: 'sess_0bcd…' }), ...chat]);
-    const b = list.get(buddyKey('kiro', '/Users/dev/demo'))!;
-    expect(b.sessions.size).toBe(2);
-    expect(b.sessions.get(JSON.stringify(['kiro', '/Users/dev/demo', 'sess_ce19…']))!.window).toHaveLength(50);
+    const b = buddy(list);
+    expect(b.sessions).toHaveLength(2);
+    expect(list.get(JSON.stringify(['kiro', 'sess_ce19…']))!.window).toHaveLength(50);
     expect(b.specPath).toBe(SPEC);
   });
 
   it('splits folders and agents into separate buddies', () => {
-    const list = run([ev('prompt', 0), ev('prompt', 1, { cwd: '/Users/dev/app' }), ev('stop', 2, { agent: 'codex', session: '01a1…' })]);
-    expect(list.size).toBe(3);
+    const list = run([
+      ev('prompt', 0),
+      ev('prompt', 1, { session: 'sess_9f2a…', cwd: '/Users/dev/app' }),
+      ev('stop', 2, { agent: 'codex', session: '01a1…' }),
+    ]);
+    expect(groupBuddies(list).size).toBe(3);
+  });
+
+  it('keeps a Claude session in one buddy after it moves into a subfolder (observed 2026-11-12)', () => {
+    const c = (kind: EventKind, m: number, cwd: string, text?: string) =>
+      ev(kind, m, { agent: 'claude', session: '81fd…', cwd, ...(text ? { text } : {}) });
+    const sub = '/Users/dev/demo/research/agentic/live';
+    for (const order of [
+      [c('prompt', 0, '/Users/dev/demo', 'look at live'), c('stop', 4, sub, 'Done.'), c('prompt', 5, sub, 'and?')],
+      [c('stop', 4, sub, 'Done.'), c('prompt', 5, sub, 'and?'), c('prompt', 0, '/Users/dev/demo', 'look at live')],
+    ]) {
+      const buddies = [...groupBuddies(run(order)).values()];
+      expect(buddies.map((b) => [b.name, b.cwd, b.sessions.length])).toEqual([['Claude Code @ demo', '/Users/dev/demo', 1]]);
+    }
+  });
+
+  it('uses CLAUDE_PROJECT_DIR as the session folder when it is reported', () => {
+    const list = run([
+      ev('prompt', 0, { agent: 'claude', session: 'e697…', cwd: '/Users/dev/demo/src', text: 'hi' }),
+      ev('stop', 1, { agent: 'claude', session: 'e697…', cwd: '/Users/dev/demo/src', projectDir: '/Users/dev/demo' }),
+    ]);
+    expect([...groupBuddies(list).values()].map((b) => b.name)).toEqual(['Claude Code @ demo']);
   });
 });
 
@@ -118,7 +147,7 @@ describe('session names', () => {
 });
 
 describe('time-based states', () => {
-  const one = (kind: EventKind) => run([ev(kind, 0)]).get(buddyKey('kiro', '/Users/dev/demo'))!.sessions.values().next().value!.state;
+  const one = (kind: EventKind) => run([ev(kind, 0)]).values().next().value!.state;
 
   it.each([
     ['stop', 10 * MIN - 1, 'TURN_DONE'],
@@ -146,8 +175,8 @@ describe('removal after 24 hours', () => {
   it('removes only the old session, and the latest task event once it is older than 24 h', () => {
     const list = run([ev('task_start', 0, { session: 'sess_0bcd…' }), ev('prompt', 20 * 60, { text: 'still chatting' })]);
     const pruned = pruneList(list, T0 + 25 * HOUR);
-    const b = pruned.get(buddyKey('kiro', '/Users/dev/demo'))!;
-    expect([...b.sessions.values()].map((s) => s.state.session)).toEqual(['sess_ce19…']);
+    const b = buddy(pruned);
+    expect(b.sessions.map((s) => s.state.session)).toEqual(['sess_ce19…']);
     expect(b.lastTask).toBeUndefined();
     expect(b.specPath).toBeUndefined();
     expect(pruneList(list, T0 + 23 * HOUR)).toBe(list);
@@ -160,7 +189,7 @@ describe('views', () => {
       ev('task_start', 0),
       ev('prompt', 0, { agent: 'claude', session: 'e697abcdef', text: 'hi' }),
       ev('stop', 0, { agent: 'codex', session: '01a1…' }),
-      ev('prompt', 0, { cwd: '/Users/dev/app' }),
+      ev('prompt', 0, { session: 'sess_9f2a…', cwd: '/Users/dev/app' }),
     ]);
     const views = toViews(list, new Map([[buddyKey('kiro', '/Users/dev/demo'), { done: 3, total: 12 }]]), T0);
     expect(views.map((v) => v.name)).toEqual(['Claude Code @ demo', 'Codex @ demo', 'Kiro @ app', 'Kiro @ demo']);

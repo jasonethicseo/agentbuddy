@@ -1,9 +1,10 @@
 // Session state: the fold over a session's event window, time-based states,
-// and the session name (events.md "State rules", "Buddies and sessions").
+// the session name and the session folder (events.md "State rules",
+// "Buddies and sessions").
 // Pure: no file system, network, timers or clock. `now` is passed in.
 
 import { IDLE_AFTER_MS, OFFLINE_AFTER_MS, SESSION_TITLE_LIMIT } from './config';
-import type { BuddyEvent, EventKind } from './event';
+import type { AgentId, BuddyEvent, EventKind } from './event';
 import { earlier, isTaskEvent, sessionKey } from './history';
 import type { Stamped } from './history';
 import { truncate } from './text';
@@ -11,7 +12,7 @@ import { truncate } from './text';
 export type CoreState = 'WORKING' | 'WAITING_APPROVAL' | 'TURN_DONE' | 'IDLE';
 export type DisplayState = CoreState | 'STALE' | 'OFFLINE';
 
-/** Earliest events of a session, kept outside its window for its name and start time. */
+/** Earliest events of a session, kept outside its window, for its name, start time and folder. */
 export interface SessionFirsts {
   first: Stamped;
   /** Earliest `prompt` that has text. */
@@ -20,11 +21,16 @@ export interface SessionFirsts {
   input?: Stamped;
   /** Earliest task event. */
   task?: Stamped;
+  /** Earliest event with `projectDir` (Claude `CLAUDE_PROJECT_DIR`). */
+  project?: Stamped;
 }
 
 export interface SessionState {
   key: string;
+  agent: AgentId;
   session: string;
+  /** Fixed folder: `projectDir` if the session has one, else the `cwd` of its earliest event. */
+  folder: string;
   state: CoreState;
   statusText?: string;
   lastAt: string;
@@ -39,6 +45,8 @@ export interface SessionRecord {
   window: Stamped[];
   firsts: SessionFirsts;
   state: SessionState;
+  /** Latest task event of this session (running maximum). */
+  lastTask?: Stamped;
 }
 
 /**
@@ -68,6 +76,7 @@ export function updateFirsts(firsts: SessionFirsts | undefined, item: Stamped): 
   if (event.kind === 'prompt' && event.text !== undefined) next.prompt = earlier(firsts?.prompt, item);
   if (event.firstInput !== undefined) next.input = earlier(firsts?.input, item);
   if (isTaskEvent(item)) next.task = earlier(firsts?.task, item);
+  if (event.projectDir !== undefined) next.project = earlier(firsts?.project, item);
   return next;
 }
 
@@ -75,6 +84,11 @@ export function updateFirsts(firsts: SessionFirsts | undefined, item: Stamped): 
 export function sessionTitle(firsts: SessionFirsts): string | undefined {
   const text = firsts.prompt?.event.text ?? firsts.input?.event.firstInput ?? firsts.task?.event.task?.name;
   return text === undefined ? undefined : truncate(text, SESSION_TITLE_LIMIT);
+}
+
+/** The session's fixed folder: its project root if reported, else where it was first seen. */
+export function sessionFolder(firsts: SessionFirsts): string {
+  return firsts.project?.event.projectDir ?? firsts.first.event.cwd;
 }
 
 /** Text an event contributes to the status text, if any. */
@@ -94,10 +108,12 @@ export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): 
     statusText = eventText(event) ?? statusText;
   }
 
-  const { agent, cwd, session } = last.event;
+  const { agent, session } = last.event;
   const result: SessionState = {
-    key: sessionKey(agent, cwd, session),
+    key: sessionKey(agent, session),
+    agent,
     session,
+    folder: sessionFolder(firsts),
     state: state ?? 'WORKING',
     lastAt: last.event.at,
     lastAtMs: last.atMs,

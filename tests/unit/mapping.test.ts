@@ -80,6 +80,14 @@ describe('edge cases around the mapping', () => {
     expect(normalize('codex', codex({ 'input-messages': msgs, 'last-assistant-message': 'Done.' }), AT)).not.toBeNull();
   });
 
+  it('keeps projectDir from CLAUDE_PROJECT_DIR on Claude events only', () => {
+    const raw = FIXTURES.find((f) => f.id === 'claude-stop')!.raw;
+    expect(normalize('claude', raw, AT, { projectDir: '/Users/dev/demo' })?.projectDir).toBe('/Users/dev/demo');
+    expect(normalize('claude', raw, AT, { projectDir: '' })).not.toHaveProperty('projectDir');
+    expect(normalize('claude', raw, AT)).not.toHaveProperty('projectDir');
+    expect(normalize('kiro', FIXTURES[0]!.raw, AT, { projectDir: '/Users/dev/demo' })).not.toHaveProperty('projectDir');
+  });
+
   it('takes firstInput from the first Codex input message, truncated', () => {
     const first = (msgs: unknown) => normalize('codex', codex({ 'input-messages': msgs, 'last-assistant-message': 'Done.' }), AT);
     expect(first(['delete hello.txt', 'make hello.txt again'])?.firstInput).toBe('delete hello.txt');

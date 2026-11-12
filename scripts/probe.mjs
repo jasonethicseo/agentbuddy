@@ -24,7 +24,7 @@ process.on('unhandledRejection', () => process.exit(0));
 const MAX_FILE_BYTES = 5 * 1_048_576;
 const MAX_STDIN_BYTES = 1_048_576;
 const STDIN_WAIT_MS = 500;
-const LAUNCHER_KEYS = ['__CFBundleIdentifier', 'TERM_PROGRAM', 'CLAUDE_CODE_ENTRYPOINT', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE'];
+const LAUNCHER_KEYS = ['__CFBundleIdentifier', 'TERM_PROGRAM', 'CLAUDE_CODE_ENTRYPOINT', 'CLAUDE_PROJECT_DIR', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE'];
 
 const agent = /^[a-z]{1,16}$/.test(process.argv[2] ?? '') ? process.argv[2] : 'unknown';
 

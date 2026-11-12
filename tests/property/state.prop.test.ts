@@ -1,28 +1,29 @@
-// P4–P7, P9–P13 (Requirements 8, 9.7, 9.8, 9.10, 10.8, 22, 23).
+// P4–P7, P9–P14 (Requirements 7, 8, 9.7, 9.8, 9.10, 10.8, 22, 23).
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { SESSION_TTL_MS, WINDOW_SIZE } from '../../src/core/config';
-import { URGENCY, applyEvent, mostUrgent, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
-import type { BuddyList } from '../../src/core/buddies';
+import { URGENCY, applyEvent, groupBuddies, mostUrgent, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
+import type { SessionList } from '../../src/core/buddies';
 import type { BuddyEvent } from '../../src/core/event';
-import { buddyKey, compareStamped, insertEvent, stamp } from '../../src/core/history';
+import { buddyKey, compareStamped, insertEvent, sessionKey, stamp } from '../../src/core/history';
 import type { Stamped } from '../../src/core/history';
 import { displayState, nextState } from '../../src/core/state';
 import type { CoreState, DisplayState } from '../../src/core/state';
 import { BASE_MS, KINDS, eventArb, inEventOrder, isoAt, permutedArb } from './arbitraries';
 
-function applyAll(events: readonly BuddyEvent[], firstSeq = 1): BuddyList {
-  let list: BuddyList = new Map();
+function applyAll(events: readonly BuddyEvent[], firstSeq = 1): SessionList {
+  let list: SessionList = new Map();
   events.forEach((e, i) => (list = applyEvent(list, e, firstSeq + i).list));
   return list;
 }
 
 const NOW = BASE_MS + 40 * 60_000; // past the 10-minute rule for early events
-const sessionStates = (list: BuddyList) =>
-  new Map([...list.values()].flatMap((b) => [...b.sessions].map(([k, s]) => [k, s.state] as const)));
-const lastTasks = (list: BuddyList) => new Map([...list].map(([k, b]) => [k, [b.lastTask?.event, b.specPath]]));
-const snapshot = (list: BuddyList) => ({ sessions: sessionStates(list), tasks: lastTasks(list), views: toViews(list, new Map(), NOW) });
+const sessionStates = (list: SessionList) => new Map([...list].map(([k, s]) => [k, s.state] as const));
+const lastTasks = (list: SessionList) =>
+  new Map([...groupBuddies(list)].map(([k, b]) => [k, [b.lastTask?.event, b.specPath]] as const));
+const snapshot = (list: SessionList) => ({ sessions: sessionStates(list), tasks: lastTasks(list), views: toViews(list, new Map(), NOW) });
 const rank = (s: DisplayState) => URGENCY.indexOf(s);
+const isTask = (e: BuddyEvent) => e.kind === 'task_start' || e.kind === 'task_done';
 
 describe('P4 arrival order', () => {
   it('any permutation gives the same session states and buddy views as event order', () => {
@@ -35,7 +36,7 @@ describe('P4 arrival order', () => {
   });
 
   it('also holds when one session has far more than 50 events', () => {
-    const shape = { agent: 'kiro' as const, minutes: 600, cwds: ['/Users/dev/demo'], sessions: ['sess_aa…', 'sess_bb…'] };
+    const shape = { agent: 'kiro' as const, minutes: 600, sessions: ['sess_aa…', 'sess_bb…'] };
     fc.assert(
       fc.property(permutedArb(shape, 200), ([events, shuffled]) => {
         expect(snapshot(applyAll(shuffled))).toEqual(snapshot(applyAll(inEventOrder(events))));
@@ -75,12 +76,10 @@ describe('P5, P6 state entry and exit', () => {
   it('each session state equals nextState over its own window', () => {
     fc.assert(
       fc.property(fc.array(eventArb({ agent: 'claude' }), { maxLength: 80, size: 'max' }), (events) => {
-        for (const b of applyAll(events).values()) {
-          for (const s of b.sessions.values()) {
-            const expected = s.window.reduce<CoreState | undefined>((st, w) => nextState(st, w.event.kind), undefined);
-            expect(s.state.state).toBe(expected);
-            expect(new Set(s.window.map((w) => w.event.session)).size).toBe(1);
-          }
+        for (const s of applyAll(events).values()) {
+          const expected = s.window.reduce<CoreState | undefined>((st, w) => nextState(st, w.event.kind), undefined);
+          expect(s.state.state).toBe(expected);
+          expect(new Set(s.window.map((w) => w.event.session)).size).toBe(1);
         }
       }),
     );
@@ -92,7 +91,7 @@ describe('P7 window', () => {
     fc.assert(
       fc.property(fc.array(eventArb({ agent: 'kiro', minutes: 5 }), { maxLength: 200, size: 'max' }), (events) => {
         let window: Stamped[] = [];
-        const all = events.map((e, i) => stamp({ ...e, cwd: '/Users/dev/demo', session: 'sess_aa…' }, i + 1));
+        const all = events.map((e, i) => stamp({ ...e, session: 'sess_aa…' }, i + 1));
         for (const item of all) window = insertEvent(window, item);
         expect(window.length).toBeLessThanOrEqual(WINDOW_SIZE);
         expect(window).toEqual([...all].sort(compareStamped).slice(-WINDOW_SIZE));
@@ -108,10 +107,8 @@ describe('P9 Codex states', () => {
         fc.array(eventArb({ agent: 'codex', kinds: ['stop'] }), { minLength: 1, maxLength: 30 }),
         fc.integer({ min: -3_600_000, max: 4 * 3_600_000 }),
         (events, offset) => {
-          for (const b of applyAll(events).values()) {
-            for (const s of b.sessions.values()) {
-              expect(['TURN_DONE', 'IDLE', 'OFFLINE']).toContain(displayState(s.state, s.state.lastAtMs + offset));
-            }
+          for (const s of applyAll(events).values()) {
+            expect(['TURN_DONE', 'IDLE', 'OFFLINE']).toContain(displayState(s.state, s.state.lastAtMs + offset));
           }
         },
       ),
@@ -120,15 +117,14 @@ describe('P9 Codex states', () => {
 });
 
 describe('P10 latest task event per buddy', () => {
-  it('is the same in any arrival order and equals the maximum task event of all sessions', () => {
+  it('is the same in any arrival order and equals the maximum task event of its sessions', () => {
     fc.assert(
       fc.property(permutedArb({ agent: 'kiro' }), ([events, shuffled]) => {
         const list = applyAll(shuffled);
         expect(lastTasks(list)).toEqual(lastTasks(applyAll(inEventOrder(events))));
-        for (const [key, b] of list) {
-          const tasks = inEventOrder(events).filter(
-            (e) => buddyKey(e.agent, e.cwd) === key && (e.kind === 'task_start' || e.kind === 'task_done'),
-          );
+        for (const b of groupBuddies(list).values()) {
+          const keys = new Set(b.sessions.map((s) => s.state.key));
+          const tasks = inEventOrder(events).filter((e) => keys.has(sessionKey(e.agent, e.session)) && isTask(e));
           expect(b.lastTask?.event).toEqual(tasks.at(-1));
           expect(b.specPath).toBe(tasks.at(-1)?.task?.specPath);
         }
@@ -147,9 +143,10 @@ describe('P10 latest task event per buddy', () => {
           const shifted = later.map((e) => ({ ...e, at: isoAt(Date.parse(e.at) + 3_600_000) }));
           let list = before;
           shifted.forEach((e, i) => (list = applyEvent(list, e, 10_000 + i).list));
-          for (const [key, b] of before) {
-            expect(list.get(key)!.lastTask).toEqual(b.lastTask);
-            expect(list.get(key)!.specPath).toBe(b.specPath);
+          const after = groupBuddies(list);
+          for (const [key, b] of groupBuddies(before)) {
+            expect(after.get(key)!.lastTask).toEqual(b.lastTask);
+            expect(after.get(key)!.specPath).toBe(b.specPath);
           }
         },
       ),
@@ -194,24 +191,22 @@ describe('P12 removal of old sessions', () => {
       fc.property(spread, nowArb, (events, now) => {
         const list = applyAll(events);
         const pruned = pruneList(list, now);
-        for (const [key, b] of list) {
-          const after = pruned.get(key);
-          const before = toBuddyView(b, null, now)!;
-          if (after === undefined) {
-            for (const s of b.sessions.values()) expect(now - s.state.lastAtMs).toBeGreaterThan(SESSION_TTL_MS);
-            removed += b.sessions.size;
+        for (const [key, s] of list) {
+          const alive = now - s.state.lastAtMs <= SESSION_TTL_MS;
+          expect(pruned.has(key)).toBe(alive);
+          if (alive) expect(pruned.get(key)!.state).toEqual(s.state);
+          alive ? kept++ : removed++;
+        }
+        const after = groupBuddies(pruned);
+        for (const [key, b] of groupBuddies(list)) {
+          const a = after.get(key);
+          if (a === undefined) {
+            for (const s of b.sessions) expect(now - s.state.lastAtMs).toBeGreaterThan(SESSION_TTL_MS);
             continue;
           }
-          for (const [sk, s] of b.sessions) {
-            const alive = now - s.state.lastAtMs <= SESSION_TTL_MS;
-            expect(after.sessions.has(sk)).toBe(alive);
-            if (alive) expect(after.sessions.get(sk)!.state).toEqual(s.state);
-            alive ? kept++ : removed++;
-          }
-          const view = toBuddyView(after, null, now);
-          if (view === null) continue; // only a still-fresh latest task event is left
-          const keptKeys = new Set(after.sessions.keys());
-          expect(view).toEqual({ ...before, sessions: before.sessions.filter((s) => keptKeys.has(s.key)) });
+          const before = toBuddyView(b, null, now);
+          const keptKeys = new Set(a.sessions.map((s) => s.state.key));
+          expect(toBuddyView(a, null, now)).toEqual({ ...before, sessions: before.sessions.filter((s) => keptKeys.has(s.key)) });
         }
       }),
       { numRuns: 300 },
@@ -225,11 +220,35 @@ describe('P13 session names', () => {
   it('title and start time are the same in any arrival order', () => {
     fc.assert(
       fc.property(permutedArb({}, 120), ([events, shuffled]) => {
-        const names = (list: BuddyList) =>
-          [...sessionStates(list)].map(([k, s]) => [k, s.title, s.startedAt]).sort();
+        const names = (list: SessionList) => [...sessionStates(list)].map(([k, s]) => [k, s.title, s.startedAt]).sort();
         expect(names(applyAll(shuffled))).toEqual(names(applyAll(inEventOrder(events))));
       }),
       { numRuns: 300 },
     );
+  });
+});
+
+describe('P14 a session stays in one buddy when its cwd changes', () => {
+  it('every session is in exactly one buddy, the one of its fixed folder, in any arrival order', () => {
+    let moved = 0;
+    fc.assert(
+      fc.property(permutedArb({}, 120), ([events, shuffled]) => {
+        for (const order of [shuffled, inEventOrder(events)]) {
+          const list = applyAll(order);
+          const buddies = [...groupBuddies(list).values()];
+          for (const [key, s] of list) {
+            const owners = buddies.filter((b) => b.sessions.some((x) => x.state.key === key));
+            expect(owners).toHaveLength(1);
+            const mine = inEventOrder(events).filter((e) => sessionKey(e.agent, e.session) === key);
+            const folder = mine.find((e) => e.projectDir !== undefined)?.projectDir ?? mine[0]!.cwd;
+            expect(s.state.folder).toBe(folder);
+            expect(owners[0]!.key).toBe(buddyKey(s.state.agent, folder));
+            if (new Set(mine.map((e) => e.cwd)).size > 1) moved++;
+          }
+        }
+      }),
+      { numRuns: 300 },
+    );
+    expect(moved).toBeGreaterThan(200); // generator sanity: sessions really change cwd
   });
 });

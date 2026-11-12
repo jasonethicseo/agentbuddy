@@ -189,6 +189,8 @@ This table is the whole state machine. `WAITING_APPROVAL` and `TURN_DONE` each a
 
 ### `src/core/buddies.ts`: buddies, urgency, removal, views (Req 7, 9.10, 18.6, 22, 23.5–23.7)
 
+> Updated in task 15: the state is a `SessionList` (session key = agent + `session`), and buddies are derived from it by `groupBuddies` (agent + fixed session folder), never stored. Each `SessionRecord` keeps its own `lastTask`; a buddy's `lastTask` is the latest of its sessions'. `pruneList` works on sessions. The interfaces below are otherwise unchanged.
+
 ```ts
 export const URGENCY: readonly DisplayState[] =
   ['WAITING_APPROVAL', 'WORKING', 'STALE', 'TURN_DONE', 'IDLE', 'OFFLINE'];
@@ -405,6 +407,7 @@ Each property is a fast-check test in `tests/property/`.
 | P11 | For any buddy and any `now`, the buddy state is the displayed state of one of its sessions, and no session of that buddy is more urgent (`mostUrgent` and `toBuddyView`). | 22.1, 22.2 |
 | P12 | For any list and any `now`, after `pruneList(list, now)` every remaining session has the same displayed state and every remaining buddy view has the same state as before; every removed session was older than 24 h; a buddy is removed only when it has no sessions and no `lastTask` within 24 h. | 23.5–23.7 |
 | P13 | For any event list, every permutation gives each session the same `title` and `startedAt`. | 23.4 |
+| P14 | For any event list in which sessions change `cwd`, in any arrival order, every session belongs to exactly one buddy, `agent` + its fixed folder (`projectDir` of its earliest event with one, else its earliest `cwd`). | 7.1, 7.2, 7.6 |
 
 ## Error handling
 
@@ -430,7 +433,7 @@ Each property is a fast-check test in `tests/property/`.
   - `state.test.ts`: Kiro `prompt` → `stop` keeps the prompt text; a late `prompt` lands in its place; Claude `permission` then `idle` (trap 3); thresholds at exactly 10 and 30 minutes; two sessions in one folder where one waits for approval and the other works; session names (prompt, Codex `firstInput` from the observed fixture, task, start time); removal at exactly 24 h.
   - `hook.test.ts`: spawns the built `dist/hook.js` with `HOME` set to a temp folder. Cases: exits 0 with empty stdout and stderr when the relay is down, when a fake relay never answers, and when stdin is left open, each within 1000 ms wall time; Codex with stdin left open exits without waiting.
   - `relay.test.ts`: starts the server on a free port with a temp `HOME`. Covers the status codes in the server table, token and log file modes 600, restore from yesterday's and today's files with the 24-hour cut, and a `tasks.md` symlink pointing outside `cwd` → progress unknown.
-- **Property tests** (`tests/property/`): P1–P13. Generators build events with `/Users/dev/...` paths and short fake IDs only.
+- **Property tests** (`tests/property/`): P1–P14. Generators build events with `/Users/dev/...` paths and short fake IDs only.
 - `os.homedir()` follows `HOME` on macOS and Linux, so tests never touch the real `~/.agentbuddy`.
 
 ## Build and project setup

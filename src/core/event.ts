@@ -24,6 +24,8 @@ export interface BuddyEvent {
   task?: TaskInfo;
   /** Codex `stop` only: the thread's first user input (first `input-messages` item). */
   firstInput?: string;
+  /** Claude only: `CLAUDE_PROJECT_DIR` from the hook's environment, the project root where the session started. */
+  projectDir?: string;
 }
 
 export const AGENTS: readonly AgentId[] = ['kiro', 'claude', 'codex'];
@@ -83,11 +85,12 @@ function validateTask(value: unknown): TaskInfo | null {
 export function validateEvent(value: unknown): BuddyEvent | null {
   try {
     if (!isRecord(value)) return null;
-    const { v, agent, session, kind, at, cwd, text, task, firstInput } = value;
+    const { v, agent, session, kind, at, cwd, text, task, firstInput, projectDir } = value;
     if (v !== 1 || !isAgentId(agent) || !isKind(kind)) return null;
     if (!isNonEmptyString(session) || !isNonEmptyString(cwd) || !isIsoTime(at)) return null;
     if (text !== undefined && !isShortText(text)) return null;
     if (firstInput !== undefined && !isShortText(firstInput)) return null;
+    if (projectDir !== undefined && !isNonEmptyString(projectDir)) return null;
 
     const event: BuddyEvent = { v: 1, agent, session, kind, at, cwd };
     if (text !== undefined) event.text = text;
@@ -98,6 +101,7 @@ export function validateEvent(value: unknown): BuddyEvent | null {
       event.task = checked;
     }
     if (firstInput !== undefined && agent === 'codex' && kind === 'stop') event.firstInput = firstInput;
+    if (projectDir !== undefined && agent === 'claude') event.projectDir = projectDir;
     return event;
   } catch {
     return null;
