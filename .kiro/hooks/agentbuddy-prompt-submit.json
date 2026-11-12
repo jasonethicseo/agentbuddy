@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "AgentBuddy: prompt submitted",
+      "description": "Reports the prompt to the local AgentBuddy relay. '|| true' keeps the exit code 0 even if agentbuddy-hook is missing, so the prompt is never blocked.",
+      "trigger": "UserPromptSubmit",
+      "action": { "type": "command", "command": "agentbuddy-hook kiro || true" },
+      "timeout": 5
+    }
+  ]
+}

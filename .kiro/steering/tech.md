@@ -18,7 +18,7 @@ inclusion: always
 4. **Demo build**: the same UI fed by a replay of `demo/events.json` instead of the relay.
 
 ## Hard constraints
-- **Never block an agent.** The hook command must finish within 1 second and always exit 0. Codex input is read from argv only, never stdin. Kiro and Claude stdin is awaited for at most 500 ms. The POST times out after 300 ms. At 900 ms after process start the command exits 0 no matter what. Errors are swallowed and appended to `~/.agentbuddy/hook-errors.log`.
+- **Never block an agent.** The hook command must finish within 1 second and always exit 0. Codex input is read from argv only, never stdin. Kiro and Claude stdin is awaited for at most 500 ms. The POST times out after 300 ms. At 900 ms after process start the command exits 0 no matter what. Errors are swallowed and appended to `~/.agentbuddy/hook-errors.log`. Agent hook configs call it as `agentbuddy-hook <agent> || true` (Kiro hook commands run through a shell), so even a missing or dangling command exits 0.
 - **Port.** Default `4343`. Both the hook command and the relay read `AGENTBUDDY_PORT`; an invalid value falls back to `4343`.
 - **Local only.** The relay binds to `127.0.0.1`, never `0.0.0.0`. No outbound network calls anywhere at runtime.
 - **Block drive-by requests.** Any web page can send requests to localhost. The relay therefore requires a random token in an `X-AgentBuddy-Token` header on `POST /events`. The token is created on first run in `~/.agentbuddy/token` (file mode 600) and read by the hook command. Requests with a browser `Origin` header on `POST /events` are rejected.

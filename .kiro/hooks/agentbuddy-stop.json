@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "AgentBuddy: turn finished",
+      "description": "Reports the end of the turn to the local AgentBuddy relay. '|| true' keeps the exit code 0 (exit 1 on Stop would start another turn).",
+      "trigger": "Stop",
+      "action": { "type": "command", "command": "agentbuddy-hook kiro || true" },
+      "timeout": 5
+    }
+  ]
+}

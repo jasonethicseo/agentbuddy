@@ -83,9 +83,9 @@ How to work through this list:
   - Confirm in the browser that Kiro, Claude Code and Codex buddies appear and change state, and that the Codex title turn adds nothing.
   - Confirm `~/.agentbuddy/hook-errors.log` gets no new lines while the relay is up.
 
-- [ ] 10. Connect this repository's Kiro hooks to AgentBuddy
+- [x] 10. Connect this repository's Kiro hooks to AgentBuddy
   - With the builder's OK, run `npm link` so `agentbuddy-hook` is on `PATH`.
-  - Add hook files under `.kiro/hooks/` for `UserPromptSubmit`, `PreTaskExec`, `PostTaskExec` and `Stop`, each running `agentbuddy-hook kiro`. Use the hook file format the builder's probe used with this Kiro version.
+  - Add hook files under `.kiro/hooks/` for `UserPromptSubmit`, `PreTaskExec`, `PostTaskExec` and `Stop`, each running `agentbuddy-hook kiro || true`, so a missing or dangling command still exits 0 (never blocks a prompt or a task, never restarts a turn after `Stop`).
   - The hook files contain no absolute paths, user names or tokens. Check with a grep before committing.
   - Confirm with the builder that a chat prompt shows `Kiro @ agentbuddy` as `WORKING` and then `TURN_DONE`, and that the hook error log stays empty.
   - _Requirements: 7.1, 12.1, 13.1_

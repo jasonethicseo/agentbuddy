@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "AgentBuddy: spec task finished",
+      "description": "Reports the spec task result to the local AgentBuddy relay. '|| true' keeps the exit code 0.",
+      "trigger": "PostTaskExec",
+      "action": { "type": "command", "command": "agentbuddy-hook kiro || true" },
+      "timeout": 5
+    }
+  ]
+}
