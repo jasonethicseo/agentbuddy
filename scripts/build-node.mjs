@@ -3,7 +3,10 @@
 import { chmod } from 'node:fs/promises';
 import { build } from 'esbuild';
 
-const entries = [{ in: 'src/hook/cli.ts', out: 'dist/hook.js' }];
+const entries = [
+  { in: 'src/hook/cli.ts', out: 'dist/hook.js' },
+  { in: 'src/relay/main.ts', out: 'dist/relay.js' },
+];
 
 for (const entry of entries) {
   await build({

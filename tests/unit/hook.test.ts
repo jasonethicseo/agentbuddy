@@ -1,13 +1,13 @@
 // agentbuddy-hook end to end: spawns the built dist/hook.js with a temp HOME
 // (Requirements 12.1–12.6, 13.1–13.7, 14.1–14.3).
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { IncomingHttpHeaders, Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FIXTURES } from '../fixtures/payloads';
 
 const ROOT = join(import.meta.dirname, '../..');
@@ -89,10 +89,6 @@ async function fakeRelay(answer: boolean | number) {
   };
   return { port, received, close };
 }
-
-beforeAll(() => {
-  execFileSync(process.execPath, [join(ROOT, 'scripts/build-node.mjs')], { cwd: ROOT });
-});
 
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'agentbuddy-hook-'));

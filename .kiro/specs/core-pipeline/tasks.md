@@ -58,18 +58,18 @@ How to work through this list:
   - [x] 6.3 Write `tests/unit/hook.test.ts`: spawn `dist/hook.js` with a temp `HOME`; exit 0 with empty stdout and stderr within 1000 ms when the relay is down, when a fake relay never answers, and when stdin stays open; Codex never waits for stdin; the error log holds codes only
     - _Requirements: 12.3, 13.1–13.7_
 
-- [ ] 7. Relay: intake and stream
-  - [ ] 7.1 Create `src/relay/home.ts`: home folder (mode 700), token create or load (mode 600), daily log names
+- [x] 7. Relay: intake and stream
+  - [x] 7.1 Create `src/relay/home.ts`: home folder (mode 700), token create or load (mode 600), daily log names
     - _Requirements: 15.2, 16.2_
-  - [ ] 7.2 Create `src/relay/store.ts` with `accept`, `views` and ordered daily log appends (mode 600). Restore comes in task 14.
+  - [x] 7.2 Create `src/relay/store.ts` with `accept`, `views` and ordered daily log appends (mode 600). Restore comes in task 14.
     - _Requirements: 16.2–16.5_
-  - [ ] 7.3 Create `src/relay/stream.ts`: SSE, full list on connect and on change, heartbeat every 25 s
+  - [x] 7.3 Create `src/relay/stream.ts`: SSE, full list on connect and on change, heartbeat every 25 s
     - _Requirements: 18.1–18.4_
-  - [ ] 7.4 Create `src/relay/server.ts`: Host, Origin, token (constant-time), size and body checks in the design order; static UI files with the security headers; no CORS headers
+  - [x] 7.4 Create `src/relay/server.ts`: Host, Origin, token (constant-time), size and body checks in the design order; static UI files with the security headers; no CORS headers
     - _Requirements: 15.1, 15.3–15.8, 16.1, 18.5_
-  - [ ] 7.5 Create `src/relay/main.ts`: port, token, listen on `127.0.0.1`, `broadcastIfChanged`, 30-second tick, port-in-use message; add it to `build:node`
+  - [x] 7.5 Create `src/relay/main.ts`: port, token, listen on `127.0.0.1`, `broadcastIfChanged`, 30-second tick, port-in-use message; add it to `build:node`
     - _Requirements: 10.7, 15.1, 15.2_
-  - [ ] 7.6 Write `tests/unit/relay.test.ts` for the server status codes (403, 403, 401, 413, 400, 204), file modes, and one SSE message after an accepted event
+  - [x] 7.6 Write `tests/unit/relay.test.ts` for the server status codes (403, 403, 401, 413, 400, 204), file modes, and one SSE message after an accepted event
     - _Requirements: 15.3–15.6, 16.1–16.4, 18.2, 18.3_
 
 - [ ] 8. Minimal text-only UI
