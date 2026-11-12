@@ -62,7 +62,7 @@ How to work through this list:
     - _Requirements: 5.8, 9.6, 15.1–15.3_
   - [x] 7.2 `sse.ts` (parser and `parseViews`); unit tests (chunk splits, comments, the 4 MB cap, malformed views dropped, a core-pipeline relay's list accepted)
     - _Requirements: 4.5_
-  - [ ] 7.3 `jump.ts` (`planJump`, `runJump`); unit tests with a recording `exec` (running check first, not running, unknown ID, timeout, folder only under Req 12.7); P24
+  - [x] 7.3 `jump.ts` (`planJump`, `runJump`); unit tests with a recording `exec` (running check first, not running, unknown ID, timeout, folder only under Req 12.7); P24
     - _Requirements: 12.1–12.12_
   - [ ] 7.4 `settings.ts` and `inbox-file.ts`; unit tests (defaults, invalid files, mode 600, atomic save, bad lines skipped); the settings half of P25
     - _Requirements: 11.2, 11.4, 11.5, 14.2, 14.3_
