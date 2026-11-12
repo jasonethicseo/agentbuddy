@@ -132,7 +132,7 @@ How to work through this list:
   - [x] 14.5 Session end: confirm in the docs which agents have a session-end hook (Claude Code `SessionEnd`; Kiro `SessionEnd`, CLI V3 only). Connect the probe to them for observation only; `agentbuddy-hook` keeps dropping these events.
   - [ ] 14.6 Observe with the builder: one session each of Claude Code and Codex in the CLI and in the app, and a Kiro CLI session end. Record the sanitized raw payloads in events.md as observed, and mark what did not arrive. If app payloads differ from the CLI ones, ask before changing any mapping.
 
-- [ ] 15. Session identity and end: key without cwd, fixed session folder, Claude SessionEnd
+- [x] 15. Session identity and end: key without cwd, fixed session folder, Claude SessionEnd
   - [x] 15.1 Session key = agent + `session`. A session's folder is fixed: Claude `CLAUDE_PROJECT_DIR` (new optional `projectDir` field, read by the hook from its environment) if any event of the session has it, else the `cwd` of the session's earliest event. Buddy = agent + session folder.
   - [x] 15.2 Buddies are grouped from sessions, so a session never splits across buddies; the latest task event is kept per session and the buddy takes the latest of its sessions.
   - [x] 15.3 Property test P14: a session whose `cwd` changes mid-session stays in exactly one buddy, in any arrival order. Unit test for the observed case (prompt in the project root, `Stop` in a subfolder).
@@ -140,7 +140,7 @@ How to work through this list:
   - [x] 15.5 Map Claude `SessionEnd` (any `reason`) to a new kind `end`; it moves the session to `ENDED`, shown as `OFFLINE` at once. `end` sorts last on `at` ties. A later event of the same session brings it back (Claude `--resume` keeps the session_id).
   - [x] 15.6 Unit test with the observed fixture (`reason: "other"`); mapping table row 13; property test P15: after `end`, earlier or same-time events of that session arriving late keep it `OFFLINE`, and a later event brings it back.
   - [x] 15.7 Update events.md, requirements and design.
-  - [ ] 15.8 Claude settings: back up, show the diff that adds `agentbuddy-hook claude || true` (timeout 1) to `SessionEnd`, apply after approval.
+  - [x] 15.8 Claude settings: back up, show the diff that adds `agentbuddy-hook claude || true` (timeout 1) to `SessionEnd`, apply after approval.
 
 - [ ] 16. Kiro progress
   - [ ] 16.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11
