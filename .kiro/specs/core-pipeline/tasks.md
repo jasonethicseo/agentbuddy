@@ -132,11 +132,11 @@ How to work through this list:
   - [x] 14.5 Session end: confirm in the docs which agents have a session-end hook (Claude Code `SessionEnd`; Kiro `SessionEnd`, CLI V3 only). Connect the probe to them for observation only; `agentbuddy-hook` keeps dropping these events.
   - [ ] 14.6 Observe with the builder: one session each of Claude Code and Codex in the CLI and in the app, and a Kiro CLI session end. Record the sanitized raw payloads in events.md as observed, and mark what did not arrive. If app payloads differ from the CLI ones, ask before changing any mapping.
 
-- [ ] 15. Session identity: key without cwd, fixed session folder
+- [x] 15. Session identity: key without cwd, fixed session folder
   - [x] 15.1 Session key = agent + `session`. A session's folder is fixed: Claude `CLAUDE_PROJECT_DIR` (new optional `projectDir` field, read by the hook from its environment) if any event of the session has it, else the `cwd` of the session's earliest event. Buddy = agent + session folder.
   - [x] 15.2 Buddies are grouped from sessions, so a session never splits across buddies; the latest task event is kept per session and the buddy takes the latest of its sessions.
   - [x] 15.3 Property test P14: a session whose `cwd` changes mid-session stays in exactly one buddy, in any arrival order. Unit test for the observed case (prompt in the project root, `Stop` in a subfolder).
-  - [ ] 15.4 Update events.md, requirements and design; rebuild and restart the relay; confirm with one short Claude app prompt that one buddy remains and `Stop` arrives, and whether the app sets `CLAUDE_PROJECT_DIR` (probe).
+  - [x] 15.4 Update events.md, requirements and design; rebuild and restart the relay; confirm with one short Claude app prompt that one buddy remains and `Stop` arrives, and whether the app sets `CLAUDE_PROJECT_DIR` (probe).
 
 - [ ] 16. Kiro progress
   - [ ] 16.1 Create `src/core/progress.ts`: `parseProgress` and `isAllowedSpecPath`, following the rule confirmed in task 11

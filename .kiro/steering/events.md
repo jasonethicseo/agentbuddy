@@ -86,10 +86,12 @@ Claude app `SessionEnd` (stdin):
 - In the app, the previous session's `SessionEnd` (`reason: "other"`) arrived 0.7 s before the next session's first prompt.
 - Claude app `Stop` arrives after every turn (04:13:42, 04:15:28, 04:17:01 UTC for one session). After the session ran `cd`, its `Stop` and later prompts carried the subfolder as `cwd`; with `cwd` in the session key this split the session into two buddies and its `Stop` looked missing from the first one. Fixed by keying sessions on agent + `session` only.
 - `SessionEnd` is not mapped; `agentbuddy-hook` drops it. Using it as "OFFLINE at once" is a later decision.
+- `CLAUDE_PROJECT_DIR` is set for hooks by both the app (`claude-desktop`, seen from 04:19 UTC) and the CLI (`cli`, seen at 04:28 UTC). It stays at the project root while `cwd` follows `cd` into a subfolder.
+- Claude Code CLI (2.1.322, run in a VS Code terminal: `CLAUDE_CODE_ENTRYPOINT=cli`, `TERM_PROGRAM=vscode`): `UserPromptSubmit` and `Stop` observed at 04:28 UTC. Prompts carry `scratchpad_dir`, `prompt_id`, `permission_mode`; `Stop` also carries `effort`, `stop_hook_active`, `background_tasks`, `session_crons`; app prompts after the first one carry `session_title`. None of these is read by the mapping.
+- Replaying all of today's Claude events through the fixed core gives one buddy per session folder: the app session (11 events, 2 different `cwd`) and the CLI session (2 events, 2 different `cwd`).
 
 Not yet observed after connecting:
-- Claude Code CLI: no event yet.
-- Claude app: `Notification` (`permission_prompt`, `idle_prompt`). Whether the app sets `CLAUDE_PROJECT_DIR` for hooks (the probe records it from 2026-11-12 04:3x UTC on).
+- Claude app and CLI: `Notification` (`permission_prompt`, `idle_prompt`).
 - Claude `SessionEnd` with a reason other than `other` (`clear`, `resume`, `logout`, `prompt_input_exit`).
 - Codex CLI and Codex in the ChatGPT app: no `notify` call yet.
 - Kiro CLI `SessionEnd`: no call yet.
