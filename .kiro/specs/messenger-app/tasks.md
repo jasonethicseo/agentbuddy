@@ -66,7 +66,7 @@ How to work through this list:
     - _Requirements: 12.1–12.12_
   - [x] 7.4 `settings.ts` and `inbox-file.ts`; unit tests (defaults, invalid files, mode 600, atomic save, bad lines skipped); the settings half of P25
     - _Requirements: 11.2, 11.4, 11.5, 14.2, 14.3_
-  - [ ] 7.5 `relay-link.ts` with injected `start` and `connect`; unit tests (own, attached, no list within 5 s → `foreign`, drop → retry → own, stall)
+  - [x] 7.5 `relay-link.ts` with injected `start` and `connect`; unit tests (own, attached, no list within 5 s → `foreign`, drop → retry → own, stall)
     - _Requirements: 4.3–4.7, 4.9_
   - [ ] 7.6 `controller.ts` with ports; end-to-end unit tests on fake ports and a fake clock (pop-ups, ding calls, records, count, snapshots; the pop-up × acknowledges without jumping, `Later` acknowledges nothing; hide-text keeps text out of every port)
     - _Requirements: 7.4, 8.4, 8.5, 9.7, 10, 13, 14_
