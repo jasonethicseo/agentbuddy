@@ -17,7 +17,7 @@ npm install
 npm test
 ```
 
-`scripts/codex-notify.sh` and `scripts/probe.mjs` are the originals; Codex and Claude Code run installed copies in `~/.agentbuddy/bin/`. Check that the copies match with `cmp scripts/codex-notify.sh ~/.agentbuddy/bin/codex-notify.sh && cmp scripts/probe.mjs ~/.agentbuddy/bin/probe.mjs`.
+`scripts/codex-notify.sh` is the original; Codex runs an installed copy in `~/.agentbuddy/bin/`. Check that the copy matches with `cmp scripts/codex-notify.sh ~/.agentbuddy/bin/codex-notify.sh`. `scripts/probe.mjs` is an observation tool that records raw hook payloads (including full prompt text) to `~/.agentbuddy/probe/`; it is not connected by default.
 
 ## Third-party libraries
 

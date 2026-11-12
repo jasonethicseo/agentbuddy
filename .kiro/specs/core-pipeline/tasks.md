@@ -153,7 +153,7 @@ How to work through this list:
     - _Requirements: 19.2–19.4_
   - [x] 16.5 Confirm with the builder that `Kiro @ agentbuddy` shows this spec's `task n/m`, and that it moves when this task is marked done
 
-- [ ] 17. Checkpoint: watched work
+- [x] 17. Checkpoint: watched work
   - Summarize the probe records collected through normal use (sanitized) into events.md, then remove the probe connections (Claude settings probe groups, Codex `--probe`, the Kiro SessionEnd probe hook) with backup, diff and approval, and delete `~/.agentbuddy/probe/` since it holds full prompt text.
   - All tests pass. The buddy list showed this repository's Kiro sessions for tasks 12–16 with state and progress.
   - Note in the report any hook call that took longer than expected or left a line in the hook error log.
