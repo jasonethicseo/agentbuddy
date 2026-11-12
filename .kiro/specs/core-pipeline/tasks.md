@@ -78,7 +78,7 @@ How to work through this list:
   - [x] 8.2 Add `vite.config.ts` with output `dist/ui` and the dev proxy for `/stream` (`changeOrigin: true`)
     - _Requirements: 18.5_
 
-- [ ] 9. Checkpoint: first end-to-end run
+- [x] 9. Checkpoint: first end-to-end run
   - `npm run build`, start the relay, and pipe each observed fixture through `dist/hook.js` (stdin for Kiro and Claude, last argv for Codex).
   - Confirm in the browser that Kiro, Claude Code and Codex buddies appear and change state, and that the Codex title turn adds nothing.
   - Confirm `~/.agentbuddy/hook-errors.log` gets no new lines while the relay is up.
