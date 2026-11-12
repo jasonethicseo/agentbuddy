@@ -165,7 +165,7 @@ How to work through this list:
     - _Requirements: 17.1–17.5, 23.4_
   - [x] 18.3 Restart the relay during this task and confirm with the builder that `Kiro @ agentbuddy` comes back with its sessions, state and progress
 
-- [ ] 19. README and final checkpoint
+- [x] 19. README and final checkpoint
   - README: what the pipeline does, `npm run build` / `npm run relay`, `npm link`, the hook command per agent (with `|| true`), `AGENTBUDDY_PORT`, buddies and sessions, the third-party libraries, and the known limits from the design.
   - All tests pass and `npm run build` succeeds.
   - Grep the repository for `/Users/` paths other than `/Users/dev/`, user names and token-like strings, and the fixtures and demo data for real session IDs. `.gitignore` does not list `.kiro`.

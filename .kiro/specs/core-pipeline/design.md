@@ -450,10 +450,11 @@ Each property is a fast-check test in `tests/property/`.
 
 ## Known limits
 
-- `cwd` is compared as an exact string. Starting an agent in a subfolder makes a separate buddy.
-- Two projects with the same folder name share a display name. The UI also shows the full `cwd`.
+- A session's folder is fixed when it is first seen (Claude: `CLAUDE_PROJECT_DIR`). Starting an agent in a subfolder makes a separate buddy; moving into a subfolder later does not.
+- Two projects with the same folder name share a display name. The UI also shows the full folder.
 - After a relay restart, the latest task event is rebuilt from the last 24 hours of logs only. If the last task run is older than that, progress is unknown until the next task run.
-- Kiro never shows `WAITING_APPROVAL`. Codex shows only `TURN_DONE`, `IDLE` and `OFFLINE`.
-- A session cannot tell that its window was closed; it goes `OFFLINE` after 30 minutes and is removed after 24 hours.
+- Kiro never shows `WAITING_APPROVAL`, and its `Stop` carries no reply text, so a Kiro status shows the last prompt or task name. Codex shows only `TURN_DONE`, `IDLE` and `OFFLINE`.
+- Only Claude reports a session end (`SessionEnd`). Other sessions go `OFFLINE` after 30 minutes and are removed after 24 hours.
+- Not yet observed after connecting: Claude `Notification`, any Codex `notify` call (Codex in the ChatGPT app may not call it at all, see openai/codex#13019), Kiro CLI `SessionEnd`.
 - Old daily logs are never deleted in this spec.
 - Paths are handled with `/` separators. macOS and Linux only.
