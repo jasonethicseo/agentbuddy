@@ -213,8 +213,8 @@ export interface Ports {
 export function createController(init: { settings: Settings; records: InboxRecord[]; port: number }, ports: Ports): {
   onList(list: BuddyView[], baseline: boolean): void;
   onLink(mode: RelayMode, connection: Connection): void;
-  onClick(target: ClickTarget | { kind: 'popup' | 'notification'; session: string }): void;
-  onPopupClose(session: string): void;   // the pop-up's ×: acknowledge, no jump
+  onClick(target: ClickTarget | { kind: 'notification'; key: string }): void;
+  onPopup(session: string, action: 'go' | 'close' | 'later'): void;   // Go there: as a session click; ×: acknowledge, no jump; Later: nothing
   onAckAll(): void; onHide(session: string): void; onWindow(action: 'minimize' | 'close'): void;
   onSetting(key: SettingKey, value: boolean): void; onGroup(folder: string, open: boolean): void;
   onTick(): void;
@@ -222,7 +222,7 @@ export function createController(init: { settings: Settings; records: InboxRecor
 ```
 
 - `onList`: `pings = baseline ? [] : detectPings(prev, list)`; `prev = list`; `hidden = refreshHidden(...)`. For each ping: append a `ping` record (always, Req 8.4); if pop-ups are on, `showPopup`; if macOS notifications are on, `notify`. One `ding()` if there was any ping and sound is on (Req 8.5). Then count and state.
-- `onClick`: `buddy` acknowledges every session of that buddy and jumps to its first session (the one whose status line the row shows, Req 12.1, 10.3); every other kind acknowledges that one session and jumps to it. `onPopupClose` acknowledges the session and jumps nowhere (Req 9.5); `Later` never reaches the controller. Acknowledging appends `ackRecords` and calls `closePopups` (Req 9.8). The click acknowledges before the jump is planned, so a failed jump still acknowledges (Req 10.7).
+- `onClick`: `buddy` acknowledges every session of that buddy and jumps to its first session (the one whose status line the row shows, Req 12.1, 10.3); every other kind acknowledges that one session and jumps to it. `onPopup` with `go` works like a session click, with `close` (×) acknowledges and jumps nowhere, and with `later` does nothing (Req 9.5). Hide-text strips status text and titles from the snapshot sent to the main window, as well as from pop-ups and notifications; the inbox file keeps titles, like the daily log keeps text. (Updated in task 7.6: one `onPopup` instead of `onPopupClose`.) Acknowledging appends `ackRecords` and calls `closePopups` (Req 9.8). The click acknowledges before the jump is planned, so a failed jump still acknowledges (Req 10.7).
 - `onAckAll`: acknowledges every session with an unacknowledged entry of today, closes their pop-ups, and jumps nowhere (Req 10.2).
 - `onHide`: `hide(...)`, acknowledge, save settings.
 - `onWindow`: passes the title bar's minimize or close-to-menu-bar to `windowAction`. The pin button is the `alwaysOnTop` setting, so it goes through `onSetting`.
@@ -314,7 +314,7 @@ export function placePopups(count: number, area: Rect, size: Size, gap: number, 
 export function popupCapacity(area: Rect, size: Size, gap: number, margin: number): number;
 ```
 
-The manager keeps open pop-ups oldest first, each with its session (or `null` for a notice) and a close timer of `POPUP_MS`. `show`: if the stack is full, close the oldest (Req 9.6); create the panel at its slot; load `app://ui/popup.html`; on `did-finish-load`, send `popup:content`, then `showInactive()` and `setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })` (Req 9.2, 9.3). `showInactive` neither activates the app nor makes the panel key, and the `panel` type is non-activating (Electron docs, `type` option). When a pop-up closes, the rest are moved down with `setBounds`, which also takes no focus, so the newest is always on top. `popup:click` with `later` → close that pop-up only, so its entry stays unacknowledged; with `close` (×) → close it and call `controller.onPopupClose(session)`; with `go` (`Go there →` or the rest of the card) → close it and pass `{ kind: 'popup', session }` to the controller (Req 9.5). The rising motion is a CSS animation inside the window, so the window itself never moves while it appears.
+The manager keeps open pop-ups oldest first, each with its session (or `null` for a notice) and a close timer of `POPUP_MS`. `show`: if the stack is full, close the oldest (Req 9.6); create the panel at its slot; load `app://ui/popup.html`; on `did-finish-load`, send `popup:content`, then `showInactive()` and `setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })` (Req 9.2, 9.3). `showInactive` neither activates the app nor makes the panel key, and the `panel` type is non-activating (Electron docs, `type` option). When a pop-up closes, the rest are moved down with `setBounds`, which also takes no focus, so the newest is always on top. `popup:click` closes that pop-up and passes its action to `controller.onPopup(session, action)`: `later` leaves the entry unacknowledged, `close` (×) acknowledges, `go` (`Go there →` or the rest of the card) acknowledges and jumps (Req 9.5). The rising motion is a CSS animation inside the window, so the window itself never moves while it appears.
 
 Notices (Req 12.9) go to the main window while it is visible (`app:notice`, shown in the footer for 4 s with an `alert` dot, then the relay status comes back), and to a notice pop-up while it is hidden.
 

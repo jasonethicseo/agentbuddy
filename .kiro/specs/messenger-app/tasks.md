@@ -57,7 +57,7 @@ How to work through this list:
     - _Requirements: 3.3, 3.5, 17.1_
   - [x] 6.4 Steering: structure.md lists `src/relay/start.ts` and `static.ts`
 
-- [ ] 7. App main process: plain modules
+- [x] 7. App main process: plain modules
   - [x] 7.1 `src/app/config.ts`, `ipc.ts` (channels and validators), `window-options.ts`, `popup-layout.ts`, `icon.ts`; unit tests for the validators and the window flags; P22
     - _Requirements: 5.8, 9.6, 15.1–15.3_
   - [x] 7.2 `sse.ts` (parser and `parseViews`); unit tests (chunk splits, comments, the 4 MB cap, malformed views dropped, a core-pipeline relay's list accepted)
@@ -68,7 +68,7 @@ How to work through this list:
     - _Requirements: 11.2, 11.4, 11.5, 14.2, 14.3_
   - [x] 7.5 `relay-link.ts` with injected `start` and `connect`; unit tests (own, attached, no list within 5 s → `foreign`, drop → retry → own, stall)
     - _Requirements: 4.3–4.7, 4.9_
-  - [ ] 7.6 `controller.ts` with ports; end-to-end unit tests on fake ports and a fake clock (pop-ups, ding calls, records, count, snapshots; the pop-up × acknowledges without jumping, `Later` acknowledges nothing; hide-text keeps text out of every port)
+  - [x] 7.6 `controller.ts` with ports; end-to-end unit tests on fake ports and a fake clock (pop-ups, ding calls, records, count, snapshots; the pop-up × acknowledges without jumping, `Later` acknowledges nothing; hide-text keeps text out of every port that shows something: window snapshots, pop-ups, notifications)
     - _Requirements: 7.4, 8.4, 8.5, 9.7, 10, 13, 14_
 
 - [ ] 8. App main process: Electron
