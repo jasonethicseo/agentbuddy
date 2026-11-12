@@ -50,12 +50,12 @@ How to work through this list:
   - All tests pass. `src/core` imports nothing outside `src/core` and no `node:` modules (check with a grep).
   - Every file stays under about 200 lines.
 
-- [ ] 6. Hook command
-  - [ ] 6.1 Create `src/hook/cli.ts`: stamp `at`, hard-exit timer at 900 ms from process start, argv for Codex, stdin up to 500 ms for Kiro and Claude, token read, POST with 300 ms abort, fixed-code error log, no stdout or stderr
+- [x] 6. Hook command
+  - [x] 6.1 Create `src/hook/cli.ts`: stamp `at`, hard-exit timer at 900 ms from process start, argv for Codex, stdin up to 500 ms for Kiro and Claude, token read, POST with 300 ms abort, fixed-code error log, no stdout or stderr
     - _Requirements: 12.1–12.7, 13.1–13.7, 14.1–14.3_
-  - [ ] 6.2 Add `build:node` (esbuild) for `dist/hook.js` with a shebang
+  - [x] 6.2 Add `build:node` (esbuild) for `dist/hook.js` with a shebang
     - _Requirements: 12.7_
-  - [ ] 6.3 Write `tests/unit/hook.test.ts`: spawn `dist/hook.js` with a temp `HOME`; exit 0 with empty stdout and stderr within 1000 ms when the relay is down, when a fake relay never answers, and when stdin stays open; Codex never waits for stdin; the error log holds codes only
+  - [x] 6.3 Write `tests/unit/hook.test.ts`: spawn `dist/hook.js` with a temp `HOME`; exit 0 with empty stdout and stderr within 1000 ms when the relay is down, when a fake relay never answers, and when stdin stays open; Codex never waits for stdin; the error log holds codes only
     - _Requirements: 12.3, 13.1–13.7_
 
 - [ ] 7. Relay: intake and stream
