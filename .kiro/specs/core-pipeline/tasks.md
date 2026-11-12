@@ -72,10 +72,10 @@ How to work through this list:
   - [x] 7.6 Write `tests/unit/relay.test.ts` for the server status codes (403, 403, 401, 413, 400, 204), file modes, and one SSE message after an accepted event
     - _Requirements: 15.3–15.6, 16.1–16.4, 18.2, 18.3_
 
-- [ ] 8. Minimal text-only UI
-  - [ ] 8.1 Create `index.html`, `src/ui/main.ts` and `src/ui/screens/list.ts`: table built with `textContent` only, `?` for `STALE`, Kiro and Codex progress cells, `relay disconnected` notice
+- [x] 8. Minimal text-only UI
+  - [x] 8.1 Create `index.html`, `src/ui/main.ts` and `src/ui/screens/list.ts`: table built with `textContent` only, `?` for `STALE`, Kiro and Codex progress cells, `relay disconnected` notice
     - _Requirements: 20.1–20.7_
-  - [ ] 8.2 Add `vite.config.ts` with output `dist/ui` and the dev proxy for `/stream` (`changeOrigin: true`)
+  - [x] 8.2 Add `vite.config.ts` with output `dist/ui` and the dev proxy for `/stream` (`changeOrigin: true`)
     - _Requirements: 18.5_
 
 - [ ] 9. Checkpoint: first end-to-end run
