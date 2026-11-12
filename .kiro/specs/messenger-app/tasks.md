@@ -88,13 +88,14 @@ How to work through this list:
     - Closed on 2026-11-13 with the builder's OK: the menu bar icon stays UNVERIFIED and is checked in task 11. Showing the main window at start took focus in runs 2 and 3; kept, since the user starts the app.
     - _Requirements: 4.4, 4.7, 16.3_
 
-- [ ] 9. Look: fonts, tokens, icons
-  - [ ] 9.1 With the builder's OK, copy the four font files and the two OFL texts from the Google Fonts repository into `src/ui/public/fonts/`; `publicDir` in `vite.config.ts`; `styles/fonts.css` and `styles/tokens.css`
+- [x] 9. Look: fonts, tokens, icons
+  - [x] 9.1 With the builder's OK, copy the four font files and the two OFL texts from the Google Fonts repository into `src/ui/public/fonts/`; `publicDir` in `vite.config.ts`; `styles/fonts.css` and `styles/tokens.css`
     - _Requirements: 6.11, 16.5_
-  - [ ] 9.2 `src/ui/icons.ts` (seven state icons, the crescent as one path, the bubble)
+  - [x] 9.2 `src/ui/icons.ts` (seven state icons, the crescent as one path, the bubble)
     - _Requirements: 5.8, 6.7, 6.13_
-  - [ ] 9.3 `contrast.test.ts` (every text pair at least 4.5:1) and `ui-build.test.ts` (fonts and licenses in `dist/ui`, no `http:` or `https:` in built files)
+  - [x] 9.3 `contrast.test.ts` (every text pair at least 4.5:1) and `ui-build.test.ts` (fonts and licenses in `dist/ui`, no `http:` or `https:` in built files)
     - _Requirements: 6.13, 16.5, 17.1_
+  - Result (2026-11-13): fonts downloaded once with the builder's OK from `https://raw.githubusercontent.com/google/fonts/main/ofl/{nanumgothic,silkscreen}/` (6.3 MB in all). SHA-256: NanumGothic-Regular `76f45ef4…2e2d31`, Bold `f96298f9…33c674`, ExtraBold `5c4568e5…e691ae`, Silkscreen-Regular `c8454733…642ebd8`, OFL-NanumGothic `eeacf160…6c30f`, OFL-Silkscreen `86c5e9c9…efbd3`. Both licenses read `SIL OPEN FONT LICENSE Version 1.1`. Also: `--on-fill` token, `styles/icons.css` (icon colors by class), `src/ui/env.d.ts` for stylesheet imports; the three stylesheets are imported by both pages already. Contrast: icon-only button glyphs count as graphics (3:1); footer dots join the rings as known exceptions (see design "Contrast").
 
 - [ ] 10. UI screens
   - [ ] 10.1 `model/list.ts`, `model/chrome.ts`, `model/inbox.ts`; unit tests (online counts, offline group, same-name folders, `[n]`, session rows only for two or more visible sessions, the buddy-row × only with exactly one visible session, the hidden-sessions line, alert strip, per-tab footer, connections, browser mode); P26

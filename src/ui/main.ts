@@ -3,6 +3,9 @@
 import type { BuddyView } from '../core/buddies';
 import type { AppSnapshot } from '../core/snapshot';
 import { createBuddyList } from './screens/list';
+import './styles/tokens.css';
+import './styles/fonts.css';
+import './styles/icons.css';
 
 const RETRY_MS = 3000;
 

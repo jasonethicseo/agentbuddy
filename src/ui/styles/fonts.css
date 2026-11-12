@@ -1,0 +1,36 @@
+/* Bundled fonts, served from the app's own files (dist/ui/fonts); nothing is fetched at run time
+   (messenger-app Requirement 16.5). Both are SIL OFL 1.1; the license texts sit next to the files.
+   Silkscreen has Latin only and lacks ♪ ★ → ▲ ▼ ▶ ├ └, so titles fall back to Nanum Gothic for those
+   and for Korean. Nanum Gothic lacks ✓, which falls back to the system font. */
+@font-face {
+  font-family: 'Nanum Gothic';
+  src: url('/fonts/NanumGothic-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Nanum Gothic';
+  src: url('/fonts/NanumGothic-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Nanum Gothic';
+  src: url('/fonts/NanumGothic-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Silkscreen';
+  src: url('/fonts/Silkscreen-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+:root {
+  --font-text: 'Nanum Gothic', sans-serif;
+  --font-title: 'Silkscreen', 'Nanum Gothic', monospace;
+}

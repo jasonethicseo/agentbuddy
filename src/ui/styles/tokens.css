@@ -1,0 +1,42 @@
+/* Color tokens from .kiro/steering/design.md and docs/mockups/ (messenger-app design, "Tokens").
+   The only file with hex colors; every other stylesheet uses these variables. */
+:root {
+  --frame: #1D5FB8;
+  --title-top: #4A9BEA;
+  --button: #2F78D0;
+  --button-line: #BFD9F5;
+  --deep: #123F7D;
+  --body: #F4F8FD;
+  --row: #FFFFFF;
+  /* Text and glyphs on filled colors; the same white as --row. */
+  --on-fill: #FFFFFF;
+  --group: #E8F0FA;
+  --group-text: #1B3A66;
+  --band: #DDE9F7;
+  --band-line: #A9C6E8;
+  --band-text: #33465F;
+  --line: #C9DBF0;
+  --line-soft: #EEF3F9;
+  --tile: #EAF2FC;
+  --tile-line: #8FB8E6;
+  --text: #1B2433;
+  --text-2: #4E5B6E;
+  --alert: #D9541E;
+  --alert-strong: #C2471A;
+  --alert-top: #F59A4E;
+  --alert-text: #8A3C00;
+  --alert-later: #6B3000;
+  --alert-shadow: #B8461A;
+  --alert-strip: #FFF3E6;
+  --alert-strip-line: #F3C99B;
+  --alert-tint: #FFF8F1;
+  --close-line: #FFD2B8;
+  --ok: #2E9E4F;
+  --ok-text: #1E6B35;
+  --done: #2F6FDE;
+  --done-text: #1D4FA8;
+  --done-tint: #F7FAFE;
+  --idle: #B8860B;
+  --stale: #6E7A8C;
+  --ring: #8C99AA;
+}

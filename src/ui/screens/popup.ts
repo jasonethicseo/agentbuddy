@@ -1,6 +1,9 @@
 // The pop-up page. Plain for now; the look of Popup.dc.html comes in task 10.4.
 // Agent text is inserted with textContent only.
 import type { PopupContent } from '../../core/snapshot';
+import '../styles/tokens.css';
+import '../styles/fonts.css';
+import '../styles/icons.css';
 
 interface PopupBridge {
   onContent(cb: (c: PopupContent) => void): void;

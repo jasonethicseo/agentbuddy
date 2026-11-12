@@ -5,6 +5,8 @@ import { parsePort } from './src/core/config';
 const relay = `http://127.0.0.1:${parsePort(process.env['AGENTBUDDY_PORT'])}`;
 
 export default defineConfig({
+  // Fonts and their licenses, copied to dist/ui/fonts as they are (messenger-app Requirement 16.5).
+  publicDir: 'src/ui/public',
   build: {
     outDir: 'dist/ui',
     emptyOutDir: true,

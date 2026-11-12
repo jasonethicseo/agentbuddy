@@ -1,0 +1,27 @@
+/* State icons and the bubble (src/ui/icons.ts). Colors come from tokens.css. */
+.icon { display: inline-block; flex-shrink: 0; vertical-align: middle; }
+.icon .i-glyph { fill: var(--on-fill); font-family: var(--font-text); font-weight: 700; }
+.icon .i-mark { fill: none; stroke: var(--on-fill); stroke-width: 1.8; }
+.icon .i-ring { fill: none; stroke: var(--ring); stroke-width: 1.6; }
+.icon-WAITING_APPROVAL .i-fill { fill: var(--alert); }
+.icon-WORKING .i-fill { fill: var(--ok); }
+.icon-TURN_DONE .i-fill { fill: var(--done); }
+.icon-STALE .i-fill { fill: var(--stale); }
+.icon-IDLE .i-fill { fill: var(--idle); }
+
+.bubble .b-body { fill: var(--on-fill); }
+.bubble .b-eye { fill: var(--frame); }
+.bubble-dark .b-body { fill: var(--frame); }
+.bubble-dark .b-eye { fill: var(--on-fill); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
