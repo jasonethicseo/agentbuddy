@@ -85,7 +85,7 @@ Claude app `SessionEnd` (stdin):
 - The app sends extra fields (`transcript_path`, `scratchpad_dir`, `prompt_id`), and `permission_mode` was `auto`. The fields the mapping reads are the same, so app prompts normalize like CLI prompts (seen in the relay log). No mapping change.
 - In the app, the previous session's `SessionEnd` (`reason: "other"`) arrived 0.7 s before the next session's first prompt.
 - Claude app `Stop` arrives after every turn (04:13:42, 04:15:28, 04:17:01 UTC for one session). After the session ran `cd`, its `Stop` and later prompts carried the subfolder as `cwd`; with `cwd` in the session key this split the session into two buddies and its `Stop` looked missing from the first one. Fixed by keying sessions on agent + `session` only.
-- `SessionEnd` is mapped to `end` from 2026-11-12 (the session goes `OFFLINE` at once). Kiro CLI V3 also has a `SessionEnd` trigger, but no payload has been observed, so Kiro `SessionEnd` stays unmapped.
+- `SessionEnd` is mapped to `end` from 2026-11-12 (the session goes `OFFLINE` at once; from the messenger-app spec on, it shows as `ENDED`, "logged off"). Kiro CLI V3 also has a `SessionEnd` trigger, but no payload has been observed, so Kiro `SessionEnd` stays unmapped.
 - `CLAUDE_PROJECT_DIR` is set for hooks by both the app (`claude-desktop`, seen from 04:19 UTC) and the CLI (`cli`, seen at 04:28 UTC). It stays at the project root while `cwd` follows `cd` into a subfolder.
 - Claude Code CLI (2.1.322, run in a VS Code terminal: `CLAUDE_CODE_ENTRYPOINT=cli`, `TERM_PROGRAM=vscode`): `UserPromptSubmit` and `Stop` observed at 04:28 UTC. Prompts carry `scratchpad_dir`, `prompt_id`, `permission_mode`; `Stop` also carries `effort`, `stop_hook_active`, `background_tasks`, `session_crons`; app prompts after the first one carry `session_title`. None of these is read by the mapping.
 - Replaying all of today's Claude events through the fixed core gives one buddy per session folder: the app session (11 events, 2 different `cwd`) and the CLI session (2 events, 2 different `cwd`).
@@ -192,10 +192,10 @@ Launcher values seen so far:
 - Two levels. A **buddy** is one **agent + session folder** pair. Under it, each **session** (agent + `session`) is one conversation window. Several sessions of the same agent in the same folder at once are normal; each keeps its own state.
 - A **session's folder is fixed**: Claude's `CLAUDE_PROJECT_DIR` (sent as `projectDir`) when the session reports it, else the `cwd` of the session's earliest event. `cwd` is not part of the session key, so a session that runs `cd` stays in its buddy (observed: a Claude app session moved into a subfolder and its `Stop` events carried the subfolder as `cwd`).
 - Display name of a buddy: `<Agent> @ <folder name>`, where the folder name is the last segment of `cwd` (for example `Kiro @ demo`).
-- **Buddy state** is the most urgent displayed state among its sessions: `WAITING_APPROVAL` > `WORKING` > `STALE` > `TURN_DONE` > `IDLE` > `OFFLINE`. The buddy row shows the status text of that session (if tied, the one with the latest event).
+- **Buddy state** is the most urgent displayed state among its sessions: `WAITING_APPROVAL` > `WORKING` > `STALE` > `TURN_DONE` > `IDLE` > `OFFLINE` = `ENDED`. `OFFLINE` and `ENDED` share the lowest rank (from 2026-11-12, messenger-app), so removing a 24-hour-old session never changes a buddy's state. The buddy row shows that session's state and status text (if tied, the one with the latest event).
 - **Session name**: the session's first prompt text; for Codex, its `firstInput`; else its first task name; else its start time (the earliest `at`). Names are cut to 40 code points.
 - Per buddy, not per session: the latest task event (the latest of its sessions' latest task events), the Kiro spec path, and progress.
-- `IDLE` and `OFFLINE` sessions are hidden by default when a buddy is expanded. The buddy itself stays.
+- `IDLE`, `OFFLINE` and `ENDED` sessions are hidden by default when a buddy is expanded. The buddy itself stays. (The messenger app also hides sessions the user closed with ×; see its spec.)
 - A session whose last event is more than 24 hours old is removed from memory (the same 24 hours as the restore window). A buddy's latest task event is kept for 24 hours even when no session of that buddy is left.
 - Notifications (later spec) are per session.
 
@@ -208,7 +208,7 @@ Launcher values seen so far:
 | `IDLE` | `idle`, or no event for 10 minutes while `TURN_DONE` |
 | `OFFLINE` | no event for 30 minutes in any state |
 | `STALE` | no event for 10 minutes while `WORKING` or `WAITING_APPROVAL` (shown as "?") |
-| `ENDED` | `end`; shown as `OFFLINE` at once, whatever the time |
+| `ENDED` | `end`; shown as `ENDED` ("logged off") at once, whatever the time, until the session is removed after 24 hours (from 2026-11-12; before, it was shown as `OFFLINE`) |
 
 - `task_done` keeps the state and updates progress.
 - `end` (Claude `SessionEnd`) ends that session_id whatever the reason; `/clear` and `/resume` continue under another session_id. Earlier events of the session that arrive late do not bring it back, because `end` is later in event order (and last on `at` ties). A later event with the same session_id does bring it back, by the normal rules: Claude `--resume <id>` continues a session under its old session_id.

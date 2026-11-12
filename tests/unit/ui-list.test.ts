@@ -69,6 +69,12 @@ describe('session rows', () => {
     expect(visibleSessions(base, true).map((s) => s.state)).toEqual(['WORKING', 'IDLE', 'OFFLINE']);
   });
 
+  it('also hides ENDED (logged off) sessions unless asked', () => {
+    const withEnded = { ...base, sessions: [...base.sessions, session('aba1…', 'ENDED')] };
+    expect(visibleSessions(withEnded, false).map((s) => s.state)).toEqual(['WORKING']);
+    expect(sessionsText(withEnded, false)).toBe('4 sessions (3 hidden)');
+  });
+
   it('shows the session name, state, status, time and short id', () => {
     const cells = sessionCells(session('sess_ce19…', 'STALE', { title: 'fix login', statusText: 'Done.' }));
     expect(cells).toHaveLength(7);

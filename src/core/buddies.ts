@@ -11,8 +11,20 @@ import { displayState, foldSession, updateFirsts } from './state';
 import type { DisplayState, SessionRecord } from './state';
 import { displayName, shortId } from './text';
 
-/** Most urgent first. */
-export const URGENCY: readonly DisplayState[] = ['WAITING_APPROVAL', 'WORKING', 'STALE', 'TURN_DONE', 'IDLE', 'OFFLINE'];
+/**
+ * Urgency rank, most urgent first. OFFLINE and ENDED share the lowest rank, so
+ * the existing tie rule (latest last event) picks between them and removing a
+ * 24-hour-old session never changes a buddy's state (messenger-app Requirement 2.3, 2.4).
+ */
+export const RANK: Readonly<Record<DisplayState, number>> = {
+  WAITING_APPROVAL: 0,
+  WORKING: 1,
+  STALE: 2,
+  TURN_DONE: 3,
+  IDLE: 4,
+  OFFLINE: 5,
+  ENDED: 5,
+};
 
 /** Kiro spec progress; null means unknown. */
 export type Progress = { done: number; total: number } | null;
@@ -45,6 +57,8 @@ export interface SessionView {
   /** From the session's latest event with a launcher field (Requirement 1.6). */
   bundleId?: string;
   termProgram?: string;
+  /** Kiro only: the status text comes from a task event, so the session is in a spec task (Requirement 7.2). */
+  task?: true;
 }
 
 export interface BuddyView {
@@ -61,9 +75,9 @@ export interface BuddyView {
   sessions: SessionView[];
 }
 
-const rank = (s: DisplayState) => URGENCY.indexOf(s);
+const rank = (s: DisplayState) => RANK[s];
 
-/** The most urgent of `states`, which must be non-empty. */
+/** The most urgent of `states`, which must be non-empty; among equal ranks, the first. */
 export function mostUrgent(states: readonly DisplayState[]): DisplayState {
   const first = states[0];
   if (first === undefined) throw new Error('mostUrgent: no states');
@@ -146,6 +160,7 @@ export function toBuddyView(b: BuddyRecord, progress: Progress, nowMs: number): 
       if (s.title !== undefined) view.title = s.title;
       if (launcher?.event.bundleId !== undefined) view.bundleId = launcher.event.bundleId;
       if (launcher?.event.termProgram !== undefined) view.termProgram = launcher.event.termProgram;
+      if (b.agent === 'kiro' && s.textFromTask) view.task = true;
       return view;
     })
     .sort(compareSessions);

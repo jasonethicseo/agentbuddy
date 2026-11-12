@@ -5,7 +5,7 @@ import type { BuddyView, SessionView } from '../../core/buddies';
 import type { DisplayState } from '../../core/state';
 
 const COLUMNS = 7; // Buddy, State, Status, Progress, Last event, Sessions, Folder
-const HIDDEN_BY_DEFAULT: readonly DisplayState[] = ['IDLE', 'OFFLINE'];
+const HIDDEN_BY_DEFAULT: readonly DisplayState[] = ['IDLE', 'OFFLINE', 'ENDED'];
 
 /** Per-buddy choices, kept across renders. */
 export interface BuddyUiState {

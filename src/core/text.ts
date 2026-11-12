@@ -1,8 +1,9 @@
 // Text helpers: truncation, code point counting and buddy names.
 // Pure: no file system, network, timers or clock.
 
-import { TEXT_LIMIT } from './config';
+import { STATUS_TEXT_LIMIT, TEXT_LIMIT } from './config';
 import type { AgentId } from './event';
+import type { DisplayState } from './state';
 
 const ELLIPSIS = '\u2026';
 
@@ -47,4 +48,37 @@ export function displayName(agent: AgentId, cwd: string): string {
 /** First 8 code points of a session ID, for display. */
 export function shortId(session: string): string {
   return Array.from(session).slice(0, 8).join('');
+}
+
+/** Messenger phrase per displayed state (messenger-app Requirement 7.2, design.md). */
+export const PHRASES: Readonly<Record<DisplayState, string>> = {
+  WAITING_APPROVAL: 'need your OK T_T',
+  WORKING: '♪ working…',
+  STALE: '? no news for a while',
+  TURN_DONE: '★ done~ your turn!',
+  IDLE: 'brb~ zZ',
+  OFFLINE: 'offline',
+  ENDED: 'logged off',
+};
+
+/** WORKING phrase for a Kiro session in a spec task. */
+export const SPEC_TASK_PHRASE = '♪ studying hard';
+
+/** A status line in two parts, so the screen can color the phrase. */
+export interface StatusParts {
+  phrase: string;
+  /** The status text cut to 40 code points; absent when there is none or hide-text is on. */
+  excerpt?: string;
+}
+
+export function statusParts(state: DisplayState, inSpecTask: boolean, statusText: string | undefined, hideText: boolean): StatusParts {
+  const phrase = state === 'WORKING' && inSpecTask ? SPEC_TASK_PHRASE : PHRASES[state];
+  if (hideText || statusText === undefined) return { phrase };
+  const excerpt = truncate(statusText, STATUS_TEXT_LIMIT);
+  return excerpt === '' ? { phrase } : { phrase, excerpt };
+}
+
+/** `phrase` or `phrase · excerpt`, for plain-text places such as macOS notifications. */
+export function statusLine(parts: StatusParts): string {
+  return parts.excerpt === undefined ? parts.phrase : `${parts.phrase} · ${parts.excerpt}`;
 }

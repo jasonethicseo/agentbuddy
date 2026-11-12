@@ -2,7 +2,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { SESSION_TTL_MS, WINDOW_SIZE } from '../../src/core/config';
-import { URGENCY, applyEvent, groupBuddies, mostUrgent, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
+import { RANK, applyEvent, groupBuddies, mostUrgent, pruneList, toBuddyView, toViews } from '../../src/core/buddies';
 import type { SessionList } from '../../src/core/buddies';
 import type { BuddyEvent } from '../../src/core/event';
 import { buddyKey, compareStamped, insertEvent, sessionKey, stamp } from '../../src/core/history';
@@ -22,7 +22,8 @@ const sessionStates = (list: SessionList) => new Map([...list].map(([k, s]) => [
 const lastTasks = (list: SessionList) =>
   new Map([...groupBuddies(list)].map(([k, b]) => [k, [b.lastTask?.event, b.specPath]] as const));
 const snapshot = (list: SessionList) => ({ sessions: sessionStates(list), tasks: lastTasks(list), views: toViews(list, new Map(), NOW) });
-const rank = (s: DisplayState) => URGENCY.indexOf(s);
+const rank = (s: DisplayState) => RANK[s];
+const ALL_STATES = Object.keys(RANK) as DisplayState[];
 const isTask = (e: BuddyEvent) => e.kind === 'task_start' || e.kind === 'task_done';
 
 describe('P4 arrival order', () => {
@@ -158,7 +159,7 @@ describe('P10 latest task event per buddy', () => {
 describe('P11 buddy state from sessions', () => {
   it('mostUrgent picks one of its inputs, and none is more urgent', () => {
     fc.assert(
-      fc.property(fc.array(fc.constantFrom(...URGENCY), { minLength: 1, maxLength: 10 }), (states) => {
+      fc.property(fc.array(fc.constantFrom(...ALL_STATES), { minLength: 1, maxLength: 10 }), (states) => {
         const best = mostUrgent(states);
         expect(states).toContain(best);
         for (const s of states) expect(rank(s)).toBeGreaterThanOrEqual(rank(best));
@@ -263,15 +264,15 @@ describe('P15 session end', () => {
   const end: BuddyEvent = { v: 1, agent: 'claude', session: 'e697…', kind: 'end', at: isoAt(END_MS), cwd: '/Users/dev/demo' };
   const key = sessionKey('claude', 'e697…');
 
-  it('stays OFFLINE when earlier or same-time events of the session arrive after the end', () => {
+  it('stays ENDED (logged off) when earlier or same-time events of the session arrive after the end', () => {
     fc.assert(
       fc.property(before, fc.boolean(), fc.integer({ min: 0, max: 5 * 3_600_000 }), (events, sameTime, offset) => {
         const late = sameTime ? [...events, { ...events[0] ?? end, kind: 'prompt' as const, at: end.at }] : events;
         const list = applyAll([end, ...late]);
         const s = list.get(key)!;
         expect(s.state.state).toBe('ENDED');
-        expect(displayState(s.state, END_MS + offset)).toBe('OFFLINE');
-        expect(toViews(list, new Map(), END_MS + offset)[0]!.state).toBe('OFFLINE');
+        expect(displayState(s.state, END_MS + offset)).toBe('ENDED');
+        expect(toViews(list, new Map(), END_MS + offset)[0]!.state).toBe('ENDED');
       }),
       { numRuns: 300 },
     );
@@ -283,7 +284,7 @@ describe('P15 session end', () => {
         const later: BuddyEvent = { ...end, kind, at: isoAt(END_MS + 60_000) };
         const s = applyAll([end, ...events, later]).get(key)!;
         expect(s.state.state).toBe(nextState('ENDED', kind));
-        expect(displayState(s.state, END_MS + 60_000)).not.toBe('OFFLINE');
+        expect(['ENDED', 'OFFLINE']).not.toContain(displayState(s.state, END_MS + 60_000));
       }),
     );
   });

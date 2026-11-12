@@ -9,7 +9,7 @@ import { earlier, isTaskEvent, sessionKey } from './history';
 import type { Stamped } from './history';
 import { truncate } from './text';
 
-/** `ENDED`: the agent reported the session closed (Claude `SessionEnd`); shown as `OFFLINE`. */
+/** `ENDED`: the agent reported the session closed (Claude `SessionEnd`); shown as `ENDED` (logged off). */
 export type CoreState = 'WORKING' | 'WAITING_APPROVAL' | 'TURN_DONE' | 'IDLE' | 'ENDED';
 export type DisplayState = CoreState | 'STALE' | 'OFFLINE';
 
@@ -34,6 +34,8 @@ export interface SessionState {
   folder: string;
   state: CoreState;
   statusText?: string;
+  /** The status text came from a task event (`task_start` or `task_done`), so the session is in a spec task. */
+  textFromTask: boolean;
   lastAt: string;
   lastAtMs: number;
   /** First prompt, Codex first input, or first task name; at most 40 code points. */
@@ -108,9 +110,14 @@ export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): 
 
   let state: CoreState | undefined;
   let statusText: string | undefined;
+  let textFromTask = false;
   for (const { event } of window) {
     state = nextState(state, event.kind);
-    statusText = eventText(event) ?? statusText;
+    const text = eventText(event);
+    if (text !== undefined) {
+      statusText = text;
+      textFromTask = event.kind === 'task_start' || event.kind === 'task_done';
+    }
   }
 
   const { agent, session } = last.event;
@@ -120,6 +127,7 @@ export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): 
     session,
     folder: sessionFolder(firsts),
     state: state ?? 'WORKING',
+    textFromTask,
     lastAt: last.event.at,
     lastAtMs: last.atMs,
     startedAt: firsts.first.event.at,
@@ -132,7 +140,8 @@ export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): 
 
 /** State shown at time `nowMs`, after the 10- and 30-minute rules. */
 export function displayState(s: SessionState, nowMs: number): DisplayState {
-  if (s.state === 'ENDED') return 'OFFLINE';
+  // A session the agent closed shows as logged off, whatever the time (messenger-app Requirement 2.1).
+  if (s.state === 'ENDED') return 'ENDED';
   const age = Math.max(0, nowMs - s.lastAtMs);
   if (age >= OFFLINE_AFTER_MS) return 'OFFLINE';
   if (age >= IDLE_AFTER_MS) {

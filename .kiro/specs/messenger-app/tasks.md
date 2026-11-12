@@ -27,15 +27,15 @@ How to work through this list:
   - [x] 2.4 After the build, the builder restarts the relay so it keeps the new fields. From then on the daily log collects launcher values from normal use (Kiro task runs, Claude app and CLI, Codex), read in task 11.
   - Result (2026-11-12): the relay started at 14:08 had been running detached with no terminal, so it was restarted for the builder: stopped with SIGTERM, then started again from the new build in its own session (no terminal; output in `~/.agentbuddy/relay.log`, mode 600). It restored 146 events.
 
-- [ ] 3. Logged-off sessions, spec-task flag and status wording
-  - [ ] 3.1 `displayState` returns `ENDED`; `RANK` with `OFFLINE` = `ENDED`; buddy state from the first sorted session; update P11, P12, P15
+- [x] 3. Logged-off sessions, spec-task flag and status wording
+  - [x] 3.1 `displayState` returns `ENDED`; `RANK` with `OFFLINE` = `ENDED`; buddy state from the first sorted session; update P11, P12, P15
     - _Requirements: 2.1–2.5_
-  - [ ] 3.2 `textFromTask` in `foldSession`; `SessionView.task` for Kiro sessions
+  - [x] 3.2 `textFromTask` in `foldSession`; `SessionView.task` for Kiro sessions
     - _Requirements: 7.2_
-  - [ ] 3.3 `PHRASES`, `SPEC_TASK_PHRASE`, `statusParts`, `statusLine` in `text.ts`; unit tests per state (with and without text, hide-text on and off, `♪ studying hard`); P21
+  - [x] 3.3 `PHRASES`, `SPEC_TASK_PHRASE`, `statusParts`, `statusLine` in `text.ts`; unit tests per state (with and without text, hide-text on and off, `♪ studying hard`); P21
     - _Requirements: 7.1–7.4_
-  - [ ] 3.4 Keep the old text-only list working until task 10: add `ENDED` to its hidden-by-default states and update `ui-list.test.ts`
-  - [ ] 3.5 Steering: events.md "State rules" and "Buddies and sessions" (`ENDED` shown as `logged off`, urgency `OFFLINE` = `ENDED`, hidden by default) and the matching tech.md property line
+  - [x] 3.4 Keep the old text-only list working until task 10: add `ENDED` to its hidden-by-default states and update `ui-list.test.ts`
+  - [x] 3.5 Steering: events.md "State rules" and "Buddies and sessions" (`ENDED` shown as `logged off`, urgency `OFFLINE` = `ENDED`, hidden by default) and the matching tech.md property line
     - _Requirements: C5, C6, C9_
 
 - [ ] 4. Pings and acknowledgements in the core

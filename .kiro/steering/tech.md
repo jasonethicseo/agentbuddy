@@ -36,11 +36,11 @@ inclusion: always
   - Codex title turns are always dropped, whichever of the two signals is present.
   - state: applying a set of events in any arrival order gives the same final state as applying them sorted by event order (`at`, kind, `session`). Sets where two events of one session share both `at` and kind are excluded, because arrival order decides those ties.
   - state: each buddy's kept latest task event (and so its spec path) is the same in any arrival order, and stays after any number of later events push the task event out of the 50-event list.
-  - state: a buddy's state is one of its sessions' displayed states, and no session of that buddy is more urgent.
+  - state: a buddy's state is one of its sessions' displayed states, and no session of that buddy is more urgent (`OFFLINE` and `ENDED` share the lowest rank).
   - state: removing sessions older than 24 hours leaves every remaining session's state and every remaining buddy's state unchanged.
   - state: a session's name is the same in any arrival order.
   - state: a session whose `cwd` changes mid-session stays in exactly one buddy (agent + its fixed folder), in any arrival order.
-  - state: after a session's `end`, its earlier or same-time events arriving late keep it `OFFLINE`; a later event of the same session brings it back.
+  - state: after a session's `end`, its earlier or same-time events arriving late keep it `ENDED`; a later event of the same session brings it back.
   - state: `WAITING_APPROVAL` is only entered by `permission`; `TURN_DONE` only by `stop`.
   - state: a buddy stuck in `WAITING_APPROVAL` leaves it on the next `idle`, `prompt` or `stop`.
   - progress: `0 <= done <= total` for any `tasks.md` text.

@@ -1,8 +1,11 @@
 // P3: truncation (Requirements 6.1–6.4).
+// P21: status lines (messenger-app Requirements 7.2–7.4).
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { RANK } from '../../src/core/buddies';
 import { TEXT_LIMIT } from '../../src/core/config';
-import { codePointLength, truncate } from '../../src/core/text';
+import type { DisplayState } from '../../src/core/state';
+import { PHRASES, SPEC_TASK_PHRASE, codePointLength, statusLine, statusParts, truncate } from '../../src/core/text';
 
 const ELLIPSIS = '\u2026';
 
@@ -59,5 +62,28 @@ describe('P3 truncate', () => {
 
   it('is idempotent', () => {
     fc.assert(fc.property(anyText, (s) => truncate(truncate(s)) === truncate(s)));
+  });
+});
+
+describe('P21 status lines', () => {
+  const state = fc.constantFrom(...(Object.keys(RANK) as DisplayState[]));
+  const text = fc.option(anyText, { nil: undefined });
+  it('has no excerpt with hide-text on; otherwise an excerpt of at most 40 code points after the phrase', () => {
+    fc.assert(
+      fc.property(state, fc.boolean(), text, fc.boolean(), (s, inTask, t, hide) => {
+        const parts = statusParts(s, inTask, t, hide);
+        expect(parts.phrase).toBe(s === 'WORKING' && inTask ? SPEC_TASK_PHRASE : PHRASES[s]);
+        if (hide || t === undefined) expect(parts).toEqual({ phrase: parts.phrase });
+        if (parts.excerpt !== undefined) {
+          expect(parts.excerpt).not.toBe('');
+          expect(codePointLength(parts.excerpt)).toBeLessThanOrEqual(40);
+          expect(statusLine(parts)).toBe(`${parts.phrase} · ${parts.excerpt}`);
+          expect(codePointLength(statusLine(parts)) - codePointLength(parts.phrase)).toBeLessThanOrEqual(43);
+        } else {
+          expect(statusLine(parts)).toBe(parts.phrase);
+        }
+      }),
+      { numRuns: 500 },
+    );
   });
 });
