@@ -26,14 +26,14 @@ How to work through this list:
   - [x] 2.5 Write unit tests for `validateEvent`, `parsePort` and `displayName`
     - _Requirements: 1.3–1.6, 7.3_
 
-- [ ] 3. Normalization and fixtures
-  - [ ] 3.1 Create `tests/fixtures/payloads.ts` with every events.md example copied character for character, each labeled observed or derived
+- [x] 3. Normalization and fixtures
+  - [x] 3.1 Create `tests/fixtures/payloads.ts` with every events.md example copied character for character, each labeled observed or derived
     - _Requirements: 21.1, 21.2, 21.5_
-  - [ ] 3.2 Create `src/core/normalize.ts`: `normalize` and one function per agent, including both Codex title signals
+  - [x] 3.2 Create `src/core/normalize.ts`: `normalize` and one function per agent, including both Codex title signals
     - _Requirements: 2.1–2.8, 3.1–3.7, 4.1–4.7, 5.1–5.7_
-  - [ ] 3.3 Write `tests/unit/mapping.test.ts`: one test per events.md mapping row (12)
+  - [x] 3.3 Write `tests/unit/mapping.test.ts`: one test per events.md mapping row (12)
     - _Requirements: 21.3_
-  - [ ] 3.4 Write property tests P1 (normalize never throws, output valid) and P2 (Codex title turns dropped)
+  - [x] 3.4 Write property tests P1 (normalize never throws, output valid) and P2 (Codex title turns dropped)
     - _Requirements: 4.2–4.4, 5.1–5.3_
 
 - [ ] 4. Buddy history and state
