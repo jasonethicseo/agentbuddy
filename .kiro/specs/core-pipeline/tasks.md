@@ -36,14 +36,14 @@ How to work through this list:
   - [x] 3.4 Write property tests P1 (normalize never throws, output valid) and P2 (Codex title turns dropped)
     - _Requirements: 4.2–4.4, 5.1–5.3_
 
-- [ ] 4. Buddy history and state
-  - [ ] 4.1 Create `src/core/history.ts`: `stamp`, `compareStamped`, `buddyKey`, `insertEvent`, `isTaskEvent`, `laterTask`
+- [x] 4. Buddy history and state
+  - [x] 4.1 Create `src/core/history.ts`: `stamp`, `compareStamped`, `buddyKey`, `insertEvent`, `isTaskEvent`, `laterTask`
     - _Requirements: 7.1, 7.2, 8.1–8.4, 8.6_
-  - [ ] 4.2 Create `src/core/state.ts`: `nextState`, `foldBuddy`, `applyEvent`, `displayState`, `toView`, `toViews`
+  - [x] 4.2 Create `src/core/state.ts`: `nextState`, `foldBuddy`, `applyEvent`, `displayState`, `toView`, `toViews`
     - _Requirements: 7.4, 9.1–9.11, 10.1–10.6_
-  - [ ] 4.3 Write property tests P4 (arrival order), P5, P6 (state entry and exit), P7 (window), P9 (Codex states), P10 (latest task event)
+  - [x] 4.3 Write property tests P4 (arrival order), P5, P6 (state entry and exit), P7 (window), P9 (Codex states), P10 (latest task event)
     - _Requirements: 8.5, 8.7, 9.7, 9.8, 10.8_
-  - [ ] 4.4 Write `tests/unit/state.test.ts`: Kiro `stop` keeps the prompt text, a late `prompt` lands in its place, Claude `permission` then `idle`, a spec path kept after 60 chat events, thresholds at exactly 10 and 30 minutes
+  - [x] 4.4 Write `tests/unit/state.test.ts`: Kiro `stop` keeps the prompt text, a late `prompt` lands in its place, Claude `permission` then `idle`, a spec path kept after 60 chat events, thresholds at exactly 10 and 30 minutes
     - _Requirements: 8.2, 9.8, 9.9, 9.10, 10.3–10.5_
 
 - [ ] 5. Checkpoint: core
