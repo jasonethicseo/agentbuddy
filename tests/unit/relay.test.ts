@@ -223,6 +223,39 @@ describe('Kiro progress from tasks.md', () => {
   });
 });
 
+describe('restore on start', () => {
+  it('comes back with sessions, state and Kiro progress from the daily log', async () => {
+    const home2 = mkdtempSync(join(tmpdir(), 'agentbuddy-restore-'));
+    const proj = join(home2, 'proj');
+    mkdirSync(join(proj, '.kiro/specs/s'), { recursive: true });
+    writeFileSync(join(proj, '.kiro/specs/s/tasks.md'), '- [x] 1. A\n- [x] 2. B\n- [ ] 3. C\n');
+    mkdirSync(join(home2, '.agentbuddy'));
+    const t = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+    const log = [
+      { v: 1, agent: 'kiro', session: 'sess_0bcd…', kind: 'task_start', at: t(6), cwd: proj, task: { name: '3. C', specPath: join(proj, '.kiro/specs/s/tasks.md') } },
+      { v: 1, agent: 'kiro', session: 'sess_ce19…', kind: 'prompt', at: t(5), cwd: proj, text: 'hello' },
+      { v: 1, agent: 'claude', session: 'e697…', kind: 'permission', at: t(1), cwd: '/Users/dev/demo' },
+    ];
+    writeFileSync(join(home2, '.agentbuddy', logFileName(new Date())), log.map((e) => JSON.stringify(e)).join('\n') + '\n');
+
+    const r = await startRelay(home2, await freePort());
+    expect(r.stdout()).toMatch(/restored 3 events from the last 24 hours/);
+    let kiro: { state: string; sessions: unknown[]; progress?: unknown } | undefined;
+    for (let i = 0; i < 40 && JSON.stringify(kiro?.progress) !== '{"done":2,"total":3}'; i++) {
+      const s = openStream(r.port);
+      const list = (await s.next(1)) as Array<{ name: string; state: string; sessions: unknown[]; progress?: unknown }>;
+      s.close();
+      kiro = list.find((b) => b.name === 'Kiro @ proj');
+      expect(list.find((b) => b.name === 'Claude Code @ demo')?.state).toBe('WAITING_APPROVAL');
+      await new Promise((res) => setTimeout(res, 50));
+    }
+    expect(kiro).toMatchObject({ state: 'WORKING', progress: { done: 2, total: 3 } });
+    expect(kiro!.sessions).toHaveLength(2);
+    await r.stop();
+    rmSync(home2, { recursive: true, force: true });
+  });
+});
+
 describe('static UI files', () => {
   it('serves files inside uiDir only, with CSP', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'agentbuddy-ui-'));

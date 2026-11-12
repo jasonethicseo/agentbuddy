@@ -55,13 +55,17 @@ const tick = setInterval(() => {
   broadcastIfChanged();
 }, RELAY_LIMITS.tickMs);
 
+// Restore the last 24 hours before accepting connections, then read Kiro progress once (Requirement 17).
+const restored = await store.restore(Date.now());
+for (const b of store.buddies()) if (b.specPath !== undefined) void refreshProgress(b.key, b.specPath, b.cwd);
+
 server.on('error', (err: NodeJS.ErrnoException) => {
   console.error(err.code === 'EADDRINUSE' ? `port ${port} is in use (set AGENTBUDDY_PORT)` : `relay error: ${err.code ?? 'unknown'}`);
   process.exit(1);
 });
 
 server.listen(port, '127.0.0.1', () => {
-  console.log(`AgentBuddy relay: http://127.0.0.1:${port}/`);
+  console.log(`AgentBuddy relay: http://127.0.0.1:${port}/ (restored ${restored} events from the last 24 hours)`);
 });
 
 function shutdown(): void {
