@@ -64,7 +64,7 @@ How to work through this list:
     - _Requirements: 4.5_
   - [x] 7.3 `jump.ts` (`planJump`, `runJump`); unit tests with a recording `exec` (running check first, not running, unknown ID, timeout, folder only under Req 12.7); P24
     - _Requirements: 12.1–12.12_
-  - [ ] 7.4 `settings.ts` and `inbox-file.ts`; unit tests (defaults, invalid files, mode 600, atomic save, bad lines skipped); the settings half of P25
+  - [x] 7.4 `settings.ts` and `inbox-file.ts`; unit tests (defaults, invalid files, mode 600, atomic save, bad lines skipped); the settings half of P25
     - _Requirements: 11.2, 11.4, 11.5, 14.2, 14.3_
   - [ ] 7.5 `relay-link.ts` with injected `start` and `connect`; unit tests (own, attached, no list within 5 s → `foreign`, drop → retry → own, stall)
     - _Requirements: 4.3–4.7, 4.9_

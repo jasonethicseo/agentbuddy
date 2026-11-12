@@ -1,5 +1,5 @@
-// P20: inbox folding. P23: hidden sessions. P25 (inbox half): record validation
-// (messenger-app Requirements 10.8, 11.2, 11.4, 13.1, 13.5).
+// P20: inbox folding. P23: hidden sessions. P25: inbox record and settings validation
+// (messenger-app Requirements 10.8, 11.2, 11.4, 13.1, 13.5, 14.3).
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { SESSION_TTL_MS } from '../../src/core/config';
@@ -7,6 +7,7 @@ import { foldInbox, hide, isHidden, refreshHidden, validateInboxRecord } from '.
 import type { InboxRecord } from '../../src/core/attention';
 import { isAttention } from '../../src/core/pings';
 import type { AttentionState } from '../../src/core/pings';
+import { parseSettings, serializeSettings } from '../../src/app/settings';
 import { T0, buddyView, iso, key } from '../fixtures/views';
 
 const KEYS = [key('claude', 'e697…'), key('claude', '81fd…'), key('kiro', 'sess_ce19…'), key('codex', '01a1…')];
@@ -99,5 +100,41 @@ describe('P25 inbox records', () => {
       { numRuns: 2000 },
     );
     expect(valid).toBeGreaterThan(20);
+  });
+});
+
+describe('P25 settings', () => {
+  const near = fc.record(
+    {
+      hideText: fc.oneof(fc.boolean(), fc.jsonValue({ maxDepth: 1 })),
+      sound: fc.oneof(fc.boolean(), fc.jsonValue({ maxDepth: 1 })),
+      popups: fc.boolean(),
+      macNotifications: fc.jsonValue({ maxDepth: 1 }),
+      alwaysOnTop: fc.boolean(),
+      closedGroups: fc.oneof(fc.array(fc.oneof(fc.constantFrom(...CWDS), fc.jsonValue({ maxDepth: 1 })), { maxLength: 5 }), fc.jsonValue({ maxDepth: 1 })),
+      hidden: fc.oneof(
+        fc.dictionary(fc.constantFrom(...KEYS), fc.record({ lastAt: fc.oneof(fc.constant(iso(T0)), fc.jsonValue({ maxDepth: 0 })), hiddenAt: fc.constant(iso(T0)) })),
+        fc.jsonValue({ maxDepth: 2 }),
+      ),
+      extra: fc.jsonValue({ maxDepth: 1 }),
+    },
+    { requiredKeys: [] },
+  );
+  const KNOWN = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'closedGroups', 'hidden'];
+  it('never throws, and keeps only known keys of the right type', () => {
+    fc.assert(
+      fc.property(fc.oneof(fc.jsonValue(), near), (value) => {
+        const s = parseSettings(value);
+        expect(Object.keys(s).sort()).toEqual([...KNOWN].sort());
+        for (const k of ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop'] as const) expect(typeof s[k]).toBe('boolean');
+        expect(s.closedGroups.every((g) => typeof g === 'string' && g !== '')).toBe(true);
+        for (const [k, m] of s.hidden) {
+          expect(typeof k).toBe('string');
+          expect(Number.isFinite(m.lastAtMs) && Number.isFinite(m.hiddenAtMs)).toBe(true);
+        }
+        expect(parseSettings(JSON.parse(serializeSettings(s)))).toEqual(s);
+      }),
+      { numRuns: 1000 },
+    );
   });
 });
