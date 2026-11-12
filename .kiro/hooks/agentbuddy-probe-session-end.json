@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "AgentBuddy probe: session ended (observation only)",
+      "description": "Records the raw SessionEnd payload to ~/.agentbuddy/probe/kiro.jsonl to see whether and what Kiro sends. SessionEnd runs in Kiro CLI V3 only. Not reported to the relay. Remove after observation.",
+      "trigger": "SessionEnd",
+      "action": { "type": "command", "command": "node scripts/probe.mjs kiro || true" },
+      "timeout": 2
+    }
+  ]
+}

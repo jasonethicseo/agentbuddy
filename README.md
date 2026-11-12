@@ -17,6 +17,8 @@ npm install
 npm test
 ```
 
+`scripts/codex-notify.sh` and `scripts/probe.mjs` are the originals; Codex and Claude Code run installed copies in `~/.agentbuddy/bin/`. Check that the copies match with `cmp scripts/codex-notify.sh ~/.agentbuddy/bin/codex-notify.sh && cmp scripts/probe.mjs ~/.agentbuddy/bin/probe.mjs`.
+
 ## Third-party libraries
 
 Development only; AgentBuddy has no runtime dependencies.
