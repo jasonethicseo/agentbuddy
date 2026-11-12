@@ -19,7 +19,8 @@
     "relay": "npm run build && node dist/relay.js",
     "dev": "vite",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "app": "npm run build && electron dist/app/main.cjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

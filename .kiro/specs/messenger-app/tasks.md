@@ -72,13 +72,14 @@ How to work through this list:
     - _Requirements: 7.4, 8.4, 8.5, 9.7, 10, 13, 14_
 
 - [ ] 8. App main process: Electron
-  - [ ] 8.1 `security.ts` and `protocol.ts`
+  - [x] 8.1 `security.ts` and `protocol.ts`
     - _Requirements: 15.1–15.6, 16.3_
-  - [ ] 8.2 `windows.ts`, `popups.ts`, `tray.ts`, `notify.ts`, with the O4 results applied
+  - [x] 8.2 `windows.ts`, `popups.ts`, `tray.ts`, `notify.ts`, with the O4 results applied
     - _Requirements: 5, 8.8, 8.9, 9_
-  - [ ] 8.3 `preload-main.ts` and `preload-popup.ts`
+  - [x] 8.3 `preload-main.ts` and `preload-popup.ts`
     - _Requirements: 15.2_
-  - [ ] 8.4 `main.ts` wiring; three new `build:node` entries; `npm run app`
+  - [x] 8.4 `main.ts` wiring; three new `build:node` entries; `npm run app`
+    - Also: a plain `popup.html` and `src/ui/screens/popup.ts` (styled in 10.4), and a stop-gap app bridge in `src/ui/main.ts` so the old list shows in the app window (replaced in 10.6). Electron's own data goes to `~/.agentbuddy/electron` (`app.setPath('userData')`). SIGINT and SIGTERM quit the app cleanly.
     - _Requirements: 4.1, 4.2_
   - [ ] 8.5 First run with the builder, announced first: the app attaches to the running relay and shows the old list in its window; the tray icon appears; quitting leaves the relay running. While it runs, `lsof -nP -i -a -p <pid>` shows only `127.0.0.1` connections. Also from O4: the tray icon and its title are visible, whether a Dock icon flashes at start, and a pop-up click brings Kiro forward from behind another app. Confirm the app process is gone after quitting.
     - _Requirements: 4.4, 4.7, 16.3_

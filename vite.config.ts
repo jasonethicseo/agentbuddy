@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { parsePort } from './src/core/config';
 
@@ -7,6 +8,10 @@ export default defineConfig({
   build: {
     outDir: 'dist/ui',
     emptyOutDir: true,
+    rollupOptions: {
+      // The main window and the pop-up page (messenger-app design).
+      input: { main: resolve(import.meta.dirname, 'index.html'), popup: resolve(import.meta.dirname, 'popup.html') },
+    },
   },
   server: {
     host: '127.0.0.1',

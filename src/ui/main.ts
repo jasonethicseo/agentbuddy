@@ -1,6 +1,7 @@
-// UI entry. Relay mode only in this spec; demo mode arrives with the demo spec.
-
+// UI entry: in the desktop app the list comes through the preload bridge; in a browser,
+// from the relay's stream. (The app bridge here is a stop-gap until task 10.6 adds bridge.ts.)
 import type { BuddyView } from '../core/buddies';
+import type { AppSnapshot } from '../core/snapshot';
 import { createBuddyList } from './screens/list';
 
 const RETRY_MS = 3000;
@@ -32,4 +33,18 @@ function connect(): void {
   });
 }
 
-connect();
+interface AppBridge {
+  onState(cb: (s: AppSnapshot) => void): void;
+  ready(): void;
+}
+const app = (window as unknown as { agentbuddy?: AppBridge }).agentbuddy;
+if (app) {
+  app.onState((s) => {
+    if (!list || !Array.isArray(s.buddies)) return;
+    list.render(s.buddies);
+    if (notice) notice.hidden = s.connection === 'ok';
+  });
+  app.ready();
+} else {
+  connect();
+}
