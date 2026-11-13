@@ -69,29 +69,6 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 .relay-mark[data-dot='idle'] { color: var(--st-idle); }
 .relay-mark[data-dot='muted'] { color: var(--st-off); }
 
-/* Inbox */
-.inbox-head { display: flex; align-items: center; padding: 8px 10px; background: var(--body); border-bottom: 1px solid var(--line); }
-.inbox-title { flex-grow: 1; font-weight: 800; }
-.mark-all { height: 24px; padding: 0 8px; font-size: 11px; color: var(--frame); background: var(--row); border: 1px solid var(--band-line); border-radius: 4px; cursor: pointer; }
-.inbox-row {
-  display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 9px 10px; text-align: left; cursor: pointer;
-  background: var(--row); border: 0; border-bottom: 1px solid var(--line-soft);
-}
-.inbox-row .icon { margin-top: 2px; }
-.inbox-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
-.inbox-who { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.inbox-agent { font-weight: 400; color: var(--band-text); }
-.inbox-at { font-weight: 400; color: var(--text-2); }
-.inbox-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
-.inbox-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.inbox-time { color: var(--text-2); }
-.inbox-row[data-unread] .inbox-agent { font-weight: 800; color: var(--text); }
-.inbox-row[data-unread] .inbox-line { font-weight: 700; }
-.inbox-row[data-unread][data-state='WAITING_APPROVAL'] { background: var(--alert-tint); }
-.inbox-row[data-unread][data-state='WAITING_APPROVAL'] .inbox-line { color: var(--alert-text); }
-.inbox-row[data-unread][data-state='TURN_DONE'] { background: var(--done-tint); }
-.inbox-row[data-unread][data-state='TURN_DONE'] .inbox-line { color: var(--done-text); }
-
 /* Settings */
 .settings { display: flex; flex-direction: column; gap: 14px; padding: 12px 10px; }
 .set-card { display: flex; flex-direction: column; background: var(--row); border: 1px solid var(--line); border-radius: 6px; }

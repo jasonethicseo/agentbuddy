@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { InboxEntry } from '../../src/core/attention';
 import { alertText, connections, footer } from '../../src/ui/model/chrome';
-import { inboxHeader, inboxRows, unreadCount } from '../../src/ui/model/inbox';
+import { agentOfKey, inboxHeader, inboxRows, unreadCount } from '../../src/ui/model/inbox';
 import { OFFLINE_GROUP, age, buildGroups } from '../../src/ui/model/list';
 import type { Clock } from '../../src/ui/model/list';
 import { T0, buddyView, iso, key, snapshot } from '../fixtures/views';
@@ -166,14 +166,18 @@ describe('inbox model', () => {
 
   it('lists newest first with need your OK / turn done lines', () => {
     expect(inboxRows(entries, false, clock)).toEqual([
-      { session: B, state: 'TURN_DONE', agent: 'Claude Code', folder: 'agentbuddy', line: 'turn done · started 05:00:00', time: '05:03', unread: true },
-      { session: A, state: 'WAITING_APPROVAL', agent: 'Claude Code', folder: 'agentbuddy', line: 'need your OK · fix login', time: '05:02', unread: true },
-      { session: K, state: 'TURN_DONE', agent: 'Kiro', folder: 'agentbuddy', line: 'turn done · 15. session model', time: '05:01', unread: false },
+      { session: B, state: 'TURN_DONE', agentId: 'claude', agent: 'Claude Code', folder: 'agentbuddy', line: 'turn done · started 05:00:00', time: '05:03', unread: true },
+      { session: A, state: 'WAITING_APPROVAL', agentId: 'claude', agent: 'Claude Code', folder: 'agentbuddy', line: 'need your OK · fix login', time: '05:02', unread: true },
+      { session: K, state: 'TURN_DONE', agentId: 'kiro', agent: 'Kiro', folder: 'agentbuddy', line: 'turn done · 15. session model', time: '05:01', unread: false },
     ]);
     expect(inboxHeader(entries)).toBe('Today · 2 unread');
     expect(unreadCount(entries)).toBe(2);
   });
 
+  it('names the agent from the session key, for its sprite (themes Requirement 6.4)', () => {
+    expect([agentOfKey(K), agentOfKey(A), agentOfKey('["codex","01a1…"]')]).toEqual(['kiro', 'claude', 'codex']);
+    for (const bad of ['', 'kiro', '["mystery","x"]', '{"0":"kiro"}', '[1]', '[']) expect(agentOfKey(bad)).toBeUndefined();
+  });
   it('hide-text shows start times instead of session names', () => {
     expect(inboxRows(entries, true, clock).map((r) => r.line)).toEqual(['turn done · started 05:00:00', 'need your OK · started 05:00:00', 'turn done · started 05:00:00']);
   });

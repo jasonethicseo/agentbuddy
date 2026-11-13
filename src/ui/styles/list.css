@@ -25,7 +25,6 @@
   margin: 0 8px; background: var(--card-bg); border: var(--card-line-width) solid var(--card-line);
   border-radius: var(--card-radius); box-shadow: var(--card-shadow);
 }
-.screen-inbox { background: var(--row); }
 .empty { margin: 0; padding: 16px 10px; color: var(--text-2); }
 
 /* Groups */

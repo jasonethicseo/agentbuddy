@@ -7,6 +7,7 @@ import './styles/fonts.css';
 import './styles/icons.css';
 import './styles/main.css';
 import './styles/list.css';
+import './styles/inbox.css';
 import type { AppSnapshot } from '../core/snapshot';
 import { appBridge, browserSource } from './bridge';
 import { renderChrome, setupChrome } from './chrome';
@@ -66,7 +67,7 @@ function render(): void {
       },
     });
     if (bridge === null) return;
-    renderInbox($('.screen-inbox'), inboxHeader(s.inbox), inboxRows(s.inbox, s.settings.hideText, c), {
+    renderInbox($('.screen-inbox'), s.settings.theme, inboxHeader(s.inbox), inboxRows(s.inbox, s.settings.hideText, c), {
       click: (session) => bridge.click('inbox', session),
       ackAll: () => bridge.ackAll(),
     });
