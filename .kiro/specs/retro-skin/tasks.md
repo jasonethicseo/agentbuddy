@@ -117,7 +117,7 @@ How to work through this list:
 
 ## Handoff (2026-11-13)
 
-State: tasks 1–8 of this spec, and S19, are done and committed; 813 tests pass. No app or check process is running; the builder's relay (pid 86955, port 4343) runs from an older build, so restart it from this build when convenient for the browser page to match.
+State: tasks 1–8 of this spec, and S19, are done and committed; 813 tests pass. No app or check process is running; the builder's relay (pid 86955, port 4343) was started before this spec: it already serves the new UI files from `dist/ui`, but its in-memory code predates the `.woff2` content type, so restart it when convenient for the browser page to load Galmuri.
 
 Open (UNVERIFIED, see requirements): the transparent window's shadow and its 420 px minimum height (carried over from themes).
 
