@@ -8,6 +8,7 @@ import type { InboxRecord } from '../../src/core/attention';
 import { isAttention } from '../../src/core/pings';
 import type { AttentionState } from '../../src/core/pings';
 import { parseSettings, serializeSettings } from '../../src/app/settings';
+import { cleanMyStatus } from '../../src/core/text';
 import { T0, buddyView, iso, key } from '../fixtures/views';
 
 const KEYS = [key('claude', 'e697…'), key('claude', '81fd…'), key('kiro', 'sess_ce19…'), key('codex', '01a1…')];
@@ -116,11 +117,12 @@ describe('P25 settings', () => {
         fc.dictionary(fc.constantFrom(...KEYS), fc.record({ lastAt: fc.oneof(fc.constant(iso(T0)), fc.jsonValue({ maxDepth: 0 })), hiddenAt: fc.constant(iso(T0)) })),
         fc.jsonValue({ maxDepth: 2 }),
       ),
+      myStatus: fc.oneof(fc.string({ maxLength: 50 }), fc.string({ unit: 'grapheme', maxLength: 45 }), fc.jsonValue({ maxDepth: 1 })),
       extra: fc.jsonValue({ maxDepth: 1 }),
     },
     { requiredKeys: [] },
   );
-  const KNOWN = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'closedGroups', 'hidden'];
+  const KNOWN = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'closedGroups', 'myStatus', 'hidden'];
   it('never throws, and keeps only known keys of the right type', () => {
     fc.assert(
       fc.property(fc.oneof(fc.jsonValue(), near), (value) => {
@@ -128,6 +130,7 @@ describe('P25 settings', () => {
         expect(Object.keys(s).sort()).toEqual([...KNOWN].sort());
         for (const k of ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop'] as const) expect(typeof s[k]).toBe('boolean');
         expect(s.closedGroups.every((g) => typeof g === 'string' && g !== '')).toBe(true);
+        expect(cleanMyStatus(s.myStatus)).toBe(s.myStatus); // a clean string of at most 40 code points (Requirement 18.5)
         for (const [k, m] of s.hidden) {
           expect(typeof k).toBe('string');
           expect(Number.isFinite(m.lastAtMs) && Number.isFinite(m.hiddenAtMs)).toBe(true);

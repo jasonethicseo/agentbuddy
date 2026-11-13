@@ -13,6 +13,8 @@ export const WINDOW_SIZE = 50;
 export const SESSION_TITLE_LIMIT = 40;
 /** The status text excerpt after a status phrase is cut to this many code points. */
 export const STATUS_TEXT_LIMIT = 40;
+/** The user's own status message in the "me" row, in code points (messenger-app Requirement 18.4). */
+export const MY_STATUS_LIMIT = 40;
 /** Longest session key, buddy name, title or folder accepted from the app's files and windows, in characters. */
 export const KEY_MAX = 1024;
 

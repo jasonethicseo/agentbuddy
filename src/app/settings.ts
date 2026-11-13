@@ -1,5 +1,5 @@
 // App settings in ~/.agentbuddy/app-settings.json (mode 600): the five switches,
-// closed groups and hidden sessions (messenger-app Requirements 11.4 of hidden marks, 13.5, 14.2, 14.3).
+// closed groups, hidden sessions and the "me" status message (messenger-app Requirements 13.5, 14.2, 14.3, 18.5).
 // `parseSettings` is pure and never throws; load and save touch the file system.
 import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -7,6 +7,7 @@ import type { HiddenMap, HiddenMark } from '../core/attention';
 import { KEY_MAX } from '../core/config';
 import { isRecord } from '../core/event';
 import type { PublicSettings } from '../core/snapshot';
+import { cleanMyStatus } from '../core/text';
 import { SETTING_KEYS } from './ipc';
 
 export const SETTINGS_FILE = 'app-settings.json';
@@ -24,6 +25,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   macNotifications: false,
   alwaysOnTop: true,
   closedGroups: [],
+  myStatus: '',
   hidden: new Map(),
 };
 
@@ -55,6 +57,8 @@ export function parseSettings(value: unknown): Settings {
     const groups = value['closedGroups'];
     if (Array.isArray(groups)) s.closedGroups = [...new Set(groups.filter(isText))].slice(0, MAX_CLOSED_GROUPS);
     s.hidden = parseHidden(value['hidden']);
+    const status = value['myStatus'];
+    if (typeof status === 'string' && cleanMyStatus(status) === status) s.myStatus = status; // only a value that is already clean
     return s;
   } catch {
     return { ...DEFAULT_SETTINGS, closedGroups: [], hidden: new Map() };
@@ -68,8 +72,8 @@ export function serializeSettings(s: Settings): string {
       hidden[key] = { lastAt: new Date(m.lastAtMs).toISOString(), hiddenAt: new Date(m.hiddenAtMs).toISOString() };
     }
   }
-  const { hideText, sound, popups, macNotifications, alwaysOnTop, closedGroups } = s;
-  return `${JSON.stringify({ v: 1, hideText, sound, popups, macNotifications, alwaysOnTop, closedGroups, hidden })}\n`;
+  const { hideText, sound, popups, macNotifications, alwaysOnTop, closedGroups, myStatus } = s;
+  return `${JSON.stringify({ v: 1, hideText, sound, popups, macNotifications, alwaysOnTop, closedGroups, myStatus, hidden })}\n`;
 }
 
 /** The saved settings, or the defaults when the file is missing, unreadable or invalid. */

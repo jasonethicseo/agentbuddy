@@ -30,6 +30,29 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 .tb-pin[aria-pressed='false'] { opacity: 0.6; }
 .tb-close { background: var(--alert); border-color: var(--close-line); }
 
+/* "Me" row (Requirement 18): every color, border and radius comes from the --me-* tokens. */
+.me-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--me-bg); border-bottom: 1px solid var(--me-line); }
+.me-tile {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box; width: 34px; height: 34px;
+  background: var(--me-tile); border: 2px solid var(--me-tile-line); border-radius: var(--me-tile-radius);
+}
+.me-tile .b-body { fill: var(--me-bubble); }
+.me-tile .b-eye { fill: var(--me-bubble-eyes); }
+.me-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.me-name { font-weight: 800; color: var(--me-name); }
+.me-status {
+  display: flex; align-items: baseline; gap: 0; max-width: 100%; padding: 0; text-align: left; white-space: nowrap; cursor: pointer;
+  color: var(--me-status); background: transparent; border: 0;
+}
+.me-status[data-hint] { color: var(--me-hint); }
+.me-status:hover .me-status-text { text-decoration: underline; }
+.me-status-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.me-pencil { flex-shrink: 0; white-space: pre; }
+.me-input {
+  box-sizing: border-box; width: 100%; margin: 0; padding: 2px 4px; font: inherit; color: var(--me-name);
+  background: var(--me-field); border: 1px solid var(--me-field-line); border-radius: var(--me-field-radius);
+}
+
 /* Alert strip */
 .alert-strip {
   display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-weight: 700;

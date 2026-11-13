@@ -10,6 +10,10 @@ const ROOT = join(import.meta.dirname, '../..');
 const UI = join(ROOT, 'src/ui');
 const tokensText = readFileSync(join(UI, 'styles/tokens.css'), 'utf8');
 const TOKENS = new Map([...tokensText.matchAll(/(--[a-z0-9-]+):\s*(#[0-9A-Fa-f]{6});/g)].map((m) => [m[1]!, m[2]!.toUpperCase()]));
+/** Tokens that name another token (`--me-status: var(--text-2)`), for values a theme may change later (Requirement 18.7). */
+const ALIASES = new Map([...tokensText.matchAll(/(--[a-z0-9-]+):\s*var\((--[a-z0-9-]+)\);/g)].map((m) => [m[1]!, m[2]!]));
+/** Size tokens such as `--me-tile-radius: 8px`. */
+const SIZES = new Set([...tokensText.matchAll(/(--[a-z0-9-]+):\s*\d+px;/g)].map((m) => m[1]!));
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -19,7 +23,9 @@ export function contrast(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi! + 0.05) / (lo! + 0.05);
 }
-const color = (token: string) => {
+const color = (token: string): string => {
+  const target = ALIASES.get(token);
+  if (target !== undefined) return color(target);
   const v = TOKENS.get(token);
   if (v === undefined) throw new Error(`unknown token ${token}`);
   return v;
@@ -57,6 +63,10 @@ const TEXT: Pair[] = [
   ['--alert-later', '--alert-tint', 'needs-OK Later'],
   ['--on-fill', '--deep', 'title text on the blue gradient, with a --deep outline'],
   ['--on-fill', '--alert-text', 'needs-OK pop-up title, with an --alert-text outline'],
+  ['--me-name', '--me-bg', '"me" in the me row'],
+  ['--me-status', '--me-bg', 'my status message'],
+  ['--me-hint', '--me-bg', 'set your status hint'],
+  ['--me-name', '--me-field', 'my status message while editing'],
 ];
 const GRAPHICS: Pair[] = [
   ['--on-fill', '--button', 'title bar and done pop-up × glyphs'],
@@ -73,6 +83,9 @@ const GRAPHICS: Pair[] = [
   ['--done', '--done-tint', 'done icon on a tinted row'],
   ['--stale', '--row', 'stale icon'],
   ['--idle', '--row', 'idle crescent, Codex dot'],
+  ['--me-bubble', '--me-tile', 'bubble on the me tile'],
+  ['--me-bubble-eyes', '--me-bubble', 'bubble eyes on the me tile'],
+  ['--me-field-line', '--me-bg', 'status field border'],
 ];
 /** Below 3:1 on purpose: each sits next to text that says the same (phrase, screen-reader name, footer text). */
 const KNOWN_LOW: Pair[] = [
@@ -82,10 +95,21 @@ const KNOWN_LOW: Pair[] = [
 ];
 
 describe('tokens', () => {
-  it('are 6-digit hex colors, one per name', () => {
+  it('are 6-digit hex colors, aliases of defined tokens, or pixel sizes, one per name', () => {
     const names = [...tokensText.matchAll(/(--[a-z0-9-]+):/g)].map((m) => m[1]);
-    expect(names.length).toBe(TOKENS.size);
+    expect(names.length).toBe(TOKENS.size + ALIASES.size + SIZES.size);
+    expect(new Set(names).size).toBe(names.length);
     expect(TOKENS.size).toBeGreaterThan(30);
+    for (const name of ALIASES.keys()) expect(color(name)).toMatch(/^#[0-9A-F]{6}$/);
+  });
+  it('the me row has its own tokens for every color, border and radius it uses (Requirement 18.7)', () => {
+    const css = readFileSync(join(UI, 'styles/main.css'), 'utf8');
+    const rules = [...css.matchAll(/^[^{}]*\.me-[^{]*\{[^}]*\}/gm)].map((m) => m[0]);
+    expect(rules.length).toBeGreaterThan(5);
+    for (const rule of rules) {
+      for (const v of rule.matchAll(/var\((--[a-z0-9-]+)\)/g)) expect([rule.split('{')[0]!.trim(), v[1]!.startsWith('--me-')]).toEqual([rule.split('{')[0]!.trim(), true]);
+      expect(rule).not.toMatch(/border-radius:\s*\d/);
+    }
   });
 
   it('appear only in tokens.css: no other UI file holds a hex color', () => {
@@ -110,7 +134,7 @@ describe('tokens', () => {
 
 describe('stylesheets', () => {
   const sheets = readdirSync(join(UI, 'styles')).filter((n) => n.endsWith('.css'));
-  const defined = new Set([...TOKENS.keys(), '--font-text', '--font-title']);
+  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, '--font-text', '--font-title']);
   it.each(sheets)('%s uses only defined variables', (name) => {
     const used = [...readFileSync(join(UI, 'styles', name), 'utf8').matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]!);
     expect(used.filter((v) => !defined.has(v))).toEqual([]);

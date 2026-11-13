@@ -3,6 +3,7 @@
 // Plain module: no Electron import, so it is testable and shared with the preloads.
 import { KEY_MAX } from '../core/config';
 import type { ClickTarget, SettingKey } from '../core/snapshot';
+import { cleanMyStatus } from '../core/text';
 
 export const CH = {
   // main process → main window
@@ -18,6 +19,7 @@ export const CH = {
   group: 'ui:group',
   ackAll: 'ui:ackAll',
   window: 'ui:window',
+  status: 'ui:status',
   // main process ↔ pop-up
   popupContent: 'popup:content',
   popupClick: 'popup:click',
@@ -38,6 +40,7 @@ export interface UiMessages {
   'ui:group': { folder: string; open: boolean };
   'ui:ackAll': true;
   'ui:window': { action: WindowAction };
+  'ui:status': { text: string };
 }
 export interface PopupMessages {
   'popup:click': { action: PopupAction };
@@ -90,6 +93,11 @@ export const UI_CHECKS: { readonly [C in keyof UiMessages]: (v: unknown) => UiMe
   'ui:window': safe((v) => {
     const action = prop(v, 'action');
     return oneOf(['minimize', 'close'] as const, action) ? { action } : null;
+  }),
+  // The "me" status message, cleaned again here (Requirement 18.5).
+  'ui:status': safe((v) => {
+    const text = cleanMyStatus(prop(v, 'text'));
+    return text === null ? null : { text };
   }),
 };
 

@@ -151,7 +151,7 @@ The contract between the main process and the windows, like `BuddyView` is betwe
 ```ts
 export type RelayMode = 'connecting' | 'own' | 'attached' | 'browser';   // 'browser': the relay's page, no app
 export type Connection = 'ok' | 'disconnected' | 'foreign' | 'error';
-export interface PublicSettings { hideText: boolean; sound: boolean; popups: boolean; macNotifications: boolean; alwaysOnTop: boolean; closedGroups: string[] }
+export interface PublicSettings { hideText: boolean; sound: boolean; popups: boolean; macNotifications: boolean; alwaysOnTop: boolean; closedGroups: string[]; myStatus: string }   // myStatus: Req 18
 export interface AppSnapshot {
   mode: RelayMode; port: number; connection: Connection; errorCode?: string;   // errno code for 'error'
   buddies: BuddyView[]; hidden: string[]; unacked: string[];
@@ -217,6 +217,7 @@ export function createController(init: { settings: Settings; records: InboxRecor
   onPopup(session: string, action: 'go' | 'close' | 'later'): void;   // Go there: as a session click; ×: acknowledge, no jump; Later: nothing
   onAckAll(): void; onHide(session: string): void; onWindow(action: 'minimize' | 'close'): void;
   onSetting(key: SettingKey, value: boolean): void; onGroup(folder: string, open: boolean): void;
+  onStatus(text: string): void;   // Req 18: saves myStatus, pushes state, nothing else
   onTick(): void;
 };
 ```
@@ -275,7 +276,7 @@ Fixed absolute program paths mean `PATH` cannot redirect the commands. Every arg
 
 ### `inbox-file.ts` and `settings.ts` (Req 11.2–11.5, 14)
 - Inbox: `inboxFileName(d)` = `inbox-YYYY-MM-DD.jsonl` (local date). `readInbox(dir, now)` reads today's file, keeps lines that pass `validateInboxRecord`, and returns `[]` on any read error. `createInboxWriter(dir, onError)` chains appends like the relay's daily log, with `{ flag: 'a', mode: 0o600 }`. A failed append calls `onError(code)` and the record stays in the controller's memory (Req 11.5).
-- Settings: `parseSettings(value): Settings` never throws and keeps only known keys of the right type, else defaults (`hideText` false, `sound` true, `popups` true, `macNotifications` false, `alwaysOnTop` true), plus `closedGroups` (at most 200 strings of at most 1024 characters) and `hidden` (at most 500 marks). `saveSettings` writes `app-settings.json.tmp` with mode 600 and renames it over `app-settings.json`, so a crash never leaves half a file. `main.ts` coalesces saves within 500 ms.
+- Settings: `parseSettings(value): Settings` never throws and keeps only known keys of the right type, else defaults (`hideText` false, `sound` true, `popups` true, `macNotifications` false, `alwaysOnTop` true), plus `closedGroups` (at most 200 strings of at most 1024 characters), `hidden` (at most 500 marks) and `myStatus` (default `''`; Req 18). `saveSettings` writes `app-settings.json.tmp` with mode 600 and renames it over `app-settings.json`, so a crash never leaves half a file. `main.ts` coalesces saves within 500 ms.
 
 ### `ipc.ts` and the preloads (Req 15.2, 15.3)
 
@@ -292,10 +293,11 @@ Fixed absolute program paths mean `PATH` cannot redirect the commands. Every arg
 | `ui:group` | main window → main | `{ folder, open }` | string of 1–1024 characters; boolean |
 | `ui:ackAll` | main window → main | none | |
 | `ui:window` | main window → main | `{ action }` | `minimize` or `close` |
+| `ui:status` | main window → main | `{ text }` | string of at most 1024 UTF-16 units that `cleanMyStatus` accepts (Req 18.5) |
 | `popup:content` | main → pop-up | `PopupContent` | |
 | `popup:click` | pop-up → main | `{ action }` | `go`, `close` or `later`; the sender must be a live pop-up; main maps it to its session |
 
-`preload-main.ts` exposes `window.agentbuddy = { onState, onDing, onScreen, onNotice, ready, click, ackAll, hide, setSetting, setGroupOpen, windowAction }`. Each `on…` wraps `ipcRenderer.on` and passes only the payload, never the event object. `preload-popup.ts` exposes `window.agentbuddyPopup = { onContent, go, close, later }`. The renderer reads the inbox and settings from `AppSnapshot`, so no read call exists.
+`preload-main.ts` exposes `window.agentbuddy = { onState, onDing, onScreen, onNotice, ready, click, ackAll, hide, setSetting, setGroupOpen, windowAction, setStatus }`. Each `on…` wraps `ipcRenderer.on` and passes only the payload, never the event object. `preload-popup.ts` exposes `window.agentbuddyPopup = { onContent, go, close, later }`. The renderer reads the inbox and settings from `AppSnapshot`, so no read call exists.
 
 `security.ts` registers each `ipcMain.on` through `trusted(channel, kind, handler)`: the sender's frame URL must start with `app://ui/`, `BrowserWindow.fromWebContents(sender)` must be the main window (`ui:*`) or a live pop-up (`popup:*`), and the payload must pass its validator. Anything else is dropped without a reply.
 
@@ -398,7 +400,7 @@ Updated in task 10: a group carries `toggle: { key, open }`, the call that flips
 - **Settings file** `~/.agentbuddy/app-settings.json` (mode 600):
   ```json
   {"v":1,"hideText":false,"sound":true,"popups":true,"macNotifications":false,"alwaysOnTop":true,
-   "closedGroups":["/Users/dev/demo"],"hidden":{"[\"claude\",\"e697…\"]":{"lastAt":"…","hiddenAt":"…"}}}
+   "closedGroups":["/Users/dev/demo"],"myStatus":"★ building AgentBuddy ♪","hidden":{"[\"claude\",\"e697…\"]":{"lastAt":"…","hiddenAt":"…"}}}
   ```
 
 ## Visual design
@@ -500,7 +502,7 @@ Measurements, all from `Main.dc.html`:
 - `.statusbar`: padding 6/10, gap 6, `--band`, 1 px `--band-line` top border, 11 px `--band-text`; `.dot` 8 px circle: `ok` → `--ok`, `muted` → `--ring`, `alert` → `--alert`.
 - Every button: `:focus-visible { outline: 2px solid var(--frame); outline-offset: -2px }`. Row buttons get `--body` on hover.
 
-Window corners: design.md asks for 10 px top and 4 px bottom radii. A frameless window that is not transparent gets rounded corners from macOS itself, on all four corners, and Electron documents that transparent windows are not resizable. So `.window` uses a 10 px radius on all corners to follow the system's clip; O4 tries a transparent window that still resizes, and if that works, the radii become 10/10/4/4.
+Window corners: design.md asks for 10 px top and 4 px bottom radii. A frameless window that is not transparent gets rounded corners from macOS itself, on all four corners, and Electron documents that transparent windows are not resizable. So `.window` uses a 10 px radius on all corners to follow the system's clip. The builder decided on 2026-11-13 to keep it so and to leave the transparent-window check to the theme spec, which changes the corners.
 
 ### State icons (`icons.ts`)
 SVG, `viewBox="0 0 14 14"`, drawn as in `Icons.dc.html`; 14 px in buddy rows, the alert strip and the inbox, 12 px in session rows, 28 px in pop-ups. Each is `aria-hidden`, followed by a `.sr-only` state name.
@@ -536,6 +538,30 @@ From `Popup.dc.html`: 300 px card, 2 px border, radius 8/8/3/3, `--row` backgrou
 - A notice pop-up uses the blue card with the title `AgentBuddy`, one line of text, and only ×.
 - `@keyframes rise` moves the card from `translateY(100%)` to its place in 220 ms inside the transparent window; `@media (prefers-reduced-motion: reduce)` turns it off (Req 9.1).
 - The mockup's `· newest` after the time is left out: design.md does not ask for it, and keeping it right would mean rewriting older cards on every ping.
+
+### My status row (Req 18, added 2026-11-13)
+
+From `Main.dc.html` and design.md "My status row". Between the title bar and the alert strip; Buddies tab of the app only.
+
+```html
+<div class="me-row">                         <!-- hidden on Inbox, Settings and in the browser -->
+  <span class="me-tile" aria-hidden="true"><svg class="bubble bubble-dark"></svg></span>   <!-- 22 px bubble -->
+  <div class="me-text"><span class="me-name">me</span>
+    <button class="me-status" data-focus="me-status"><span class="sr-only">Edit my status message: </span>
+      <span class="me-status-text">★ building AgentBuddy ♪</span> <span class="me-pencil" aria-hidden="true">✎</span></button>
+    <!-- while editing, the button is replaced by: -->
+    <input class="me-input" type="text" aria-label="My status message" autocomplete="off" spellcheck="false">
+  </div>
+</div>
+```
+
+- Pure parts: `cleanMyStatus(v: unknown): string | null` and `MY_STATUS_LIMIT = 40` in `src/core/text.ts` (white space and control characters to one space, trimmed; `null` for a non-string, more than 1024 UTF-16 units, or more than 40 code points after cleaning); `limitStatusInput(value)` (cut to 40 code points while typing) and `meView(s, tab)` (`null` unless the app shows the Buddies tab; else `{ text, hint }`) in `src/ui/model/me.ts`.
+- `parseSettings` keeps `myStatus` only when `cleanMyStatus` returns it unchanged; else `''`. `ui:status` passes the cleaned text to `controller.onStatus`, which only saves the settings and pushes the snapshot: no inbox record, pop-up, notification or relay call (Req 18.5). The snapshot carries `myStatus` with the other settings; hide-text leaves it as it is (Req 18.6).
+- `src/ui/screens/me.ts` keeps one module-level editing flag. While a field is open, a re-render leaves the row alone, so typing survives new lists and the 30-second re-render. Enter (not during an input-method composition, `isComposing`) saves `cleanMyStatus(value) ?? ''` and puts focus back on the button; Esc puts the old text back and focus on the button; `blur` cancels. Leaving the Buddies tab removes the field (cancel).
+- Look, all through tokens added for this row (Req 18.7), each now set to an existing palette color or size, so no new color appears: `--me-bg` (`--row`), `--me-line` (`--line`, bottom border), `--me-tile` / `--me-tile-line` (`--tile` / `--tile-line`), `--me-tile-radius` (8px), `--me-bubble` / `--me-bubble-eyes` (`--frame` / `--on-fill`), `--me-name` (`--text`), `--me-status` and `--me-hint` (`--text-2`), `--me-field` / `--me-field-line` (`--row` / `--frame`), `--me-field-radius` (3px).
+- Sizes from the mockup: padding 8/10, gap 10; tile 34×34 with a 2 px border; text column gap 2; `me` weight 800; the status 12 px, one line with an ellipsis, the `✎` never cut; the field 12 px, full width, 1 px border, padding 2/4.
+- The hint uses `--me-hint`, which is `--text-2`: the palette has no lighter text color that keeps 4.5:1 on white (`--stale` gives 4.35), so the hint is told apart by its words, not by a lighter color. A theme can set `--me-hint` on its own.
+- The contrast test resolves alias tokens (`--me-status: var(--text-2)`) and checks `--me-name`, `--me-status`, `--me-hint` on `--me-bg`, and `--me-name` on `--me-field`; the bubble on its tile is a graphic (3:1).
 
 ### Inbox screen (`Inbox.dc.html`)
 
@@ -610,8 +636,8 @@ Graphics: icon glyphs and shapes reach at least 3:1 except the `--ring` rings (2
 | Pop-up size | 260×84, 8 px gap | 300 px card, 10 px gap | mockup |
 | Pop-up `· newest` | — | on the newest card | left out (see above) |
 | Inbox | a list | `Today · n unread`, `Mark all read`, tab badge | design.md (Req 10.2, 11.3) |
-| Window corners | — | 10/10/4/4 | 10 px all round unless O4 shows a resizable transparent window |
-| My status row | — | optional | not built; not in the requirements |
+| Window corners | — | 10/10/4/4 | 10 px all round (builder, 2026-11-13; the theme spec revisits them) |
+| My status row | — | optional | built (Req 18, added by the builder 2026-11-13); no default message |
 | Phrases | `working… ♪`, `done~ your turn!`, `brb~` | `♪ working…`, `♪ studying hard`, `★ done~ your turn!`, `brb~ zZ` | design.md (Req 7.2) |
 | Colors | — | "no other colors", yet about 20 more in use | those become tokens; nothing beyond them |
 | Contrast | — | 4.5:1 rule against three of its own colors | the table above |
@@ -635,7 +661,7 @@ P1–P15 are the core-pipeline properties. Changed ones are marked.
 | P22 | `placePopups`: every pop-up lies inside the area, none overlap, each later one is above the earlier ones, and `count <= popupCapacity`. | 9.1, 9.6 |
 | P23 | A hidden session stays hidden until its last event time passes the mark, and then shows again; a mark older than 24 hours is gone after `refreshHidden`. | 13.1, 13.5 |
 | P24 | `planJump` never returns `run` with a value that fails `isBundleId`; it returns a folder only for Kiro-agent sessions with `dev.kiro.desktop`, a state other than `OFFLINE`/`ENDED`, an absolute path and `isDirectory` true; the argument arrays built by `runJump` contain `-b` as the only item starting with `-`. | 12.3–12.7 |
-| P25 | `parseSettings` and `validateInboxRecord` never throw for any JSON value, and their results only hold known keys of the right type. | 11.4, 14.3 |
+| P25 | `parseSettings` and `validateInboxRecord` never throw for any JSON value, and their results only hold known keys of the right type; `myStatus` is always a string that `cleanMyStatus` keeps unchanged (at most 40 code points). | 11.4, 14.3, 18.4, 18.5 |
 | P26 | `buildGroups`: every buddy appears in exactly one group; a buddy is in the offline group exactly when all its sessions are `OFFLINE` or `ENDED`; each folder group's `online` is at most its `total`; session rows exist only when two or more sessions are visible or the buddy is in `showMore`. | 6.1–6.6 |
 
 ## Error handling
@@ -684,7 +710,7 @@ From the changes table in the requirements: events.md "State rules" and "Buddies
 - The ding and pop-ups do not follow macOS Focus modes; the settings turn them off.
 - At midnight, earlier entries leave the inbox and stop counting.
 - Run from source, macOS did not allow Electron to post notifications (O4: `UNErrorDomain` error 1), so the optional macOS notifications show a notice instead until a packaged app or a changed system setting allows them.
-- The main window's bottom corners follow macOS's rounding for frameless windows, not design.md's 4 px, unless O4 shows a transparent window can still be resized.
+- The main window's bottom corners follow macOS's rounding for frameless windows, not design.md's 4 px (kept by the builder's decision until the theme spec).
 - macOS only.
 
 ## Order of work

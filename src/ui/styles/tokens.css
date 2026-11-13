@@ -39,4 +39,21 @@
   --idle: #B8860B;
   --stale: #6E7A8C;
   --ring: #8C99AA;
+
+  /* The "me" row (messenger-app Requirement 18.7). Each value names an existing palette
+     color or size today; a theme changes them here and nothing else. */
+  --me-bg: var(--row);
+  --me-line: var(--line);
+  --me-tile: var(--tile);
+  --me-tile-line: var(--tile-line);
+  --me-tile-radius: 8px;
+  --me-bubble: var(--frame);
+  --me-bubble-eyes: var(--on-fill);
+  --me-name: var(--text);
+  --me-status: var(--text-2);
+  /* The hint when no message is set: the palette has no lighter text color with 4.5:1 on white. */
+  --me-hint: var(--text-2);
+  --me-field: var(--row);
+  --me-field-line: var(--frame);
+  --me-field-radius: 3px;
 }

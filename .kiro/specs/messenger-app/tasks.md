@@ -125,26 +125,35 @@ How to work through this list:
     - Done 2026-11-13: Claude app `com.anthropic.claudefordesktop` (no `TERM_PROGRAM`), Claude CLI in VS Code `com.microsoft.VSCode` / `vscode`, Claude CLI in a Kiro terminal `dev.kiro.desktop` / `kiro`, Kiro IDE chat `dev.kiro.desktop` (no `TERM_PROGRAM`). Not arrived: Kiro task runs, Codex.
   - _Requirements: 17.3_
 
-- [ ] 12. Steering, README and final checkpoint
+- [ ] 12. Steering, README and final checkpoint (after task 13, builder's order of 2026-11-13)
   - Steering: tech.md "Pieces", "Commands", "Sound"; structure.md (`src/app`, the new core and UI files, who touches files and network); product.md core flow step 2.
   - README: `npm run app`, own and attached relays, the new files in `~/.agentbuddy/`, Electron and the two fonts with their licenses in the third-party table, and the known limits from the design.
   - All tests pass and `npm run build` succeeds. Grep for `/Users/` paths other than `/Users/dev/`, user names and token-like strings. `.gitignore` does not list `.kiro`.
   - _Requirements: 17.4, 17.5_
 
-- [ ]* 13. My status row (design.md, optional)
-  - Only if the builder adds it to the requirements: `me`, the bubble tile and an editable status message stored in `app-settings.json`.
+- [ ] 13. My status row (required since 2026-11-13, Req 18)
+  - [x] 13.1 Spec: Requirement 18, design "My status row", decisions A13 and A14 (corners stay 10 px all round)
+  - [x] 13.2 `cleanMyStatus` in `src/core/text.ts`; `myStatus` in `PublicSettings`, `parseSettings`, `serializeSettings`; `ui:status` and its check; `controller.onStatus`; `setStatus` in the main preload; unit tests and P25 updated
+    - _Requirements: 18.4–18.6_
+  - [x] 13.3 `model/me.ts`, `screens/me.ts`, the row in `index.html`, the `--me-*` tokens and their styles; contrast pairs; unit tests for `meView` and `limitStatusInput`
+    - _Requirements: 18.1–18.3, 18.7, 18.8_
+  - [ ] 13.4 Visual check with the builder, announced first: the row next to `Main.dc.html`, editing with Enter, Esc, a click outside, Korean input, and the 40-code-point cap
+    - _Requirements: 18.1–18.4_
+  - Result so far (2026-11-13): 505 tests pass. Moving focus out of the field cancels, like Esc (Req 18.3). The hint uses `--me-hint` = `--text-2`, because no lighter palette color keeps 4.5:1 on white (`--stale` 4.35). `parseSettings` first took a saved `null` as a message (`cleanMyStatus(null) === null`); the new unit test caught it before the commit. The contrast test now resolves alias tokens and checks that every `.me-*` rule uses only `--me-*` variables and no literal radius.
+  - Also in this task: `app.setName('AgentBuddy')` in `src/app/main.ts`. Run from source as `electron dist/app/main.cjs`, Electron's default app reads `package.json` only from the folder it is given, so `productName` in the root `package.json` would not apply (read from `default_app.asar`, Electron 45.3.1). `userData` was already `~/.agentbuddy/electron`. `~/Library/Application Support/Electron` (written 2026-11-12 08:10–08:24 UTC, the O4 runs) was deleted with the builder's OK. `~/Library/Preferences/com.github.Electron.plist` was kept: it was last written 2026-11-13 00:30:14 UTC (task 11 run B), not by O4, and macOS keys it by the Electron binary's bundle ID, which `setName` does not change, so every run from source writes it again.
 
 - [ ]* 14. Packaged `.app` (optional, unsigned)
   - Only if time allows and the builder asks for it.
 
-## Handoff for the next session (2026-11-13)
+## Handoff for the next session (2026-11-13, updated)
 
-State: tasks 1–11 are done and committed; 485 tests pass. The relay runs detached from the latest build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`). No app or check process is running.
+State: tasks 1–11 are done; 13.1–13.3 are done and committed; 505 tests pass. The relay runs detached from an earlier build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`). No app or check process is running.
 
-Next, in this order:
-1. The "me" row of `Main.dc.html` (avatar, `me`, own status message with ✎) is missing. design.md marked it optional and it was left out without a clear report; the builder wants it. Add it to the requirements, design and tasks (task 13 becomes required): Buddies tab only, app only, inline edit (Enter saves, Esc cancels, at most 40 code points), stored only in `app-settings.json`, never sent to the relay or an agent. Open questions for the builder: the default text (`★ building AgentBuddy ♪`, an empty field showing `set your status ✎`, or other), and the window corners: (a) keep 10 px all round, or (b) a 30-second check with a transparent main window, and 10/10/4/4 if its height still resizes.
-2. Task 12: steering (tech.md Pieces, Commands, Sound; structure.md for `src/app`, the new core and UI files, and who touches files and network; product.md core flow step 2), README, final checks.
+Next, in this order (builder, 2026-11-13):
+1. Task 13.4: the visual check of the "me" row with the builder (announced first, run once with a fixed time limit). During it, also confirm that `~/Library/Application Support/Electron` and `~/Library/Application Support/AgentBuddy` are not created. Then mark task 13 done and commit.
+2. Task 12: steering, README, final checks. Add `myStatus` and the "me" row to the README's stored-files text.
+3. Then the builder brings the material for a theme spec (Blue Bot / Strawberry Milk). It changes the main window corners (16–18 px) and runs the transparent-window check once (A14).
 
-Still unanswered by the builder: whether a new Kiro window opened on the two clicks on a Claude-in-Kiro-terminal session (00:09 and 00:21 UTC; the folder rule has since changed so these no longer get a folder); and whether to delete `~/Library/Application Support/Electron` (7.4 MB) and `~/Library/Preferences/com.github.Electron.plist`, left by the O4 runs.
+Still unanswered by the builder: whether a new Kiro window opened on the two clicks on a Claude-in-Kiro-terminal session (00:09 and 00:21 UTC). The builder's reply left the answer blank; the rule stays as it is (no folder for those sessions).
 
 Working rules used so far: report to the builder in Korean; one commit per task, files staged by name; announce every check that shows windows or plays sound, say "지금 띄웁니다" right before it, run it once with a fixed time limit, write its results to a file while it runs (a detached script that stops the app by itself), and confirm no process is left before reporting.

@@ -1,7 +1,7 @@
 // Text helpers: truncation, code point counting and buddy names.
 // Pure: no file system, network, timers or clock.
 
-import { STATUS_TEXT_LIMIT, TEXT_LIMIT } from './config';
+import { KEY_MAX, MY_STATUS_LIMIT, STATUS_TEXT_LIMIT, TEXT_LIMIT } from './config';
 import type { AgentId } from './event';
 import type { DisplayState } from './state';
 
@@ -81,4 +81,22 @@ export function statusParts(state: DisplayState, inSpecTask: boolean, statusText
 /** `phrase` or `phrase · excerpt`, for plain-text places such as macOS notifications. */
 export function statusLine(parts: StatusParts): string {
   return parts.excerpt === undefined ? parts.phrase : `${parts.phrase} · ${parts.excerpt}`;
+}
+
+/** The first `limit` code points of `s`, with no ellipsis: what a text field may hold. */
+export function firstCodePoints(s: string, limit: number): string {
+  if (s.length <= limit) return s;
+  const points = Array.from(s);
+  return points.length <= limit ? s : points.slice(0, limit).join('');
+}
+
+/**
+ * The user's own status message (messenger-app Requirement 18.4, 18.5): runs of white space
+ * and control characters become one space, both ends are trimmed. `null` for anything that
+ * is not a string, is longer than KEY_MAX UTF-16 units, or is longer than 40 code points after cleaning.
+ */
+export function cleanMyStatus(v: unknown): string | null {
+  if (typeof v !== 'string' || v.length > KEY_MAX) return null;
+  const clean = v.replace(/[\s\p{Cc}]+/gu, ' ').trim();
+  return codePointLength(clean) <= MY_STATUS_LIMIT ? clean : null;
 }

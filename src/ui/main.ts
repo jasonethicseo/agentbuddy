@@ -11,10 +11,12 @@ import { keepFocus } from './dom';
 import { connections } from './model/chrome';
 import type { Tab } from './model/chrome';
 import { inboxHeader, inboxRows } from './model/inbox';
+import { meView } from './model/me';
 import { buildGroups } from './model/list';
 import type { Clock } from './model/list';
 import { renderInbox } from './screens/inbox';
 import { renderList } from './screens/list';
+import { renderMe } from './screens/me';
 import { renderSettings } from './screens/settings';
 import { ding } from './sound';
 
@@ -41,6 +43,7 @@ function render(): void {
   const s = bridge ? snap : { ...snap, settings: { ...snap.settings, closedGroups: [...localGroups] } };
   keepFocus(() => {
     renderChrome(s, tab, notice?.text);
+    renderMe($('.me-row'), meView(s, tab), { save: (text) => bridge?.setStatus(text) });
     const c = clock();
     renderList($('.screen-list'), buildGroups(s, showMore, c), bridge !== null, {
       click: (kind, key) => bridge?.click(kind, key),

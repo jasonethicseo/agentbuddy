@@ -32,4 +32,5 @@ contextBridge.exposeInMainWorld('agentbuddy', {
   setSetting: (key: SettingKey, value: boolean) => ipcRenderer.send(CH.setting, { key, value }),
   setGroupOpen: (folder: string, open: boolean) => ipcRenderer.send(CH.group, { folder, open }),
   windowAction: (action: WindowAction) => ipcRenderer.send(CH.window, { action }),
+  setStatus: (text: string) => ipcRenderer.send(CH.status, { text }),
 });

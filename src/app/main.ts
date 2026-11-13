@@ -28,6 +28,9 @@ const port = parsePort(process.env['AGENTBUDDY_PORT']);
 const uiDir = join(__dirname, '..', 'ui');
 const home = defaultHome();
 
+// Run from source, `electron dist/app/main.cjs` reads no package.json, so the app would be named
+// "Electron" (menu items, default data folders). Name it before anything asks for a path.
+app.setName('AgentBuddy');
 // Keep Electron's own data (caches, local storage) inside ~/.agentbuddy too (Requirement 16.4).
 const electronData = join(home, 'electron');
 mkdirSync(electronData, { recursive: true, mode: 0o700 });
@@ -116,6 +119,7 @@ async function main(): Promise<void> {
   onTrusted(CH.group, UI_CHECKS['ui:group'], fromMain, (v) => controller.onGroup(v.folder, v.open));
   onTrusted(CH.ackAll, UI_CHECKS['ui:ackAll'], fromMain, () => controller.onAckAll());
   onTrusted(CH.window, UI_CHECKS['ui:window'], fromMain, (v) => controller.onWindow(v.action));
+  onTrusted(CH.status, UI_CHECKS['ui:status'], fromMain, (v) => controller.onStatus(v.text));
   onTrusted(CH.popupClick, POPUP_CHECKS['popup:click'], popups.isPopup, (v, sender) => popups.handle(sender, v.action));
 
   const link = createRelayLink({

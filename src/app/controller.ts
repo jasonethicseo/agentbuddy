@@ -184,6 +184,12 @@ export function createController(init: { settings: Settings; records: readonly I
       if (key === 'alwaysOnTop') ports.applyAlwaysOnTop(value);
       update();
     },
+    /** The "me" status message: kept in the settings file only, sent nowhere else (Requirement 18.5). */
+    onStatus(text: string): void {
+      if (text === settings.myStatus) return;
+      setSettings({ ...settings, myStatus: text });
+      update();
+    },
     onGroup(folder: string, open: boolean): void {
       const closed = new Set(settings.closedGroups);
       if (open) closed.delete(folder);

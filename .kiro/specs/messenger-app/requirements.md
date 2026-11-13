@@ -38,6 +38,7 @@ It builds on the finished core-pipeline spec (`.kiro/specs/core-pipeline/`). Tha
 - Status lines with messenger phrases, and a setting that hides agent text.
 - Pings: synthesized ding, retro pop-up windows that never take focus, an optional macOS notification (off by default), and an inbox kept on this machine that marks what the user has seen.
 - Jump: bringing forward the app a session runs in, using `bundleId` and `termProgram` that the hook now sends.
+- The "me" row: the user's own status message at the top of the buddy list, kept only on this machine (Req 18, added 2026-11-13).
 
 ### Out of scope
 - Replying to or approving anything for an agent.
@@ -327,7 +328,8 @@ It builds on the finished core-pipeline spec (`.kiro/specs/core-pipeline/`). Tha
    - inbox file mode 600, bad lines skipped; settings file validation;
    - jump commands are built as argument arrays, only for valid bundle IDs; the running check comes first; a folder argument only under Req 12.7;
    - `startRelay` start, `stop()`, and port in use;
-   - the window options (security flags of Req 15.1) from a pure function, for the main window and pop-ups.
+   - the window options (security flags of Req 15.1) from a pure function, for the main window and pop-ups;
+   - the "me" row (Req 18): cleaning and the 40-code-point limit, the saved value and its check in the main process, the IPC check, the row shown only on the Buddies tab of the app, the hint when empty, and that saving touches no port but settings and state.
 2. Property tests SHALL cover:
    - normalize (core P1) with the two new fields: present only when well-formed;
    - a session's launcher is the same in any arrival order;
@@ -346,6 +348,22 @@ It builds on the finished core-pipeline spec (`.kiro/specs/core-pipeline/`). Tha
    - with hide-text on, no prompt or reply text appears anywhere, including pop-ups, notifications and the inbox.
 4. Fixtures and tests SHALL contain no real home paths, user names, session IDs or tokens. Bundle IDs of public apps are allowed.
 5. THE README SHALL describe `npm run app`, own and attached relays, the new files in `~/.agentbuddy/`, Electron and the two fonts (with their OFL licenses) in the third-party list, and the known limits.
+
+## Requirement 18: My status row
+
+Added on 2026-11-13 by the builder (design.md "My status row" and `Main.dc.html`; earlier left out as optional).
+
+**User story:** As a user, I want my own status message at the top of the buddy list, like in a 2000s messenger.
+
+### Acceptance criteria
+1. ON the Buddies tab of the app, THE main window SHALL show a "me" row between the title bar and the alert strip: the bubble on a tile, `me`, and the user's status message followed by `✎`, as one button. THE Inbox and Settings tabs, and the relay's page in a browser, SHALL NOT show it.
+2. WHEN no status message is set, the button SHALL show the hint `set your status ✎`, in the faintest text color that keeps 4.5:1 (Req 6.13). Default: no status message.
+3. WHEN the user activates the button, THE row SHALL show a labelled text field holding the current message, with keyboard focus in it. Enter SHALL save; Esc SHALL cancel and keep the old message; moving focus out of the field SHALL cancel too. Enter that only ends an input-method composition (for example Korean) SHALL NOT save. Saving an empty message clears it.
+4. THE message SHALL be at most 40 code points. The field SHALL NOT hold more. On saving, runs of white space and control characters SHALL become one space, and leading and trailing spaces SHALL be dropped.
+5. THE message SHALL be kept only in `~/.agentbuddy/app-settings.json`, and SHALL never be sent to the relay, an agent, a pop-up, a macOS notification or the inbox. THE main process SHALL check it again (a string of at most 40 code points after cleaning) before keeping it; a saved value that fails the check SHALL give the default.
+6. THE message is the user's own text, not agent text, so the hide-text setting (Req 7.4) SHALL NOT hide it.
+7. THE colors, borders and corner radii this row introduces SHALL be CSS custom properties in `tokens.css`, so that a later theme can change them by value alone. Existing screens are not changed by this criterion.
+8. THE button's accessible name SHALL start with `Edit my status message`, followed by the message or the hint; the tile SHALL be hidden from screen readers.
 
 ---
 
@@ -368,7 +386,7 @@ It builds on the finished core-pipeline spec (`.kiro/specs/core-pipeline/`). Tha
 | macOS notifications from Electron run from source | observed in O4 run A: `show()` failed with `UNErrorDomain` error 1 (not allowed) | optional and off by default; a failure shows a notice (design) |
 | Ding without a gesture while the main window is hidden | observed in O4 run A: the context was `running` with no gesture in a `show: false` window | as designed |
 | Where a minimized main window goes when the app has no Dock icon, and how it comes back | observed in O4 run C: into the Dock as a minimized window; it came back from there | native minimize, as designed |
-| Height resize and title bar drag of the frameless main window; its corners; whether a transparent window still resizes | UNVERIFIED (not tried in O4) | opaque window with 10 px corners all round; checked in task 10.7 |
+| Height resize and title bar drag of the frameless main window; its corners; whether a transparent window still resizes | resize and drag confirmed by the builder in task 10.7; a transparent main window not tried (builder, 2026-11-13: left for the theme spec, which changes the corners) | opaque window with 10 px corners all round |
 | The tray icon and its title being visible; a Dock icon flash at start | tray: not visible in task 8.5 run 1, seen by the builder in task 11 (cause of the first miss UNVERIFIED); Dock: `UIElement` app type while running, a flash at start not watched | as designed |
 | Claude `Notification` (`permission_prompt`, `idle_prompt`) since connecting | not observed since connecting (events.md) | handled by the core rules; no extra handling |
 
@@ -454,7 +472,7 @@ Results so far (Electron 45.3.1, macOS 26.6.2):
 | 14.1 | five switches | plus a connections card (`hooks on`, `no events in 24 h`, `finished turns only`) | look |
 | 16.5 | none | fonts and their licenses inside the app; no font fetch | look |
 
-Not taken from design.md: the optional "my status row" (`me` and an editable status message). It is not in these requirements; it can be added as an optional last task.
+The optional "my status row" (`me` and an editable status message) was first left out. The builder added it on 2026-11-13 as Req 18, with no default message (hint `set your status ✎`) and its new style values as CSS custom properties for a later theme spec.
 
 ## Decisions (confirmed by the builder, 2026-11-12)
 
@@ -472,6 +490,8 @@ Not taken from design.md: the optional "my status row" (`me` and an editable sta
 | A10 | A jump never starts an app that is not running. |
 | A11 | When an attached relay goes away, the app starts its own relay on the next retry. |
 | A12 | Flat fields `bundleId` and `termProgram`. |
+| A13 | (2026-11-13) The "me" row is required (Req 18): no default message, hint `set your status ✎`; its new style values are CSS custom properties for a later theme spec (Blue Bot / Strawberry Milk). |
+| A14 | (2026-11-13) The main window keeps 10 px corners all round; no transparent-window check in this spec. The theme spec changes the corners (16–18 px) and checks a transparent window once. |
 | Q1 | (b): a folder argument only for Kiro agent sessions (added 2026-11-13: a Claude CLI session in a Kiro terminal also reports `dev.kiro.desktop`, but its folder need not be a Kiro window's workspace) with bundle ID `dev.kiro.desktop` that are not `OFFLINE` or `ENDED`, with the relay's session folder for that session, an absolute path to an existing directory; never a path from a window or an event field (Req 12.7). A Kiro IDE session's folder is the workspace of the window the agent runs in, so that window is very likely open while the session is active. VS Code and terminals never get a folder, because a Claude or Codex session folder is often a subfolder, and VS Code opened a new window for a subfolder (O3). |
 | — | A buddy-row click acknowledges every session of that buddy (Req 10.3). |
 | — | No temporary Claude probe hook; terminal values come from the builder's own shell check. |

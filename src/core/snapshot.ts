@@ -17,10 +17,12 @@ export interface PublicSettings {
   alwaysOnTop: boolean;
   /** Folders whose group is closed. */
   closedGroups: string[];
+  /** The user's own status message in the "me" row; '' when unset (messenger-app Requirement 18). */
+  myStatus: string;
 }
 
 /** The five on/off settings a window may change. */
-export type SettingKey = Exclude<keyof PublicSettings, 'closedGroups'>;
+export type SettingKey = Exclude<keyof PublicSettings, 'closedGroups' | 'myStatus'>;
 
 export interface AppSnapshot {
   mode: RelayMode;

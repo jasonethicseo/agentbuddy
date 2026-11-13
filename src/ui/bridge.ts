@@ -17,6 +17,7 @@ export interface AppBridge {
   setSetting(key: SettingKey, value: boolean): void;
   setGroupOpen(folder: string, open: boolean): void;
   windowAction(action: 'minimize' | 'close'): void;
+  setStatus(text: string): void;
 }
 
 export function appBridge(): AppBridge | null {
@@ -40,7 +41,7 @@ export function browserSource(onSnapshot: (s: AppSnapshot) => void): void {
       hidden: [],
       unacked: [],
       inbox: [],
-      settings: { hideText: false, sound: false, popups: false, macNotifications: false, alwaysOnTop: false, closedGroups: [] },
+      settings: { hideText: false, sound: false, popups: false, macNotifications: false, alwaysOnTop: false, closedGroups: [], myStatus: '' },
       count: { waiting: 0, unreadTurns: 0, total: 0 },
     });
   const connect = () => {
