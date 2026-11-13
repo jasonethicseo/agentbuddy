@@ -1,7 +1,7 @@
 // AgentBuddy desktop app: the Electron main process (messenger-app Requirements 4, 5, 8, 9, 12, 15, 16).
 // Wires the plain modules (controller, relay link, jump, files) to windows, the tray and two programs.
 import { execFile } from 'node:child_process';
-import { mkdirSync, statSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Menu, app } from 'electron';
 import { parsePort } from '../core/config';
@@ -105,13 +105,6 @@ async function main(): Promise<void> {
       popups.setTheme(theme);
     },
     windowAction: (a) => mainWin.action(a),
-    isDirectory: (p) => {
-      try {
-        return statSync(p).isDirectory();
-      } catch {
-        return false;
-      }
-    },
   };
   const controller = createController({ settings, records, port }, ports);
 

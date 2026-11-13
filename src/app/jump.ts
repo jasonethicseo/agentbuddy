@@ -2,14 +2,11 @@
 // `planJump` is pure; `runJump` runs fixed programs through an injected `execFile`,
 // never a shell. Plain module: no Electron.
 import type { BuddyView, SessionView } from '../core/buddies';
-import { KEY_MAX } from '../core/config';
 import { isBundleId } from '../core/launcher';
 import { JUMP_TIMEOUT_MS } from './config';
 
-/** The only app that gets a folder argument (decision Q1 (b), O3). */
-export const FOLDER_APP = 'dev.kiro.desktop';
-
-export type JumpPlan = { kind: 'notice'; text: string } | { kind: 'run'; bundleId: string; folder?: string };
+/** A jump only brings an app forward; no app gets a folder argument (fix F1, 2026-11-13). */
+export type JumpPlan = { kind: 'notice'; text: string } | { kind: 'run'; bundleId: string };
 
 export const NOTICES = {
   gone: 'this session is gone',
@@ -18,42 +15,29 @@ export const NOTICES = {
   failed: (id: string) => `couldn't bring ${id} forward`,
 } as const;
 
-function find(views: readonly BuddyView[], session: string): { buddy: BuddyView; s: SessionView } | null {
-  for (const buddy of views) for (const s of buddy.sessions) if (s.key === session) return { buddy, s };
+function find(views: readonly BuddyView[], session: string): SessionView | null {
+  for (const buddy of views) for (const s of buddy.sessions) if (s.key === session) return s;
   return null;
 }
 
 /**
  * What a jump to `session` should do. Everything comes from the main process's own
  * copy of the relay's list; a window only sends the key (Requirement 12.2).
- * A folder is added only for sessions of the Kiro agent that run in Kiro (`dev.kiro.desktop`),
- * are not offline or ended, and whose folder is an absolute path to an existing directory
- * right now (12.7). A Claude or Codex session in a Kiro terminal also reports Kiro's bundle ID,
- * but its folder need not be a Kiro window's workspace, so it gets no folder (2026-11-13).
+ * No folder is ever passed (fix F1, 2026-11-13): `open -b dev.kiro.desktop <folder>` opens a new Kiro window
+ * whenever no Kiro window has that folder as its only folder, for example a window with a multi-root workspace.
  */
-export function planJump(views: readonly BuddyView[], session: string, isDirectory: (path: string) => boolean): JumpPlan {
-  const found = find(views, session);
-  if (found === null) return { kind: 'notice', text: NOTICES.gone };
-  const { buddy, s } = found;
+export function planJump(views: readonly BuddyView[], session: string): JumpPlan {
+  const s = find(views, session);
+  if (s === null) return { kind: 'notice', text: NOTICES.gone };
   if (!isBundleId(s.bundleId)) return { kind: 'notice', text: NOTICES.unknownApp };
-  const folder = buddy.cwd;
-  const withFolder =
-    buddy.agent === 'kiro' &&
-    s.bundleId === FOLDER_APP &&
-    s.state !== 'OFFLINE' &&
-    s.state !== 'ENDED' &&
-    folder.startsWith('/') &&
-    folder.length <= KEY_MAX &&
-    !folder.includes('\0') &&
-    isDirectory(folder);
-  return withFolder ? { kind: 'run', bundleId: s.bundleId, folder } : { kind: 'run', bundleId: s.bundleId };
+  return { kind: 'run', bundleId: s.bundleId };
 }
 
-/** The two commands of a `run` plan: the running check, then `open`. Program paths are absolute. */
-export function jumpCommands(plan: { bundleId: string; folder?: string }): { check: [string, string[]]; open: [string, string[]] } {
+/** The two commands of a `run` plan: the running check, then `open -b`. Program paths are absolute. */
+export function jumpCommands(plan: { bundleId: string }): { check: [string, string[]]; open: [string, string[]] } {
   return {
     check: ['/usr/bin/lsappinfo', ['find', `bundleid=${plan.bundleId}`]],
-    open: ['/usr/bin/open', plan.folder === undefined ? ['-b', plan.bundleId] : ['-b', plan.bundleId, plan.folder]],
+    open: ['/usr/bin/open', ['-b', plan.bundleId]],
   };
 }
 

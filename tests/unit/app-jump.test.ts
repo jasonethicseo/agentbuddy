@@ -29,54 +29,31 @@ function recorder(answers: Array<{ stdout: string } | Error>) {
 }
 
 describe('planJump', () => {
-  const always = () => true;
-
   it('brings the app forward with its bundle ID', () => {
-    expect(planJump(views(), C, always)).toEqual({ kind: 'run', bundleId: 'com.anthropic.claudefordesktop' });
+    expect(planJump(views(), C)).toEqual({ kind: 'run', bundleId: 'com.anthropic.claudefordesktop' });
   });
-
-  it('adds the session folder only for Kiro, while the session is not offline or ended, and the folder exists', () => {
-    expect(planJump(views('TURN_DONE'), K, always)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop', folder: '/Users/dev/demo' });
-    expect(planJump(views('WORKING'), K, () => false)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
-    for (const s of ['OFFLINE', 'ENDED'] as const) expect(planJump(views(s), K, always)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
-    const vscode = views('TURN_DONE', { [C]: 'com.microsoft.VSCode' });
-    expect(planJump(vscode, C, always)).toEqual({ kind: 'run', bundleId: 'com.microsoft.VSCode' });
+  it('never passes a folder, Kiro included: a folder argument opened a new Kiro window (fix F1)', () => {
+    for (const s of ['WAITING_APPROVAL', 'WORKING', 'TURN_DONE', 'IDLE', 'STALE', 'OFFLINE', 'ENDED'] as const) {
+      expect(planJump(views(s), K)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
+    }
+    expect(planJump(views('TURN_DONE', { [C]: 'com.microsoft.VSCode' }), C)).toEqual({ kind: 'run', bundleId: 'com.microsoft.VSCode' });
+    expect(planJump(views('TURN_DONE', { [C]: 'dev.kiro.desktop' }), C)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
   });
-
-  it('gives no folder to a Claude session running in a Kiro terminal (it reports the Kiro bundle ID)', () => {
-    const inKiro = views('TURN_DONE', { [C]: 'dev.kiro.desktop' });
-    inKiro[1]!.cwd = '/Users/dev/agentbuddy';
-    expect(planJump(inKiro, C, always)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
-  });
-
-  it('asks isDirectory about the relay folder only, never another path', () => {
-    const asked: string[] = [];
-    planJump(views(), K, (p) => (asked.push(p), true));
-    expect(asked).toEqual(['/Users/dev/demo']);
-  });
-
-  it('never uses a relative folder', () => {
-    const list = views();
-    list[0]!.cwd = 'demo';
-    expect(planJump(list, K, () => true)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
-  });
-
   it('shows a notice for a session that is gone, or that has no or a bad bundle ID', () => {
-    expect(planJump(views(), key('codex', '01a1…'), () => true)).toEqual({ kind: 'notice', text: NOTICES.gone });
-    expect(planJump(views('TURN_DONE', {}), C, () => true)).toEqual({ kind: 'notice', text: NOTICES.unknownApp });
-    expect(planJump(views('TURN_DONE', { [C]: '-a Calculator' }), C, () => true)).toEqual({ kind: 'notice', text: NOTICES.unknownApp });
+    expect(planJump(views(), key('codex', '01a1…'))).toEqual({ kind: 'notice', text: NOTICES.gone });
+    expect(planJump(views('TURN_DONE', {}), C)).toEqual({ kind: 'notice', text: NOTICES.unknownApp });
+    expect(planJump(views('TURN_DONE', { [C]: '-a Calculator' }), C)).toEqual({ kind: 'notice', text: NOTICES.unknownApp });
   });
 });
-
 describe('runJump', () => {
-  const plan: JumpPlan = { kind: 'run', bundleId: 'dev.kiro.desktop', folder: '/Users/dev/demo' };
+  const plan: JumpPlan = { kind: 'run', bundleId: 'dev.kiro.desktop' };
 
   it('checks that the app runs first, then opens it, each with a 3-second limit', async () => {
     const r = recorder([{ stdout: 'ASN:0x0-0x5bb1bac-"Kiro":\n' }, { stdout: '' }]);
     expect(await runJump(plan, r.exec, r.notice)).toBe('opened');
     expect(r.calls).toEqual([
       ['/usr/bin/lsappinfo', ['find', 'bundleid=dev.kiro.desktop'], 3000],
-      ['/usr/bin/open', ['-b', 'dev.kiro.desktop', '/Users/dev/demo'], 3000],
+      ['/usr/bin/open', ['-b', 'dev.kiro.desktop'], 3000],
     ]);
     expect(r.notices).toEqual([]);
   });

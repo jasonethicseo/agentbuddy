@@ -27,7 +27,6 @@ export interface Ports {
   /** Send a new theme to the open pop-ups and the native window (themes Requirement 2.5). */
   applyTheme(theme: ThemeId): void;
   windowAction(action: WindowAction): void;
-  isDirectory(path: string): boolean;
 }
 
 export type ClickFrom = ClickTarget | { kind: 'notification'; key: string };

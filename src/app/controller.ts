@@ -81,7 +81,7 @@ export function createController(init: { settings: Settings; records: readonly I
     entries = foldInbox(records);
   }
 
-  const jumpTo = (key: string) => ports.jump(planJump(views, key, ports.isDirectory));
+  const jumpTo = (key: string) => ports.jump(planJump(views, key));
 
   return {
     /** Every new list from the relay link; `baseline` lists never ping (Requirement 8.2). */

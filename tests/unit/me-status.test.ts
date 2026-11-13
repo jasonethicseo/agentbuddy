@@ -81,7 +81,6 @@ describe('controller.onStatus', () => {
       applyAlwaysOnTop: rec('applyAlwaysOnTop'),
       applyTheme: rec('applyTheme'),
       windowAction: rec('windowAction'),
-      isDirectory: () => false,
     };
     const c = createController({ settings: parseSettings({ hideText }), records: [], port: 4343 }, ports);
     c.onList([buddyView('kiro', '/Users/dev/demo', [{ key: key('kiro', 'sess_ce19…'), state: 'WORKING' }])], true);

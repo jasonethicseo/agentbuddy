@@ -46,7 +46,6 @@ function setup(over: Record<string, unknown> = {}, records: InboxRecord[] = []) 
     applyAlwaysOnTop: rec('applyAlwaysOnTop'),
     applyTheme: rec('applyTheme'),
     windowAction: rec('windowAction'),
-    isDirectory: (p) => p === '/Users/dev/agentbuddy',
   };
   const c = createController({ settings: parseSettings(over), records, port: 4343 }, ports);
   const of = (name: string) => calls.filter((x) => x[0] === name).map((x) => x[1]);
@@ -106,7 +105,7 @@ describe('controller: acknowledging', () => {
   it('a session row acknowledges and jumps; a buddy row acknowledges all its sessions and jumps to the first', () => {
     const t = pinged();
     t.c.onClick({ kind: 'session', key: K });
-    expect(t.of('jump')).toEqual([[{ kind: 'run', bundleId: 'dev.kiro.desktop', folder: '/Users/dev/agentbuddy' }]]);
+    expect(t.of('jump')).toEqual([[{ kind: 'run', bundleId: 'dev.kiro.desktop' }]]); // no folder (fix F1)
     expect(t.state().unacked.sort()).toEqual([A, B].sort());
     t.c.onClick({ kind: 'buddy', key: JSON.stringify(['claude', '/Users/dev/demo']) });
     expect(t.of('jump').at(-1)).toEqual([{ kind: 'run', bundleId: 'com.anthropic.claudefordesktop' }]);

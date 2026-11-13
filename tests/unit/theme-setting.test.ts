@@ -71,7 +71,6 @@ describe('controller.onTheme (Requirement 2.6)', () => {
       applyAlwaysOnTop: rec('applyAlwaysOnTop'),
       applyTheme: rec('applyTheme'),
       windowAction: rec('windowAction'),
-      isDirectory: () => false,
     };
     const c = createController({ settings: parseSettings({}), records: [], port: 4343 }, ports);
     c.onList([buddyView('claude', '/Users/dev/demo', [{ key: key('claude', 'e697…'), state: 'TURN_DONE' }])], true);
