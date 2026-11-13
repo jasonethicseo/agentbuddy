@@ -150,7 +150,7 @@ Unchanged (Req 10).
 
 ### Tokens: `src/ui/styles/themes.css` (Req 3)
 
-The only file with color values. Two blocks with the same names:
+The only files with color values. Two blocks with the same names; to keep each file under about 200 lines (structure.md), each block lives in its own file, `styles/themes/blue-bot.css` and `styles/themes/strawberry-milk.css`, which `themes.css` imports (Vite inlines them in the build), and `themes.css` keeps the frame and hidden-page rules:
 
 ```css
 :root[data-theme="blue-bot"], [data-theme-preview="blue-bot"] { --bg: #EEF6FF; … }

@@ -1,14 +1,22 @@
 // The pop-up page (messenger-app Requirements 9.1, 9.5, 9.7). Agent text goes in with textContent only.
 // × closes and acknowledges, Later only closes, Go there → or anywhere else on the card jumps.
 import '../styles/tokens.css';
+import '../styles/themes.css';
+import '../styles/sprites.css';
 import '../styles/fonts.css';
 import '../styles/icons.css';
 import '../styles/popup.css';
 import type { PopupContent } from '../../core/snapshot';
+import type { ThemeId } from '../../core/theme';
 import { stateIcon } from '../icons';
+import { applyTheme, applyThemeFromUrl } from '../theme';
+
+applyThemeFromUrl(); // before the card is filled (themes Requirement 2.7)
 
 interface PopupBridge {
   onContent(cb: (c: PopupContent) => void): void;
+  /** A theme change while the pop-up is open (themes Requirement 2.5). */
+  onTheme(cb: (t: ThemeId) => void): void;
   go(): void;
   close(): void;
   later(): void;
@@ -46,6 +54,7 @@ function fill(c: PopupContent): void {
 
 if (bridge) {
   bridge.onContent(fill);
+  bridge.onTheme(applyTheme);
   document.addEventListener('click', (e) => {
     const target = e.target instanceof Element ? e.target : null;
     if (target?.closest('.card') === null || target === null) return;

@@ -2,6 +2,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { THEMES, isTheme, parseTheme } from '../../src/core/theme';
+import { parseThemes } from '../unit/theme-tokens';
 
 describe('parseTheme', () => {
   it('gives one of the two themes for any JSON value and never throws', () => {
@@ -26,5 +27,19 @@ describe('parseTheme', () => {
 
   it('is the identity on the two themes', () => {
     fc.assert(fc.property(fc.constantFrom(...THEMES), (t) => parseTheme(t) === t));
+  });
+});
+
+describe('token sets (themes Requirement 3.2)', () => {
+  const blocks = parseThemes();
+  const names = [...new Set(THEMES.flatMap((th) => [...blocks[th].tokens.keys()]))];
+  it('every token name of either theme is defined by the other too', () => {
+    fc.assert(
+      fc.property(fc.constantFrom(...THEMES), fc.constantFrom(...names), (th, name) => {
+        const other = THEMES.find((x) => x !== th)!;
+        expect([name, blocks[th].tokens.has(name), blocks[other].tokens.has(name)]).toEqual([name, true, true]);
+      }),
+      { numRuns: 1000 },
+    );
   });
 });

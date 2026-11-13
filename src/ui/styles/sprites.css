@@ -1,0 +1,44 @@
+/* Sprites and badges (themes Requirement 6; design "Sprites"). Colors and glyphs come from themes.css. */
+.sprite { position: relative; display: inline-block; flex-shrink: 0; line-height: 0; vertical-align: middle; }
+.sprite svg { display: block; }
+
+/* Each pixel takes its role's color; `body` takes the agent's. */
+.px-ink { fill: var(--px-ink); }
+.px-tear { fill: var(--px-tear); }
+.px-cheek { fill: var(--px-cheek); }
+.px-visor { fill: var(--px-visor); }
+.px-acc-wait { fill: var(--px-acc-wait); }
+.px-acc-work { fill: var(--px-acc-work); }
+.px-acc-done { fill: var(--px-acc-done); }
+.px-acc-stale { fill: var(--px-acc-stale); }
+.px-acc-idle { fill: var(--px-acc-idle); }
+.px-dim { fill: var(--px-dim); }
+.px-grey-body { fill: var(--px-grey-body); }
+.px-grey-visor { fill: var(--px-grey-visor); }
+.px-grey-ink { fill: var(--px-grey-ink); }
+.px-title-body { fill: var(--px-title-body); }
+.px-title-ink { fill: var(--px-title-ink); }
+.px-title-cheek { fill: var(--px-title-cheek); }
+.px-me-cheek { fill: var(--px-me-cheek); }
+.px-body { fill: var(--px-body); }
+.sprite[data-agent="claude"] { --px-body: var(--agent-claude); }
+.sprite[data-agent="kiro"] { --px-body: var(--agent-kiro); }
+.sprite[data-agent="codex"] { --px-body: var(--agent-codex); }
+.sprite[data-agent="me"] { --px-body: var(--agent-me); }
+
+/* The state badge: an HTML element over the sprite, so its glyph is a token (decision D3). */
+.badge {
+  position: absolute; display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  border: 1.5px solid var(--badge-line); border-radius: var(--badge-radius);
+  background: var(--badge-fill); color: var(--on-fill);
+  font-family: var(--font-text); font-weight: 700; line-height: 1;
+}
+.badge::before { content: var(--badge-glyph); }
+.sprite[data-size="26"] .badge { width: 12px; height: 12px; right: -3px; bottom: -3px; font-size: 9px; }
+.sprite[data-size="44"] .badge { width: 18px; height: 18px; right: -4px; bottom: -4px; font-size: 13px; }
+.badge[data-state="WAITING_APPROVAL"] { --badge-fill: var(--st-wait); --badge-glyph: var(--badge-wait); }
+.badge[data-state="WORKING"] { --badge-fill: var(--st-work); --badge-glyph: var(--badge-work); }
+.badge[data-state="TURN_DONE"] { --badge-fill: var(--st-done); --badge-glyph: var(--badge-done); }
+.badge[data-state="STALE"] { --badge-fill: var(--st-stale); --badge-glyph: var(--badge-stale); }
+.badge[data-state="IDLE"] { --badge-fill: var(--st-idle); --badge-glyph: var(--badge-idle); }
+.badge[data-state="ENDED"] { --badge-fill: var(--st-off); --badge-glyph: var(--badge-ended); }

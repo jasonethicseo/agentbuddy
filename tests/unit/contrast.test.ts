@@ -120,7 +120,7 @@ describe('tokens', () => {
         const p = join(dir, name);
         if (name === 'public') continue;
         if (statSync(p).isDirectory()) walk(p);
-        else if (/\.(css|ts)$/.test(name) && !p.endsWith('tokens.css')) files.push(p);
+        else if (/\.(css|ts)$/.test(name) && !p.endsWith('tokens.css') && !p.endsWith('themes.css') && !p.includes('/styles/themes/')) files.push(p); // theme files: themes.test.ts
       }
     };
     walk(UI);
@@ -132,7 +132,10 @@ describe('tokens', () => {
 
 describe('stylesheets', () => {
   const sheets = readdirSync(join(UI, 'styles')).filter((n) => n.endsWith('.css'));
-  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, ...STRINGS, '--font-text', '--font-title']);
+  // Every custom property any stylesheet declares (themes.css, sprites.css's per-sprite ones, fonts.css).
+  const themeSheets = readdirSync(join(UI, 'styles/themes')).map((n) => join('themes', n));
+  const declared = [...sheets, ...themeSheets].flatMap((n) => [...readFileSync(join(UI, 'styles', n), 'utf8').matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]!));
+  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, ...STRINGS, ...declared]);
   it.each(sheets)('%s uses only defined variables', (name) => {
     const used = [...readFileSync(join(UI, 'styles', name), 'utf8').matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]!);
     expect(used.filter((v) => !defined.has(v))).toEqual([]);

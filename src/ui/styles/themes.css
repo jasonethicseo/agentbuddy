@@ -1,0 +1,17 @@
+/* The two themes (themes spec, Requirement 3; values from .kiro/steering/design.md and the mockups,
+   listed in the themes design "Tokens"). Each theme's tokens live in themes/<id>.css: the only UI files
+   with color values, defining exactly the same names. `[data-theme-preview]` lets a Theme card tile
+   show a theme inside the other one. */
+@import './themes/blue-bot.css';
+@import './themes/strawberry-milk.css';
+
+
+/* An opaque main window has square corners (themes Requirement 8.4). Unused while MAIN_FRAME is transparent. */
+:root[data-frame="opaque"] {
+  --radius-window: 0px;
+}
+
+/* Until the page has set its theme, show nothing, so the other theme never flashes (Requirement 2.7). */
+html:not([data-theme]) body {
+  visibility: hidden;
+}

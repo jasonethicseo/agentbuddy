@@ -1,6 +1,8 @@
 // UI entry for the main window and the relay's page (messenger-app Requirement 6.12).
 // In the app, state comes from the preload bridge; in a browser, from the relay's stream.
 import './styles/tokens.css';
+import './styles/themes.css';
+import './styles/sprites.css';
 import './styles/fonts.css';
 import './styles/icons.css';
 import './styles/main.css';
@@ -19,6 +21,9 @@ import { renderList } from './screens/list';
 import { renderMe } from './screens/me';
 import { renderSettings } from './screens/settings';
 import { ding } from './sound';
+import { applyTheme, applyThemeFromUrl } from './theme';
+
+applyThemeFromUrl(); // before anything renders (themes Requirement 2.7)
 
 const NOTICE_MS = 4000;
 const AGE_TICK_MS = 30_000;
@@ -82,6 +87,7 @@ setupChrome(
 
 const onSnapshot = (s: AppSnapshot) => {
   snap = s;
+  applyTheme(s.settings.theme);
   render();
 };
 
