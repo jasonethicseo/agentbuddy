@@ -100,16 +100,25 @@ How to work through this list:
   - _Requirements: 9.1, 9.2, 9.7_
   - Result (2026-11-13): 813 tests pass.
 
-- [ ] 7. Screen check with the builder
+- [x] 7. Screen check with the builder
   - Announced right before it runs with what will appear and for how long. Run once in the foreground of the tool call with a fixed time limit: the app from this build with a temp `HOME` and port 4399 (its own relay), fake events with `/Users/dev/...` paths and no real prompts (a Kiro buddy with a temp `tasks.md`, a Claude buddy waiting for approval, a Codex turn done), so that all three screens, both skins, a selected row, the banner and both pop-up kinds show.
   - The builder compares with the `*2000` mockups and checks: Galmuri at 12 / 10 px with smoothing off, the hair, the berry, the pixel check and pencil, the uneven pixel rows at 16 / 28 px (design "Known limits"), the toolbar with ←/→/Home/End and Enter, `Skin` landing on the checked radio, the focus rings on the title bar, the banner and a selected row, a skin change with a pop-up open, the banner after a skin switch from its own tip.
   - Afterwards: `pgrep` shows no process of this check, port 4399 is free, the temp home is deleted; this is confirmed before the tool call returns. Record the run (time, length, what was shown, what the builder confirmed, what was not checked) here, and anything unverified in the requirements.
   - _Requirements: 15.4_
   - Run (2026-11-13, 05:15:01–05:18:04 UTC, 180 s plus 3 s shutdown; announced as "지금 띄웁니다, 180초"; run once in the foreground of the tool call): the app from this build (`npm run build` first) with a temp `HOME` and port 4399, its own relay; a throwaway driver (`scripts/check7/run.mjs`, deleted) sent 16 fake events, every one accepted (204): a Kiro session in a temp folder with a 6-task `tasks.md` (2 done) running task 3, three Claude Code sessions in `/Users/dev/demo` and `/Users/dev/blueline` (one idle, two asking for approval in turn), and Codex turns in `/Users/dev/demo`. 5 pings reached the inbox (the later Codex turns did not ping, because the session stayed `TURN_DONE`), 4 acknowledgements came from the builder's clicks. The saved skin at the end was `blue-bot`, `hideBanner` false. Stopped at 180 s with SIGTERM to the app's process group (exit 0; Chromium logged its GPU and network services ending).
   - Afterwards: no process of the check left (`pgrep`), nothing listening on 4399, the temp home and the driver deleted, nothing under `~/Library/Application Support`; the builder's relay (4343) kept running.
-  - Builder's findings: pending.
+  - Builder's findings (2026-11-13): all three screens in both skins match the `*2000` mockups; Galmuri, the hair, the strawberry and the icons are as in the mockups. Every item of the list above was tried; none was left out. Not part of this check (so still UNVERIFIED in the requirements): the transparent window's shadow and its 420 px minimum height.
 
-- [ ] 8. Steering, README and final checkpoint
+- [x] 8. Steering, README and final checkpoint
   - structure.md: `src/core/tips.ts`; `model/toolbar.ts`, `model/banner.ts`, `model/skin.ts` (was `theme.ts`); `screens/banner.ts`; `sprites/icons.ts`; `src/ui/fallback.ts`; `styles/materials.css`; Galmuri in `public/fonts`. tech.md: the property list gains the tip and `hideBanner` properties. design.md: anything the screen check changed. README: "skin" for the feature, the Banner setting, `app-settings.json` holds `hideBanner`, Galmuri in the font table, the known limits.
   - All tests pass and `npm run build` succeeds. `.gitignore` does not list `.kiro`. A short handoff at the end of this file: state, open items, next.
   - _Requirements: 1.1, 3.7, 14.4_
+  - Result (2026-11-13): structure.md (`core/tips.ts`, `ui/fallback.ts`, `sprites/icons.ts`, `model/skin.ts`, `model/toolbar.ts`, `model/banner.ts`, `screens/banner.ts`, `materials.css`, Galmuri in `public/fonts`, the chrome line), tech.md (the tip and `hideBanner` properties; toolbar and TIP banner among the app-only parts), README (toolbar and its keys, the TIP banner, "skin" for the feature, `hideBanner` in `app-settings.json`, `Go there ▶`, the 7 px corners and the uneven pixel rows in the known limits; the `▸`/`✓`/`✎` system-font note is gone). design.md needed nothing from the screen check. 813 tests pass, `npm run typecheck` and `npm run build` succeed, `.gitignore` does not list `.kiro`. The fixtures and tests added by this spec use `/Users/dev/...` paths and shortened IDs only.
+
+## Handoff (2026-11-13)
+
+State: tasks 1–8 of this spec, and S19, are done and committed; 813 tests pass. No app or check process is running; the builder's relay (pid 86955, port 4343) runs from an older build, so restart it from this build when convenient for the browser page to match.
+
+Open (UNVERIFIED, see requirements): the transparent window's shadow and its 420 px minimum height (carried over from themes).
+
+Next: the builder decides the next spec (the demo-mode spec, then messenger-app task 14, the packaged `.app`, as ordered before).

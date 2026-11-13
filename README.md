@@ -42,14 +42,15 @@ npm run app       # builds, then starts the app from source (Electron)
 ```
 
 - **Own or attached relay.** The app starts its own relay on the port. If an `agentbuddy` relay already runs there, the app attaches to it and only reads its stream; quitting the app then leaves that relay running. If the attached relay goes away, the app starts its own on the next retry (every 3 s). Settings › Connections shows which one is in use.
-- **Window and menu bar.** A 320 px window in the top-right corner, always on top by default (the ▲ pin button or Settings). Closing it keeps the app in the menu bar; the bubble icon there shows a count of sessions waiting for your OK plus finished turns you have not looked at, and its menu shows the list or the inbox, or quits. There is no Dock icon. Cmd+Q also quits.
-- **Pings.** When a session finishes a turn or needs your OK, the app plays a synthesized ding and slides up a pop-up in the bottom-right corner. Pop-ups never take focus, close by themselves after 6 s and stack upward. `Go there →` (or a click on the card) brings forward the app the session runs in, × closes and marks it read, `Later` only closes. States the app finds when it connects never ping.
+- **Window and menu bar.** A 320 px window in the top-right corner, always on top by default (the ▲ pin button or Settings). A toolbar under the title bar switches between Buddies, Inbox and Settings, and its Skin button opens the Skin group; from the keyboard it is one Tab stop, and ←/→, Home and End move between its buttons. Closing it keeps the app in the menu bar; the bubble icon there shows a count of sessions waiting for your OK plus finished turns you have not looked at, and its menu shows the list or the inbox, or quits. There is no Dock icon. Cmd+Q also quits.
+- **Pings.** When a session finishes a turn or needs your OK, the app plays a synthesized ding and slides up a pop-up in the bottom-right corner. Pop-ups never take focus, close by themselves after 6 s and stack upward. `Go there ▶` (or a click on the card) brings forward the app the session runs in, × closes and marks it read, `Later` only closes. States the app finds when it connects never ping.
 - **Inbox.** Every ping of the day, newest first, with the ones you have not looked at marked. A click goes there; `Mark all read` marks everything read.
 - **Jump.** A click on a buddy, a session, a pop-up or an inbox entry brings that agent's app forward with `/usr/bin/open -b <bundle ID>`, after `/usr/bin/lsappinfo` confirms it is running (it never starts an app). A Kiro session also passes its folder, so the right Kiro window comes forward. The bundle ID comes from the environment of the agent's hook process.
 - **Hiding.** × on a session (or on a buddy with one visible session) hides that row until the session does something new.
 - **"me" row.** Your own status message at the top of the list. It stays in the settings file and is never sent anywhere.
-- **Settings.** The theme (Blue Bot, the default, or Strawberry Milk; it changes the window and open pop-ups at once), ding sound, message pop-ups, macOS notifications (off by default), always on top, and "Hide prompt and reply text", which keeps every agent's text off the screen, pop-ups and notifications.
-- **Themes.** Each theme is one block of CSS custom properties (`src/ui/styles/themes/`) and one module of pixel sprites (`src/ui/sprites/`), drawn from the mockups in `docs/mockups/`. The buddies are original pixel art.
+- **TIP banner.** A small strip at the bottom of the buddy list with one built-in tip (nothing is downloaded). The first tip of the day follows the date; after that it changes only when you click it or its ▶ button. A click on a tip that points somewhere opens that place. Settings › Banner hides it.
+- **Settings.** The skin (Blue Bot, the default, or Strawberry Milk; it changes the window and open pop-ups at once), the TIP banner, ding sound, message pop-ups, macOS notifications (off by default), always on top, and "Hide prompt and reply text", which keeps every agent's text off the screen, pop-ups and notifications.
+- **Skins.** A 2000s desktop-messenger look: glossy title bar, raised buttons, sunken panels and the Galmuri pixel fonts. Each skin is one block of CSS custom properties (`src/ui/styles/themes/`) and one module of pixel sprites (`src/ui/sprites/`), drawn from the mockups in `docs/mockups/`. The buddies and icons are original pixel art.
 
 ## Connect your agents
 
@@ -96,7 +97,7 @@ All in `~/.agentbuddy/` (folder mode 700, files mode 600):
 | `hook-errors.log` | fixed error codes only (no payload, no text, no token) |
 | `bin/codex-notify.sh` | the installed Codex relay script |
 | `inbox-YYYY-MM-DD.jsonl` | the app's inbox: one line per ping (buddy name, session key, session name, state, time) and per "read" mark |
-| `app-settings.json` | the app's settings (including the theme), closed groups, hidden sessions and your "me" status message |
+| `app-settings.json` | the app's settings (including the skin as `theme` and `hideBanner`), closed groups, hidden sessions and your "me" status message |
 | `electron/` | Electron's own data for the app (caches, local storage) |
 
 Old daily logs and inbox files are not deleted yet. Run from source, the app is the Electron binary, so macOS also keeps a small preferences file for it at `~/Library/Preferences/com.github.Electron.plist`.
@@ -116,8 +117,8 @@ Old daily logs and inbox files are not deleted yet. Run from source, the app is 
 - The ding and pop-ups do not follow macOS Focus modes; turn them off in Settings.
 - At midnight, earlier entries leave the inbox and stop counting.
 - Run from source, macOS does not allow Electron to post notifications, so turning macOS notifications on shows a notice instead. The pop-ups and the ding keep working.
-- The main window is transparent so that the page can draw the theme's round corners (16 or 18 px); its macOS shadow and its 420 px minimum height have not been checked by eye yet.
-- Blue Bot's `▸` is in neither bundled font, so macOS draws it with a system font; `✓` and `✎` likewise.
+- The main window is transparent so that the page can draw its rounded top corners (7 px); its macOS shadow and its 420 px minimum height have not been checked by eye yet.
+- Some sprites are drawn at sizes that are not whole multiples of their pixel grid (the 16 px title icon and Skin tiles, the 28 px banner mascot, the strawberry at 12 and 10 px), so a few pixel rows are one screen pixel wider than others.
 - Terminal tabs are never selected; a jump brings the terminal app forward.
 - The desktop app runs on macOS only and is not packaged or signed.
 

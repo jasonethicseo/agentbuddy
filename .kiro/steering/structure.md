@@ -23,7 +23,8 @@ inclusion: always
 │  │  ├─ pings.ts      pings: sessions entering an attention state between two lists
 │  │  ├─ attention.ts  inbox records, acknowledgements, menu bar count, hidden sessions
 │  │  ├─ snapshot.ts   types between the app's main process and its windows
-│  │  ├─ theme.ts      the two theme IDs and parseTheme
+│  │  ├─ theme.ts      the two theme (skin) IDs and parseTheme
+│  │  ├─ tips.ts       the TIP banner's built-in tips: conditions, start by date, next, keep
 │  │  └─ text.ts       truncation, status phrases and lines, the "me" status message
 │  ├─ hook/
 │  │  └─ cli.ts        agentbuddy-hook entry: read payload, normalize, POST, exit 0
@@ -52,16 +53,18 @@ inclusion: always
 │  ├─ ui/
 │  │  ├─ main.ts       entry; state from the app's bridge, or from the relay's stream in a browser
 │  │  ├─ bridge.ts     the app bridge type and the browser source
-│  │  ├─ chrome.ts     title bar, alert strip, tabs, footer
+│  │  ├─ chrome.ts     title bar, toolbar, alert strip, status bar
 │  │  ├─ dom.ts        createElement helpers
 │  │  ├─ theme.ts      puts the theme (and the window frame) on <html>
-│  │  ├─ sprites/      types.ts, blue-bot.ts, strawberry-milk.ts (pixels by role, no colors), render.ts (sprite + state badge)
-│  │  ├─ model/        pure view models: list, progress, chrome, inbox, me, theme
-│  │  ├─ screens/      buddy list, "me" row, inbox, settings, message pop-up
+│  │  ├─ fallback.ts   the characters a bundled Galmuri file lacks (kept equal to the fonts by a test)
+│  │  ├─ sprites/      types.ts, blue-bot.ts, strawberry-milk.ts (pixels by role, no colors), render.ts (sprite + state badge),
+│  │  │                icons.ts (pixel icons: check, pencil, group boxes, strawberry, toolbar)
+│  │  ├─ model/        pure view models: list, progress, chrome, inbox, me, skin, toolbar, banner
+│  │  ├─ screens/      buddy list, "me" row, TIP banner, inbox, settings, message pop-up
 │  │  ├─ sound.ts      Web Audio "ding"
-│  │  ├─ public/fonts/ Nanum Gothic and Jua with their OFL licenses
+│  │  ├─ public/fonts/ Galmuri11 (Regular, Bold), Galmuri9 and Nanum Gothic with their OFL licenses
 │  │  └─ styles/       themes.css + themes/blue-bot.css, themes/strawberry-milk.css (the only files with colors),
-│  │                   fonts, sprites, main, list, inbox, settings, popup
+│  │                   fonts, materials (raised, sunken, gloss, focus), sprites, main, list, inbox, settings, popup
 │  └─ setup/           (later spec)
 │     └─ snippets.ts   prints hook snippets for Kiro, Claude Code, Codex
 ├─ demo/               (later spec)

@@ -15,7 +15,7 @@ inclusion: always
 ## Pieces
 1. **Hook command** `agentbuddy-hook <agent>`: reads the raw payload (stdin for Kiro and Claude, last argv for Codex), normalizes it with the pure core, and POSTs it to the relay.
 2. **Relay** `agentbuddy`: an HTTP server on `127.0.0.1:4343` (port overridable with `AGENTBUDDY_PORT`) that keeps buddy state in memory, appends every accepted event to a daily log `~/.agentbuddy/events-YYYY-MM-DD.jsonl`, rebuilds state from the last 24 hours of logs on start, streams updates to the UI, and reads Kiro `tasks.md` files to compute progress. `startRelay()` (`src/relay/start.ts`) is the relay as a function, used by the `agentbuddy` command and by the app.
-3. **UI**: the buddy list (with the "me" row), inbox and settings in the app's main window, and the ping pop-up in its own small window. The relay also serves the buddy list to a browser at `http://127.0.0.1:<port>/`, without the app-only parts (pings, pop-ups, jump, ×, inbox, settings, title bar buttons).
+3. **UI**: the buddy list (with the "me" row), inbox and settings in the app's main window, and the ping pop-up in its own small window. The relay also serves the buddy list to a browser at `http://127.0.0.1:<port>/`, without the app-only parts (pings, pop-ups, jump, ×, inbox, settings, title bar buttons, toolbar, TIP banner).
 5. **Desktop app** `npm run app`: the Electron main process starts its own relay with `startRelay()`, or attaches to a relay already on the port, and reads its `/stream` (no token). It finds pings, plays the ding, shows pop-ups that never take focus, keeps the inbox in `~/.agentbuddy/inbox-YYYY-MM-DD.jsonl` and the settings in `~/.agentbuddy/app-settings.json`, shows a menu bar icon with a count, and brings an agent's app forward with `/usr/bin/lsappinfo` and `/usr/bin/open -b` through `execFile`. macOS only.
 4. **Demo build**: the same UI fed by a replay of `demo/events.json` instead of the relay.
 
@@ -57,6 +57,8 @@ inclusion: always
   - app files: settings and inbox records parse without throwing and keep only known keys of the right type.
   - buddy list model: every buddy is in exactly one group; the offline group holds exactly the buddies whose sessions are all `OFFLINE` or `ENDED`.
   - themes: reading a theme gives one of the two themes for any JSON value or string; saving and reading the settings back gives the same theme; every token name of one theme is defined by the other.
+  - tips: for any day number and conditions, the starting tip applies and is the same for the same inputs; pressing next as many times as there are applicable tips visits each once and returns; on a day the skin changed, no start, next or kept tip is a skin tip.
+  - settings: `hideBanner` reads as a boolean for any JSON value, `true` only for `true`; it survives saving and reading back.
 - **Unit tests**: one test per row of the mapping table in events.md, using the sanitized payloads.
 
 ## Commands
