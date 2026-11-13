@@ -6,7 +6,7 @@ This spec replaces the app's single Y2K sky-blue look with two themes the user c
 
 It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). That spec's files are not edited. Every criterion of it that this spec changes is listed in the table below. Behavior that nobody has observed is marked **UNVERIFIED** and is never guessed.
 
-**Principle: this spec changes the look, not the behavior** (builder, 2026-11-13). Every behavior of the messenger-app spec stays as it is: what pings, what acknowledges, what a click or a key does, what is stored and what is sent. The only behavior changes are the two marked "behavior" in the table below (`띠링!` in the pop-up title, and how Kiro progress is drawn) and the theme setting this spec adds. Where design.md or a mockup seems to change a behavior, the messenger-app spec wins unless the builder says otherwise.
+**Principle: this spec changes the look, not the behavior** (builder, 2026-11-13). Every behavior of the messenger-app spec stays as it is: what pings, what acknowledges, what a click or a key does, what is stored and what is sent. The only behavior changes are the three marked "behavior" in the table below (how Kiro progress is drawn, `띠링!` in the pop-up title, and the two core phrases that lose their leading `♪`) and the theme setting this spec adds. Where design.md or a mockup seems to change a behavior, the messenger-app spec wins unless the builder says otherwise.
 
 ## Changes to earlier criteria
 
@@ -27,6 +27,7 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 | T11 | MA 9.7 (accessible name of ×) | `Close message` | `Close and mark as read`, which names what × already does (MA 9.5) | look | Req 7 |
 | T12 | MA 5.1; MA decision A14; design "Window corners" | opaque window, 10 px corners all round | transparent window with the theme radius (16 or 18 px), or opaque with square corners, decided by one check | look | Req 8 |
 | T13 | MA 6.13; design "Contrast" | one palette checked | every text and graphic pair checked in both themes | look | Req 9 |
+| T14 | MA 7.2; MA design `text.ts` (`PHRASES`, `SPEC_TASK_PHRASE`) | the core's phrase strings `♪ working…` and `♪ studying hard` | `working…` and `studying hard`; the screen draws the theme's glyph before them (T3). Every other phrase string is unchanged. Affected: the status lines on screen (the glyph comes back through CSS); macOS notifications, pop-ups and the inbox file are not affected, because none of them ever holds a `WORKING` phrase (see design "Phrase strings"); tests that name the old strings (`status-line.test.ts`, `text.prop.test.ts` P21, `ui-model.test.ts`) | behavior | Req 4 |
 
 ## Scope
 
@@ -41,7 +42,7 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 - A third theme, user-defined colors, or following the macOS light and dark appearance.
 - Changing the menu bar icon (it stays the template image of MA 5.8).
 - The relay's page in a browser getting a theme switch.
-- Any behavior change beyond T9 and T10, including the "my status" behavior of MA Req 18 and every pop-up button (MA 9.5).
+- Any behavior change beyond T9, T10 and T14, including the "my status" behavior of MA Req 18 and every pop-up button (MA 9.5).
 - The demo build and the packaged `.app` (later specs, builder's order of 2026-11-13).
 
 ### Given by the builder (2026-11-13)
@@ -50,7 +51,7 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 - Sprites live in one module per theme (`sprites/blue-bot.ts`, `sprites/strawberry-milk.ts`) with the same export shape. Their pixels are copied from the mockups. The state badge glyphs stay in both themes.
 - The menu bar icon does not change with the theme.
 - The transparent-window resize check runs exactly once, announced first as "지금 띄웁니다, 30초", and its window and process are closed and confirmed closed before the tool call returns. If height resize fails, the app ships an opaque window with square corners. The spec records which one shipped.
-- This spec changes the look, not the behavior; the only behavior changes are `띠링!` and the Kiro progress drawing.
+- This spec changes the look, not the behavior; the only behavior changes are `띠링!`, the Kiro progress drawing, and the two core phrase strings of T14 (builder, 2026-11-13).
 - No third-party character or mascot is copied; only the mockup pixels are used. Test and demo data hold no real paths, names or prompts. Any change to settings outside this repository goes backup, then diff, then the builder's approval.
 
 ## Glossary
@@ -119,10 +120,11 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
    | unread marker at the end of a row | `N` (a tag) | `♥` |
    | before the alert strip text | `!` | `♥` |
 
-2. THE words of every phrase SHALL be the same in both themes (design.md "Status phrases"). THE core phrases SHALL carry no theme glyph; the screen adds it.
+2. THE words of every phrase SHALL be the same in both themes (design.md "Status phrases"). THE core phrases SHALL carry no theme glyph; the screen adds it. THE core's `WORKING` phrases change from `♪ working…` to `working…` and from `♪ studying hard` to `studying hard` (T14); no other core phrase changes.
 3. Decoration characters SHALL be hidden from screen readers. Where one carries meaning (the unread marker), the meaning SHALL be given as text (`unread`).
 4. Decoration characters SHALL NOT be emoji (design.md).
 5. Text that leaves the window carries no theme glyph: macOS notifications keep the plain phrase (MA 8.8), and nothing in the inbox file or the settings file depends on the theme.
+6. No stored file SHALL hold a phrase string, so a file written before this spec can never show a glyph twice (design "Phrase strings").
 
 ## Requirement 5: Fonts
 
@@ -143,10 +145,10 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 2. A sprite SHALL be a 12 × 12 grid of SVG rectangles with `shape-rendering="crispEdges"`, with the same rectangles and colors as the mockups: the state faces from `FacesBot` and `FacesCute`, and the title-bar icon and the `me` sprite from `MainBot` and `MainCute`. No pixel SHALL come from anywhere else.
 3. THE body color SHALL name the agent (design.md "Buddy sprites" table). `OFFLINE` and `ENDED` sprites SHALL use the theme's grey instead.
 4. Sprites SHALL replace the state icons: 26 px in buddy rows, 16 px in session rows, 44 px in pop-ups, the inbox rows' size from the design, 34 px for `me`, 20 px in the title bar.
-5. EVERY sprite of a state other than `OFFLINE` SHALL carry a badge with that state's glyph, in both themes: `!` waiting, `▸` or `♪` working, `✓` turn done, `?` stale, `z` idle, `×` logged off. `OFFLINE` has no badge; its blank grey face differs from every other face.
+5. EVERY sprite of a state that is 26 px or larger (buddy rows, inbox rows, pop-ups), other than `OFFLINE`, SHALL carry a badge with that state's glyph, in both themes. The 16 px sprites of session rows carry none, because their phrase names the state in text beside them (builder, 2026-11-13). The glyphs: `!` waiting, `▸` or `♪` working, `✓` turn done, `?` stale, `z` idle, `×` logged off. `OFFLINE` has no badge; its blank grey face differs from every other face.
 6. A badge SHALL be an HTML element laid over the sprite, not part of the sprite's SVG. Its shape (Blue Bot: rounded square; Strawberry Milk: circle), its border, its fill and its glyph SHALL all come from tokens, so `✓` is a text character. Its fill SHALL be the theme's state text color (design.md "State colors") and its glyph white.
 7. Sprites and badges SHALL be hidden from screen readers, with the state name given as text (MA 6.13).
-8. A state SHALL be told apart from every other state by face shape or badge glyph, never by color alone.
+8. A state SHALL be told apart from every other state by face shape, badge glyph or the phrase beside it, never by color alone.
 9. Sprites SHALL be built with `createElementNS` and attributes only, never from HTML text (MA 6.9).
 
 ## Requirement 7: Layout changes from design.md
@@ -155,12 +157,12 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 
 ### Acceptance criteria
 1. THE main window SHALL follow `MainBot` and `MainCute` in both themes: the patterned background, the title bar (sprite icon, `AgentBuddy` and the title mark, pin, minimize and close-to-menu-bar buttons of 22 × 22 px), the `me` row and the buddy list as cards, the alert strip with its decoration character, the tabs as separate rounded buttons with the Inbox count badge, and the footer.
-2. Buddy rows SHALL end with the theme's unread marker WHILE any of their sessions is unacknowledged (MA 6.4). Session rows SHALL start with `┗`; the most urgent session row SHALL use the theme's urgent-row style.
+2. Buddy rows SHALL end with the theme's unread marker WHILE any of their sessions is unacknowledged (MA 6.4). Session rows SHALL start with `┗`. THE most urgent session row SHALL use the theme's urgent-row style (tint and left line) WHEN it is `WAITING_APPROVAL`, and otherwise only a 3 px left line in its state color (builder, 2026-11-13).
 3. Kiro progress SHALL keep the meaning it has today (MA 6.4, tech.md "Progress from `tasks.md`"): `n` done top-level tasks of `m` counted ones, shown as `n/m`, and `?/?` with no bar or cells when unknown. Under the line:
    - Blue Bot: `m` cells, the first `n` drawn as done; WHILE the buddy is `WORKING` and `n < m`, the next cell drawn as current; the rest as to-do. The cell count follows `m`, never the mockup. WHEN `m` is above 30, one continuous bar in the same colors, filled to `n/m`.
    - Strawberry Milk: one rounded striped bar filled to `n/m`.
 4. BOTH pop-up kinds SHALL keep MA 9.5 exactly: ×, `Later` and `Go there` with the theme's character after it. × closes and acknowledges; `Later` closes only; `Go there` and a click anywhere else on the card go there.
-5. THE pop-up title SHALL be `띠링! ♪ needs your OK` or `띠링! ♪ new message`. Screen readers SHALL read `Ding!` in place of `띠링!`, through an `aria-label` (builder, 2026-11-13). × SHALL be named `Close and mark as read`.
+5. THE pop-up title SHALL be `띠링! ♪ needs your OK` or `띠링! ♪ new message`. THE title SHALL be a heading whose `aria-label` is `Ding! needs your OK` or `Ding! new message`, so screen readers read `Ding!` in place of `띠링!` and skip `♪` (builder, 2026-11-13). × SHALL be named `Close and mark as read`.
 6. THE pop-up card SHALL take its border, radius, header gradient and colors from the theme and the pop-up kind (design.md "Ding! popup").
 7. THE Inbox and Settings tabs SHALL keep the layout of `Inbox.dc.html` and `Settings.dc.html` with the theme's cards, colors, fonts, sprites and unread marker. Checkboxes SHALL use the theme's primary color (`accent-color`).
 8. Every other behavior of the messenger-app spec SHALL stay as it is.
@@ -202,6 +204,8 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
    - reading `theme` from old settings files, missing values, wrong types and unknown strings; the IPC check of a theme change;
    - both sprite modules have the same export shape, give a sprite for every agent and state, keep every rectangle inside the 12 × 12 grid, and use the grey for `OFFLINE` and `ENDED`;
    - the sprite rectangles equal the mockup rectangles (read from the mockup files in the test, so a later edit of either shows up);
+   - badges only on state sprites of 26 px and larger, never on `OFFLINE`;
+   - the new phrase strings (T14), `lead` exactly for `WORKING`, and that no field of an inbox record or of the settings file holds a phrase;
    - a theme change in the controller saves the settings and pushes state, and sends nothing else (no ping, no inbox record, no relay call);
    - pop-ups get the theme, and both pop-up kinds keep ×, `Later` and `Go there` with MA 9.5's actions;
    - Blue Bot progress cells: `m` cells, `n` done, one current cell only while `WORKING` and `n < m`, one bar above 30;
@@ -236,4 +240,7 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 | D6 | Mockup and design.md differ: Blue Bot Kiro phrase (`▸ grinding tasks` / `studying hard`), Strawberry Milk title mark (`✧` / `♡`), its close button (`#FF8FB1` / `#C2185B`), its tree mark (`#C9B6D6` / `#D9C2E8`), its urgent-row left border (none / 3 px), the Blue Bot current cell (`#3D8BFF` / `#2F6FD6`), the Blue Bot footer dot (`#2BBF7A` / working color). | design.md in every case. |
 | D7 | Values only the mockups have. | Offline group header colors (Blue Bot `#EDF3FB` / `#4E6290`, 5.42; Strawberry Milk `#F5F1F8` / `#5A4A68`, 7.20) and Strawberry Milk's dashed row dividers (`#F0DDEA`) from the mockups. The footer's connection mark is a decoration-character token: a square dot in Blue Bot, `♥` in Strawberry Milk. |
 | D8 | Strawberry Milk contrast: `text-2` `#74647F` reaches 4.31:1 on the pattern dots (`#FFDCEB`); the turn-done pop-up × is white on `#A98BEA` (2.77). | Text directly on the background uses `#5A4A68` (8.03 on the background); the turn-done × uses the title-button style (`#5A2D6E` on `#F7E9FF`, 8.87). design.md's token table updated. |
-| D9 | `띠링!` against product.md's English-only UI text. | Kept; recorded as an exception in product.md; the title carries `aria-label` so screen readers say `Ding!`. |
+| D9 | `띠링!` against product.md's English-only UI text. | Kept; recorded as an exception in product.md. The title is an `<h1>` with `aria-label="Ding! needs your OK"` or `"Ding! new message"` (a label on a plain `<span>` is not announced). |
+| D10 | The leading `♪` leaves the core phrases and comes back through CSS `::before`. | Approved, as a behavior change: T14. |
+| D11 | A 9 px badge on the 16 px session-row sprites. | None there; badges only on sprites of 26 px and larger (Req 6.5). |
+| D12 | design.md's urgent-row is the needs-OK orange. | Only the top session row in `WAITING_APPROVAL` gets it; other top rows get a 3 px left line in their state color. |
