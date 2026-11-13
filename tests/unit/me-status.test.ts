@@ -79,6 +79,7 @@ describe('controller.onStatus', () => {
       jump: rec('jump'),
       notice: rec('notice'),
       applyAlwaysOnTop: rec('applyAlwaysOnTop'),
+      applyTheme: rec('applyTheme'),
       windowAction: rec('windowAction'),
       isDirectory: () => false,
     };

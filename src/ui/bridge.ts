@@ -2,6 +2,7 @@
 // own stream turned into a snapshot (messenger-app Requirement 6.12).
 import type { BuddyView } from '../core/buddies';
 import type { AppSnapshot, ClickTarget, SettingKey } from '../core/snapshot';
+import type { ThemeId } from '../core/theme';
 import type { Tab } from './model/chrome';
 
 /** `window.agentbuddy`, exposed by src/app/preload-main.ts. */
@@ -18,6 +19,7 @@ export interface AppBridge {
   setGroupOpen(folder: string, open: boolean): void;
   windowAction(action: 'minimize' | 'close'): void;
   setStatus(text: string): void;
+  setTheme(theme: ThemeId): void;
 }
 
 export function appBridge(): AppBridge | null {
@@ -41,7 +43,7 @@ export function browserSource(onSnapshot: (s: AppSnapshot) => void): void {
       hidden: [],
       unacked: [],
       inbox: [],
-      settings: { hideText: false, sound: false, popups: false, macNotifications: false, alwaysOnTop: false, closedGroups: [], myStatus: '' },
+      settings: { hideText: false, sound: false, popups: false, macNotifications: false, alwaysOnTop: false, theme: 'blue-bot', closedGroups: [], myStatus: '' },
       count: { waiting: 0, unreadTurns: 0, total: 0 },
     });
   const connect = () => {

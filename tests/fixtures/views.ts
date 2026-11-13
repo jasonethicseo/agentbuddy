@@ -50,7 +50,7 @@ export function snapshot(buddies: BuddyView[], over: Partial<AppSnapshot> = {}, 
     hidden: [],
     unacked: [],
     inbox: [],
-    settings: { hideText: false, sound: true, popups: true, macNotifications: false, alwaysOnTop: true, closedGroups: [], myStatus: '', ...settings },
+    settings: { hideText: false, sound: true, popups: true, macNotifications: false, alwaysOnTop: true, theme: 'blue-bot', closedGroups: [], myStatus: '', ...settings },
     count: { waiting: 0, unreadTurns: 0, total: 0 },
     ...over,
   };

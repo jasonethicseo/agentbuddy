@@ -1,6 +1,7 @@
 // BrowserWindow options for the main window and pop-ups, as plain objects so the
 // security flags are unit-tested without Electron (messenger-app Requirements 5.1, 9.2, 9.3, 15.1).
 import type { BrowserWindowConstructorOptions, WebPreferences } from 'electron';
+import type { ThemeId } from '../core/theme';
 import { MAIN, POPUP } from './config';
 import type { Point, Rect } from './popup-layout';
 
@@ -24,7 +25,25 @@ export function mainWindowPosition(area: Rect): Point {
   return { x: area.x + area.width - MAIN.width - MAIN.margin, y: area.y + MAIN.margin };
 }
 
-export function mainWindowOptions(o: { preload: string; x: number; y: number; alwaysOnTop: boolean }): BrowserWindowConstructorOptions {
+/**
+ * The window background of each theme, for an opaque main window: the one copy of `--bg` outside
+ * themes.css, checked against it by a unit test (themes Requirement 3.6).
+ */
+export const THEME_BACKGROUND: Readonly<Record<ThemeId, string>> = { 'blue-bot': '#EEF6FF', 'strawberry-milk': '#FFF7FB' };
+
+export function mainWindowOptions(o: {
+  preload: string;
+  x: number;
+  y: number;
+  alwaysOnTop: boolean;
+  theme: ThemeId;
+  frame: 'transparent' | 'opaque';
+}): BrowserWindowConstructorOptions {
+  // Transparent: the page draws the frame and the theme's round corners (themes Requirement 8.3, O5).
+  const frame: BrowserWindowConstructorOptions =
+    o.frame === 'transparent'
+      ? { transparent: true, backgroundColor: '#00000000', hasShadow: true }
+      : { backgroundColor: THEME_BACKGROUND[o.theme] };
   return {
     title: 'AgentBuddy',
     x: o.x,
@@ -34,14 +53,13 @@ export function mainWindowOptions(o: { preload: string; x: number; y: number; al
     minWidth: MAIN.width,
     maxWidth: MAIN.width,
     minHeight: MAIN.minHeight,
-    // The page draws its own title bar (Requirement 5.9). Not transparent: Electron
-    // documents transparent windows as not resizable.
+    // The page draws its own title bar (Requirement 5.9).
     frame: false,
+    ...frame,
     resizable: true,
     maximizable: false,
     fullscreenable: false,
     alwaysOnTop: o.alwaysOnTop,
-    backgroundColor: '#F4F8FD',
     show: false,
     webPreferences: { ...SECURE_PREFERENCES, preload: o.preload, backgroundThrottling: false },
   };

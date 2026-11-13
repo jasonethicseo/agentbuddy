@@ -33,15 +33,16 @@ How to work through this list:
     - _Requirements: 4.6, 11.1, 11.2_
   - Result (2026-11-13): 516 tests pass. `PublicSettings.theme` moved to 4.1, where the settings file starts to carry it, so this task leaves the app files untouched. So that the list keeps showing `♪ working…` until task 6, `lead` already reaches the buddy and session view models and `screens/list.ts` draws it as an empty `.lead-work` span whose `::before` reads `--glyph-work` (`"♪"` in `tokens.css` for now; `themes.css` takes it over in task 5). New tests: `theme-core.test.ts` (IDs, names, `isTheme`, `parseTheme`, no phrase in inbox records or the settings file), `theme.prop.test.ts` (any JSON value or string gives a theme; identity on the two). Updated: `status-line.test.ts`, `text.prop.test.ts` (P21 with `lead`), `ui-model.test.ts`, and `contrast.test.ts`, which now accepts string tokens.
 
-- [ ] 4. App: the setting, IPC and theme delivery
-  - [ ] 4.1 `PublicSettings.theme` (from 3.1); `settings.ts`: `theme` (default, `parseTheme`, serialized); old files load unchanged; the settings round-trip property includes `theme`
+- [x] 4. App: the setting, IPC and theme delivery
+  - [x] 4.1 `PublicSettings.theme` (from 3.1); `settings.ts`: `theme` (default, `parseTheme`, serialized); old files load unchanged; the settings round-trip property includes `theme`
     - _Requirements: 1.1–1.4, 1.6_
-  - [ ] 4.2 `ipc.ts`: `ui:theme` with its check, `popup:theme`; `preload-main.ts` `setTheme`, `preload-popup.ts` `onTheme`; validator unit tests
+  - [x] 4.2 `ipc.ts`: `ui:theme` with its check, `popup:theme`; `preload-main.ts` `setTheme`, `preload-popup.ts` `onTheme`; validator unit tests
     - _Requirements: 1.5; MA 15.2_
-  - [ ] 4.3 `controller.ts`: `onTheme`, `Ports.applyTheme`; unit test (saves, pushes state, calls `applyTheme`, nothing else; the same theme does nothing); add `applyTheme` to the existing fake ports, with no other change to those tests
+  - [x] 4.3 `controller.ts`: `onTheme`, `Ports.applyTheme`; unit test (saves, pushes state, calls `applyTheme`, nothing else; the same theme does nothing); add `applyTheme` to the existing fake ports, with no other change to those tests
     - _Requirements: 2.6_
-  - [ ] 4.4 `config.ts` (`MAIN_FRAME` from task 1, `POPUP.height` 144), `window-options.ts` (transparent or opaque options, `THEME_BACKGROUND`), `windows.ts` and `popups.ts` (`?theme=` and `&frame=` in the URL, `popups.setTheme` storing and broadcasting), `main.ts` wiring (`setBackgroundColor` when opaque); window-option unit tests
+  - [x] 4.4 `config.ts` (`MAIN_FRAME` from task 1, `POPUP.height` 144), `window-options.ts` (transparent or opaque options, `THEME_BACKGROUND`), `windows.ts` and `popups.ts` (`?theme=` and `&frame=` in the URL, `popups.setTheme` storing and broadcasting), `main.ts` wiring (`setBackgroundColor` when opaque); window-option unit tests
     - _Requirements: 2.5, 2.7, 3.6, 8.3, 8.4, 8.6_
+  - Result (2026-11-13): 528 tests pass; the existing controller and app tests pass with only `applyTheme` added to their fake ports. `controller.ts` grew to 211 lines, so the pop-up card and notification text moved unchanged to `src/app/ping-content.ts` (controller now 192 lines). The pop-up window is 144 px high, so a 920-point-high visible area stacks 5 pop-ups instead of 6 before the oldest closes (MA 9.6's rule unchanged); `app-basics.test.ts` follows. The main window is now transparent (`MAIN_FRAME`), but until task 6.1 the old stylesheet still paints `body` edge to edge, so its corners stay square; the page does not read `?theme=` until task 5.2.
 
 - [ ] 5. Theme tokens and sprites
   - [ ] 5.1 `styles/themes.css` with both blocks from the design's token table, `[data-theme-preview]`, `[data-frame="opaque"]` and the hidden-until-themed rule. `tokens.css` stays until task 6, as the only allowed exception of the color rule.

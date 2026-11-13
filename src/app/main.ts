@@ -67,8 +67,8 @@ async function main(): Promise<void> {
     if (s) await saveSettings(home, s).catch((e: NodeJS.ErrnoException) => console.error(`settings save failed: ${e.code ?? 'unknown'}`));
   };
 
-  const mainWin = createMainWindow({ preload: join(__dirname, 'preload-main.cjs'), alwaysOnTop: settings.alwaysOnTop, isQuitting: () => quitting });
-  const popups = createPopups({ preload: join(__dirname, 'preload-popup.cjs'), onAction: (session, action) => controller.onPopup(session, action) });
+  const mainWin = createMainWindow({ preload: join(__dirname, 'preload-main.cjs'), alwaysOnTop: settings.alwaysOnTop, theme: settings.theme, isQuitting: () => quitting });
+  const popups = createPopups({ preload: join(__dirname, 'preload-popup.cjs'), theme: settings.theme, onAction: (session, action) => controller.onPopup(session, action) });
   const notice = (text: string) => (mainWin.isVisible() ? mainWin.send(CH.notice, { text }) : popups.show(null, { kind: 'notice', text }));
   const notifier = createNotifier({ onClick: (session) => controller.onClick({ kind: 'notification', key: session }), onRefused: () => notice(NOTIFY_REFUSED) });
   const tray = createTray({
@@ -100,6 +100,10 @@ async function main(): Promise<void> {
     jump: (plan) => void runJump(plan, execAsync, notice),
     notice,
     applyAlwaysOnTop: (on) => mainWin.setAlwaysOnTop(on),
+    applyTheme: (theme) => {
+      mainWin.setTheme(theme);
+      popups.setTheme(theme);
+    },
     windowAction: (a) => mainWin.action(a),
     isDirectory: (p) => {
       try {
@@ -120,6 +124,7 @@ async function main(): Promise<void> {
   onTrusted(CH.ackAll, UI_CHECKS['ui:ackAll'], fromMain, () => controller.onAckAll());
   onTrusted(CH.window, UI_CHECKS['ui:window'], fromMain, (v) => controller.onWindow(v.action));
   onTrusted(CH.status, UI_CHECKS['ui:status'], fromMain, (v) => controller.onStatus(v.text));
+  onTrusted(CH.theme, UI_CHECKS['ui:theme'], fromMain, (v) => controller.onTheme(v.theme));
   onTrusted(CH.popupClick, POPUP_CHECKS['popup:click'], popups.isPopup, (v, sender) => popups.handle(sender, v.action));
 
   const link = createRelayLink({

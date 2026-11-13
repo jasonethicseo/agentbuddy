@@ -5,12 +5,12 @@ import type { BuddyView, SessionView } from '../core/buddies';
 import { ackRecords, foldInbox, hide, isHidden, menuCount, pingRecord, refreshHidden, unackedSessions } from '../core/attention';
 import type { InboxEntry, InboxRecord, MenuCount } from '../core/attention';
 import { detectPings } from '../core/pings';
-import type { Ping } from '../core/pings';
-import type { AppSnapshot, Connection, PopupContent, RelayMode, SettingKey } from '../core/snapshot';
-import { AGENT_NAMES, PHRASES, folderName, statusParts } from '../core/text';
+import type { AppSnapshot, Connection, RelayMode, SettingKey } from '../core/snapshot';
+import type { ThemeId } from '../core/theme';
 import type { ClickFrom, Ports } from './controller-ports';
 import type { PopupAction, WindowAction } from './ipc';
 import { NOTICES, planJump } from './jump';
+import { notificationBody, popupContent } from './ping-content';
 import { MAX_CLOSED_GROUPS } from './settings';
 import type { Settings } from './settings';
 
@@ -38,8 +38,7 @@ export function createController(init: { settings: Settings; records: readonly I
 
   const iso = () => new Date(ports.now()).toISOString();
   const sessions = () => views.flatMap((b) => b.sessions);
-  const nameOf = (title: string | undefined, startedAt: string) =>
-    settings.hideText || title === undefined ? `started ${ports.formatTime(Date.parse(startedAt), true)}` : title;
+  const text = () => ({ hideText: settings.hideText, formatTime: ports.formatTime });
 
   function add(r: InboxRecord): void {
     records.push(r);
@@ -82,22 +81,6 @@ export function createController(init: { settings: Settings; records: readonly I
     entries = foldInbox(records);
   }
 
-  function popupContent(p: Ping): PopupContent {
-    const b = views.find((v) => v.key === p.buddy);
-    const content: Extract<PopupContent, { kind: 'ping' }> = {
-      kind: 'ping',
-      state: p.state,
-      agent: b ? AGENT_NAMES[b.agent] : p.buddyName,
-      folder: b ? folderName(b.cwd) : '',
-      time: ports.formatTime(ports.now(), false),
-      phrase: PHRASES[p.state],
-    };
-    if (settings.hideText) return content;
-    const excerpt = p.state === 'TURN_DONE' ? statusParts(p.state, false, p.statusText, false).excerpt : undefined;
-    content.detail = excerpt ?? `session · ${nameOf(p.title, p.startedAt)}`;
-    return content;
-  }
-
   const jumpTo = (key: string) => ports.jump(planJump(views, key, ports.isDirectory));
 
   return {
@@ -110,9 +93,8 @@ export function createController(init: { settings: Settings; records: readonly I
       const at = iso();
       for (const p of pings) {
         add(pingRecord(p, at)); // always, whatever the settings (Requirement 8.4)
-        if (settings.popups) ports.showPopup(p.session, popupContent(p));
-        const body = settings.hideText ? PHRASES[p.state] : `${PHRASES[p.state]} · ${nameOf(p.title, p.startedAt)}`;
-        if (settings.macNotifications) ports.notify(p.session, p.buddyName, body);
+        if (settings.popups) ports.showPopup(p.session, popupContent(text(), views, p, ports.now()));
+        if (settings.macNotifications) ports.notify(p.session, p.buddyName, notificationBody(text(), p));
       }
       if (pings.length > 0 && settings.sound) ports.ding(); // once per list (Requirement 8.5)
       update();
@@ -164,6 +146,13 @@ export function createController(init: { settings: Settings; records: readonly I
     onSetting(key: SettingKey, value: boolean): void {
       setSettings({ ...settings, [key]: value });
       if (key === 'alwaysOnTop') ports.applyAlwaysOnTop(value);
+      update();
+    },
+    /** A new theme: saved, sent to the windows, nothing else (themes Requirement 2.6). */
+    onTheme(theme: ThemeId): void {
+      if (theme === settings.theme) return;
+      setSettings({ ...settings, theme });
+      ports.applyTheme(theme);
       update();
     },
     /** The "me" status message: kept in the settings file only, sent nowhere else (Requirement 18.5). */

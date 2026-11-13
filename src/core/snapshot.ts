@@ -4,6 +4,7 @@
 import type { BuddyView } from './buddies';
 import type { InboxEntry, MenuCount } from './attention';
 import type { AttentionState } from './pings';
+import type { ThemeId } from './theme';
 
 /** `browser`: the relay's own page, with no app around it. */
 export type RelayMode = 'connecting' | 'own' | 'attached' | 'browser';
@@ -15,6 +16,8 @@ export interface PublicSettings {
   popups: boolean;
   macNotifications: boolean;
   alwaysOnTop: boolean;
+  /** The look of the main window and the pop-ups (themes Requirement 1). */
+  theme: ThemeId;
   /** Folders whose group is closed. */
   closedGroups: string[];
   /** The user's own status message in the "me" row; '' when unset (messenger-app Requirement 18). */
@@ -22,7 +25,7 @@ export interface PublicSettings {
 }
 
 /** The five on/off settings a window may change. */
-export type SettingKey = Exclude<keyof PublicSettings, 'closedGroups' | 'myStatus'>;
+export type SettingKey = Exclude<keyof PublicSettings, 'closedGroups' | 'myStatus' | 'theme'>;
 
 export interface AppSnapshot {
   mode: RelayMode;

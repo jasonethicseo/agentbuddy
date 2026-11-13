@@ -17,7 +17,15 @@ export const SAVE_DELAY_MS = 500;
 /** Re-check time-based state, hidden marks and the day. */
 export const TICK_MS = 30_000;
 
-/** Pop-up card from `Popup.dc.html`: 26 px title, about 70 px body, 36 px buttons, 2 px border. */
-export const POPUP = { width: 300, height: 136, gap: 10, margin: 12 } as const;
+/**
+ * Pop-up card from `PopupBot.dc.html` / `PopupCute.dc.html`: 3 px border, 30 px header, 62 px body,
+ * 40 px buttons, 3 px border, 4 px shadow, plus 2 px (themes design "window-options.ts, config.ts").
+ */
+export const POPUP = { width: 300, height: 144, gap: 10, margin: 12 } as const;
+/**
+ * The main window's frame (themes Requirement 8): `transparent` because O5 (2026-11-13) showed a
+ * transparent frameless window still resizes in height, so the page draws the theme's round corners.
+ */
+export const MAIN_FRAME: 'transparent' | 'opaque' = 'transparent';
 /** Main window from design.md: 320 px wide, height changeable, at least 420 px. */
 export const MAIN = { width: 320, height: 620, minHeight: 420, margin: 12 } as const;

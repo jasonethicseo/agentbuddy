@@ -44,6 +44,7 @@ function setup(over: Record<string, unknown> = {}, records: InboxRecord[] = []) 
     jump: rec('jump'),
     notice: rec('notice'),
     applyAlwaysOnTop: rec('applyAlwaysOnTop'),
+    applyTheme: rec('applyTheme'),
     windowAction: rec('windowAction'),
     isDirectory: (p) => p === '/Users/dev/agentbuddy',
   };

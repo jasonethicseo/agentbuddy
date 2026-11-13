@@ -38,6 +38,7 @@ inclusion: always
 │  ├─ app/             Electron desktop app (main process and two preloads)
 │  │  ├─ main.ts       entry: single instance, no Dock icon, protocol, windows, tray, wiring (Electron)
 │  │  ├─ controller.ts app state and decisions; effects through ports (types in controller-ports.ts), no I/O of its own
+│  │  ├─ ping-content.ts pop-up card and notification text of a ping (pure)
 │  │  ├─ relay-link.ts own relay or attach; SSE client; retries
 │  │  ├─ sse.ts        SSE text parser and BuddyView[] check
 │  │  ├─ jump.ts       planJump (pure) and runJump (execFile lsappinfo, open -b)

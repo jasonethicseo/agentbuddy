@@ -3,6 +3,7 @@
 import { BrowserWindow, screen } from 'electron';
 import type { WebContents } from 'electron';
 import type { PopupContent } from '../core/snapshot';
+import type { ThemeId } from '../core/theme';
 import { POPUP, POPUP_MS } from './config';
 import { CH } from './ipc';
 import type { PopupAction } from './ipc';
@@ -15,8 +16,9 @@ interface Open {
   timer: ReturnType<typeof setTimeout>;
 }
 
-export function createPopups(o: { preload: string; onAction: (session: string, action: PopupAction) => void }) {
+export function createPopups(o: { preload: string; theme: ThemeId; onAction: (session: string, action: PopupAction) => void }) {
   const open: Open[] = []; // oldest first
+  let theme = o.theme;
   const area = () => screen.getPrimaryDisplay().workArea;
 
   /** Move the remaining pop-ups down; setBounds takes no focus. */
@@ -58,13 +60,18 @@ export function createPopups(o: { preload: string; onAction: (session: string, a
       win.showInactive(); // neither activates the app nor makes the panel key
     });
     win.webContents.once('did-fail-load', () => close(p));
-    win.loadURL('app://ui/popup.html').catch(() => close(p));
+    win.loadURL(`app://ui/popup.html?theme=${theme}`).catch(() => close(p));
   }
 
   const find = (sender: WebContents) => open.find((p) => !p.win.isDestroyed() && p.win.webContents === sender);
 
   return {
     show,
+    /** Later pop-ups open in `t`; open ones change at once, without moving or closing (themes Requirement 2.5). */
+    setTheme(t: ThemeId): void {
+      theme = t;
+      for (const p of open) if (!p.win.isDestroyed()) p.win.webContents.send(CH.popupTheme, t);
+    },
     isPopup: (sender: WebContents) => find(sender) !== undefined,
     /** A button in a pop-up: it closes, then its action goes on (Requirement 9.5). */
     handle(sender: WebContents, action: PopupAction): void {

@@ -4,6 +4,8 @@
 import { KEY_MAX } from '../core/config';
 import type { ClickTarget, SettingKey } from '../core/snapshot';
 import { cleanMyStatus } from '../core/text';
+import { isTheme } from '../core/theme';
+import type { ThemeId } from '../core/theme';
 
 export const CH = {
   // main process → main window
@@ -20,9 +22,11 @@ export const CH = {
   ackAll: 'ui:ackAll',
   window: 'ui:window',
   status: 'ui:status',
+  theme: 'ui:theme',
   // main process ↔ pop-up
   popupContent: 'popup:content',
   popupClick: 'popup:click',
+  popupTheme: 'popup:theme',
 } as const;
 
 export const SETTING_KEYS: readonly SettingKey[] = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop'];
@@ -41,6 +45,7 @@ export interface UiMessages {
   'ui:ackAll': true;
   'ui:window': { action: WindowAction };
   'ui:status': { text: string };
+  'ui:theme': { theme: ThemeId };
 }
 export interface PopupMessages {
   'popup:click': { action: PopupAction };
@@ -98,6 +103,11 @@ export const UI_CHECKS: { readonly [C in keyof UiMessages]: (v: unknown) => UiMe
   'ui:status': safe((v) => {
     const text = cleanMyStatus(prop(v, 'text'));
     return text === null ? null : { text };
+  }),
+  // Exactly one of the two themes; anything else is dropped (themes Requirement 1.5).
+  'ui:theme': safe((v) => {
+    const theme = prop(v, 'theme');
+    return isTheme(theme) ? { theme } : null;
   }),
 };
 

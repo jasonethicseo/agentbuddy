@@ -4,7 +4,6 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { mainWindowOptions } from '../../src/app/window-options';
 
 const ROOT = join(import.meta.dirname, '../..');
 const UI = join(ROOT, 'src/ui');
@@ -129,9 +128,6 @@ describe('tokens', () => {
     for (const f of files) expect([f, readFileSync(f, 'utf8').match(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)]).toEqual([f, null]);
   });
 
-  it('the main window background matches --body', () => {
-    expect(mainWindowOptions({ preload: '/p', x: 0, y: 0, alwaysOnTop: true }).backgroundColor).toBe(color('--body'));
-  });
 });
 
 describe('stylesheets', () => {

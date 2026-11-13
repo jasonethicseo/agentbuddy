@@ -2,6 +2,7 @@
 // (messenger-app Requirement 15.2). Runs sandboxed; bundled to CommonJS.
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AppSnapshot, ClickTarget, SettingKey } from '../core/snapshot';
+import type { ThemeId } from '../core/theme';
 import { CH } from './ipc';
 import type { Screen, WindowAction } from './ipc';
 
@@ -33,4 +34,5 @@ contextBridge.exposeInMainWorld('agentbuddy', {
   setGroupOpen: (folder: string, open: boolean) => ipcRenderer.send(CH.group, { folder, open }),
   windowAction: (action: WindowAction) => ipcRenderer.send(CH.window, { action }),
   setStatus: (text: string) => ipcRenderer.send(CH.status, { text }),
+  setTheme: (theme: ThemeId) => ipcRenderer.send(CH.theme, { theme }),
 });

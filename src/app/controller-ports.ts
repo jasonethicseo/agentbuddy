@@ -2,6 +2,7 @@
 // Types only; main.ts gives the real ports, tests give fakes.
 import type { InboxRecord } from '../core/attention';
 import type { AppSnapshot, ClickTarget, PopupContent } from '../core/snapshot';
+import type { ThemeId } from '../core/theme';
 import type { WindowAction } from './ipc';
 import type { JumpPlan } from './jump';
 import type { Settings } from './settings';
@@ -23,6 +24,8 @@ export interface Ports {
   jump(plan: JumpPlan): void;
   notice(text: string): void;
   applyAlwaysOnTop(on: boolean): void;
+  /** Send a new theme to the open pop-ups and the native window (themes Requirement 2.5). */
+  applyTheme(theme: ThemeId): void;
   windowAction(action: WindowAction): void;
   isDirectory(path: string): boolean;
 }

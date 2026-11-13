@@ -1,11 +1,11 @@
 // App plain modules: IPC checks, window options, pop-up layout and the menu bar icon
 // (messenger-app Requirements 5.1, 5.8, 9.1–9.3, 9.6, 15.1–15.3, 17.1).
 import { describe, expect, it } from 'vitest';
-import { MAIN, POPUP } from '../../src/app/config';
+import { MAIN, MAIN_FRAME, POPUP } from '../../src/app/config';
 import { BUBBLE, bubbleBitmap } from '../../src/app/icon';
 import { POPUP_CHECKS, UI_CHECKS } from '../../src/app/ipc';
 import { placePopups, popupCapacity } from '../../src/app/popup-layout';
-import { SECURE_PREFERENCES, mainWindowOptions, mainWindowPosition, popupWindowOptions } from '../../src/app/window-options';
+import { SECURE_PREFERENCES, THEME_BACKGROUND, mainWindowOptions, mainWindowPosition, popupWindowOptions } from '../../src/app/window-options';
 
 const hostile = Object.defineProperty({}, 'kind', { get: () => { throw new Error('boom'); }, enumerable: true });
 
@@ -18,6 +18,7 @@ describe('IPC checks', () => {
     expect(UI_CHECKS['ui:setting']({ key: 'hideText', value: true })).toEqual({ key: 'hideText', value: true });
     expect(UI_CHECKS['ui:group']({ folder: '/Users/dev/demo', open: false })).toEqual({ folder: '/Users/dev/demo', open: false });
     expect(UI_CHECKS['ui:window']({ action: 'minimize' })).toEqual({ action: 'minimize' });
+    for (const theme of ['blue-bot', 'strawberry-milk']) expect(UI_CHECKS['ui:theme']({ theme })).toEqual({ theme });
     for (const action of ['go', 'close', 'later']) expect(POPUP_CHECKS['popup:click']({ action })).toEqual({ action });
   });
 
@@ -42,6 +43,11 @@ describe('IPC checks', () => {
     ['ui:setting', { key: 'sound', value: 'yes' }],
     ['ui:group', { folder: '/Users/dev/demo', open: 1 }],
     ['ui:window', { action: 'quit' }],
+    ['ui:theme', { theme: 'pink' }],
+    ['ui:theme', { theme: 'Blue-Bot' }],
+    ['ui:theme', { theme: ['blue-bot'] }],
+    ['ui:theme', 'blue-bot'],
+    ['ui:theme', {}],
   ] as const)('reject a bad %s message', (channel, payload) => {
     expect(UI_CHECKS[channel](payload)).toBeNull();
   });
@@ -54,7 +60,7 @@ describe('IPC checks', () => {
 });
 
 describe('window options', () => {
-  const main = mainWindowOptions({ preload: '/p/main.cjs', x: 1, y: 2, alwaysOnTop: true });
+  const main = mainWindowOptions({ preload: '/p/main.cjs', x: 1, y: 2, alwaysOnTop: true, theme: 'blue-bot', frame: 'transparent' });
   const popup = popupWindowOptions({ preload: '/p/popup.cjs', x: 3, y: 4 });
 
   it.each([
@@ -69,9 +75,18 @@ describe('window options', () => {
 
   it('the main window is frameless, 320 px wide, at least 420 px high, and keeps running while hidden', () => {
     expect(main).toMatchObject({ frame: false, width: 320, minWidth: 320, maxWidth: 320, minHeight: 420, resizable: true, alwaysOnTop: true, x: 1, y: 2 });
-    expect(main).not.toHaveProperty('transparent');
     expect(main.webPreferences?.backgroundThrottling).toBe(false);
-    expect(mainWindowOptions({ preload: '/p', x: 0, y: 0, alwaysOnTop: false }).alwaysOnTop).toBe(false);
+    expect(mainWindowOptions({ preload: '/p', x: 0, y: 0, alwaysOnTop: false, theme: 'blue-bot', frame: 'transparent' }).alwaysOnTop).toBe(false);
+  });
+
+  it('the main window is transparent, as O5 decided, and opaque in the theme background otherwise (themes Requirement 8)', () => {
+    expect(MAIN_FRAME).toBe('transparent');
+    expect(main).toMatchObject({ transparent: true, backgroundColor: '#00000000', hasShadow: true });
+    for (const theme of ['blue-bot', 'strawberry-milk'] as const) {
+      const opaque = mainWindowOptions({ preload: '/p', x: 0, y: 0, alwaysOnTop: true, theme, frame: 'opaque' });
+      expect(opaque).not.toHaveProperty('transparent');
+      expect(opaque.backgroundColor).toBe(THEME_BACKGROUND[theme]);
+    }
   });
 
   it('the pop-up is a non-activating panel that never takes focus but gets its first click', () => {
@@ -88,15 +103,16 @@ describe('pop-up layout', () => {
   const area = { x: 0, y: 25, width: 1512, height: 920 };
   it('stacks upward from the bottom-right corner with a 10 px gap', () => {
     expect(placePopups(3, area, POPUP, POPUP.gap, POPUP.margin)).toEqual([
-      { x: 1512 - 12 - 300, y: 25 + 920 - 12 - 136 },
-      { x: 1512 - 12 - 300, y: 25 + 920 - 12 - 136 - 146 },
-      { x: 1512 - 12 - 300, y: 25 + 920 - 12 - 136 - 292 },
+      { x: 1512 - 12 - 300, y: 25 + 920 - 12 - 144 },
+      { x: 1512 - 12 - 300, y: 25 + 920 - 12 - 144 - 154 },
+      { x: 1512 - 12 - 300, y: 25 + 920 - 12 - 144 - 308 },
     ]);
   });
 
   it('places no more than fit, so the oldest must close first', () => {
-    expect(popupCapacity(area, POPUP, POPUP.gap, POPUP.margin)).toBe(6); // (920 - 24 + 10) / 146
-    expect(placePopups(9, area, POPUP, POPUP.gap, POPUP.margin)).toHaveLength(6);
+    expect(POPUP.height).toBe(144); // the themed card (themes design "config.ts")
+    expect(popupCapacity(area, POPUP, POPUP.gap, POPUP.margin)).toBe(5); // (920 - 24 + 10) / 154
+    expect(placePopups(9, area, POPUP, POPUP.gap, POPUP.margin)).toHaveLength(5);
     expect(popupCapacity({ x: 0, y: 0, width: 200, height: 900 }, POPUP, 10, 12)).toBe(0);
   });
 });
