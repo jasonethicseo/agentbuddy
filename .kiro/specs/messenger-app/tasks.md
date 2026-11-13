@@ -131,15 +131,16 @@ How to work through this list:
   - All tests pass and `npm run build` succeeds. Grep for `/Users/` paths other than `/Users/dev/`, user names and token-like strings. `.gitignore` does not list `.kiro`.
   - _Requirements: 17.4, 17.5_
 
-- [ ] 13. My status row (required since 2026-11-13, Req 18)
+- [x] 13. My status row (required since 2026-11-13, Req 18)
   - [x] 13.1 Spec: Requirement 18, design "My status row", decisions A13 and A14 (corners stay 10 px all round)
   - [x] 13.2 `cleanMyStatus` in `src/core/text.ts`; `myStatus` in `PublicSettings`, `parseSettings`, `serializeSettings`; `ui:status` and its check; `controller.onStatus`; `setStatus` in the main preload; unit tests and P25 updated
     - _Requirements: 18.4–18.6_
   - [x] 13.3 `model/me.ts`, `screens/me.ts`, the row in `index.html`, the `--me-*` tokens and their styles; contrast pairs; unit tests for `meView` and `limitStatusInput`
     - _Requirements: 18.1–18.3, 18.7, 18.8_
-  - [ ] 13.4 Visual check with the builder, announced first: the row next to `Main.dc.html`, editing with Enter, Esc, a click outside, Korean input, and the 40-code-point cap
+  - [x] 13.4 Visual check with the builder, announced first: the row next to `Main.dc.html`, editing with Enter, Esc, a click outside, Korean input, and the 40-code-point cap
     - _Requirements: 18.1–18.4_
   - Result so far (2026-11-13): 505 tests pass. Moving focus out of the field cancels, like Esc (Req 18.3). The hint uses `--me-hint` = `--text-2`, because no lighter palette color keeps 4.5:1 on white (`--stale` 4.35). `parseSettings` first took a saved `null` as a message (`cleanMyStatus(null) === null`); the new unit test caught it before the commit. The contrast test now resolves alias tokens and checks that every `.me-*` rule uses only `--me-*` variables and no literal radius.
+  - Run (2026-11-13, 01:05:45–01:07:18 UTC, 90 s, attached to the relay, pid 86955): the settings file got `myStatus` twice, two Korean letters at 01:06:16 and a 40-code-point Korean string at 01:06:38 (the cap held); nothing else was saved. The main process held only `127.0.0.1:54807 -> 127.0.0.1:4343`. Exit 0 on SIGTERM; no Electron process left; the relay unchanged; settings file mode 600; neither `~/Library/Application Support/Electron` nor `.../AgentBuddy` was created. The app printed one macOS input-method line (`error messaging the mach port for IMKCFRunLoopWakeUpReliable`) when Korean input began; nothing followed from it. The builder confirmed: the row matches `Main.dc.html`, the hint shows when empty, Esc and a click outside bring the old message back, and Enter during a Korean composition only ends the composition.
   - Also in this task: `app.setName('AgentBuddy')` in `src/app/main.ts`. Run from source as `electron dist/app/main.cjs`, Electron's default app reads `package.json` only from the folder it is given, so `productName` in the root `package.json` would not apply (read from `default_app.asar`, Electron 45.3.1). `userData` was already `~/.agentbuddy/electron`. `~/Library/Application Support/Electron` (written 2026-11-12 08:10–08:24 UTC, the O4 runs) was deleted with the builder's OK. `~/Library/Preferences/com.github.Electron.plist` was kept: it was last written 2026-11-13 00:30:14 UTC (task 11 run B), not by O4, and macOS keys it by the Electron binary's bundle ID, which `setName` does not change, so every run from source writes it again.
 
 - [ ]* 14. Packaged `.app` (optional, unsigned)
@@ -147,12 +148,11 @@ How to work through this list:
 
 ## Handoff for the next session (2026-11-13, updated)
 
-State: tasks 1–11 are done; 13.1–13.3 are done and committed; 505 tests pass. The relay runs detached from an earlier build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`). No app or check process is running.
+State: tasks 1–11 and 13 are done and committed; 505 tests pass. The relay runs detached from an earlier build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`). No app or check process is running.
 
 Next, in this order (builder, 2026-11-13):
-1. Task 13.4: the visual check of the "me" row with the builder (announced first, run once with a fixed time limit). During it, also confirm that `~/Library/Application Support/Electron` and `~/Library/Application Support/AgentBuddy` are not created. Then mark task 13 done and commit.
-2. Task 12: steering, README, final checks. Add `myStatus` and the "me" row to the README's stored-files text.
-3. Then the builder brings the material for a theme spec (Blue Bot / Strawberry Milk). It changes the main window corners (16–18 px) and runs the transparent-window check once (A14).
+1. Task 12: steering, README, final checks. Add `myStatus` and the "me" row to the README's stored-files text.
+2. Then the builder brings the material for a theme spec (Blue Bot / Strawberry Milk). It changes the main window corners (16–18 px) and runs the transparent-window check once (A14).
 
 Still unanswered by the builder: whether a new Kiro window opened on the two clicks on a Claude-in-Kiro-terminal session (00:09 and 00:21 UTC). The builder's reply left the answer blank; the rule stays as it is (no folder for those sessions).
 
