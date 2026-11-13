@@ -55,6 +55,8 @@ The agent announces "지금 띄웁니다, 30초", starts it once in the backgrou
 
 Outcome:
 - **transparent**: at least one `resize` event with a changed height, no height below 420, and the builder saw the corners clean. Then `MAIN_FRAME = 'transparent'`.
+
+**Result (2026-11-13): `MAIN_FRAME = 'transparent'`.** Both edges resized the height and the title bar moved the window; the builder saw round corners. The shadow and the 420 px minimum were not checked (requirements, O5).
 - **opaque**: anything else. Then `MAIN_FRAME = 'opaque'`.
 
 The requirements record the date, the versions (Electron, macOS), the events seen and the builder's answers.
@@ -395,7 +397,7 @@ The existing app tests get `applyTheme` in their fake ports and `theme` in their
 | fonts | a glyph missing from Jua | falls back to Nanum Gothic, then the system font |
 
 ## Known limits
-- With a transparent main window, macOS draws its shadow from the window's content; O5 records how it looked.
+- With a transparent main window, macOS draws its shadow from the window's content; O5 did not watch it, so task 8 looks at it.
 - `✓` in a badge is a text character, so its look depends on the font that has it (Nanum Gothic lacks it; see the `cmap` check).
 - The Theme card's mini previews are below 3:1 in places; the theme names say what they show.
 

@@ -10,11 +10,12 @@ How to work through this list:
 - The builder's relay (`agentbuddy`) stays running while working.
 - Optional tasks are marked `- [ ]*`.
 
-- [ ] 1. O5: transparent main window check
-  - [ ] 1.1 Write the throwaway check app in `scripts/o5/` (not part of the product), as in design "O5": one transparent, frameless, resizable 320 × 620 window (min height 420) with a 16 px-radius frame and a draggable title bar; it logs every `resize` and `move` with bounds, and `isResizable()`, to a mode-600 file in the system temp folder, and exits by itself at 30 s.
-  - [ ] 1.2 Announce "지금 띄웁니다, 30초", run it once in the background and wait for its exit in the same tool call; confirm with `pgrep` that no Electron process of this repository is left (kill it if one is); read the log. The builder tries the bottom edge, the top edge and the title bar, and looks at the corners and the shadow.
-  - [ ] 1.3 Record the outcome (date, Electron and macOS versions, the events, the builder's answers) in the requirements (new "Observations" section and the outcome of Req 8.3/8.4), and set `MAIN_FRAME` in the design to `transparent` or `opaque`. Delete `scripts/o5/` and the log.
+- [x] 1. O5: transparent main window check
+  - [x] 1.1 Write the throwaway check app in `scripts/o5/` (not part of the product), as in design "O5": one transparent, frameless, resizable 320 × 620 window (min height 420) with a 16 px-radius frame and a draggable title bar; it logs every `resize` and `move` with bounds, and `isResizable()`, to a mode-600 file in the system temp folder, and exits by itself at 30 s.
+  - [x] 1.2 Announce "지금 띄웁니다, 30초", run it once in the background and wait for its exit in the same tool call; confirm with `pgrep` that no Electron process of this repository is left (kill it if one is); read the log. The builder tries the bottom edge, the top edge and the title bar, and looks at the corners and the shadow.
+  - [x] 1.3 Record the outcome (date, Electron and macOS versions, the events, the builder's answers) in the requirements (new "Observations" section and the outcome of Req 8.3/8.4), and set `MAIN_FRAME` in the design to `transparent` or `opaque`. Delete `scripts/o5/` and the log.
   - _Requirements: 8.1, 8.2, 8.5_
+  - Result (2026-11-13): transparent. Height resize from both edges and title bar drag worked; the builder saw round corners; the shadow and the 420 px minimum were not checked (moved to task 8). The tool call returned before the app ended (it was started with `&`); the app was stopped at about 29 s and nothing was left. Recorded in requirements O5.
 
 - [ ] 2. Jua
   - [ ] 2.1 With the builder's OK, download `Jua-Regular.ttf` and `OFL.txt` (saved as `OFL-Jua.txt`) from `google/fonts` `ofl/jua/` into `src/ui/public/fonts/`. Check `METADATA.pb` says `license: "OFL"` and the license text reads `SIL OPEN FONT LICENSE Version 1.1`; record the SHA-256 of both here.
@@ -52,7 +53,7 @@ How to work through this list:
 
 - [ ] 6. Screens in both themes (one commit per sub-task)
   - [ ] 6.1 Progress cells model and the main window skeleton: `model/list.ts` progress `cells` (`m` cells, `n` done, one current while `WORKING` and `n < m`, none above 30 or for `m = 0`) and `lead` on buddy and session view models, with unit tests; `main.css` rewritten for the window, title bar, alert strip, tabs and footer from `MainBot`/`MainCute` with tokens only; `index.html` and `chrome.ts` (title sprite, `.title-mark`, `.alert-mark`, `.relay-mark`)
-    - _Requirements: 4.1, 5.9 of MA, 7.1, 7.3_
+    - _Requirements: 4.1, 7.1, 7.3; MA 5.9_
   - [ ] 6.2 Buddy list and the `me` row: `screens/list.ts` (26 px and 16 px sprites, `.lead-work`, `.unread-mark`, `┗`, the urgent-row rule of D12, progress cells and bar) and its rules in `main.css`; `screens/me.ts` (the 34 px `me` sprite, the row as a card)
     - _Requirements: 4, 6.4, 6.5, 7.1–7.3_
   - [ ] 6.3 Inbox: `screens/inbox.ts` (26 px sprites with badges, `.unread-mark`, the unread tints) and its rules in `main.css`
@@ -70,7 +71,7 @@ How to work through this list:
   - _Requirements: 11.3, 11.4_
 
 - [ ] 8. Visual check with the builder
-  - Announced first with what appears and for how long, run once with a fixed time limit, results written to a file while it runs, nothing left running afterwards (MA working rules). With a temp HOME and port 4399 so the app starts its own relay, and fake events with `/Users/dev/...` paths and no real prompts: the three tabs in both themes next to the mockups; switching the theme while a pop-up is open (it changes, does not move, does not close); the Theme card with the keyboard (Tab, arrow keys, Space); the corners as O5 decided; the menu bar icon unchanged. Then the relay's page in a browser shows Blue Bot.
+  - Announced first with what appears and for how long, run once with a fixed time limit, results written to a file while it runs, nothing left running afterwards (MA working rules). With a temp HOME and port 4399 so the app starts its own relay, and fake events with `/Users/dev/...` paths and no real prompts: the three tabs in both themes next to the mockups; switching the theme while a pop-up is open (it changes, does not move, does not close); the Theme card with the keyboard (Tab, arrow keys, Space); the corners as O5 decided, the transparent window's shadow and its 420 px minimum height (both not checked in O5); the menu bar icon unchanged. Run the app in the foreground of the tool call, so the call returns only after it has ended. Then the relay's page in a browser shows Blue Bot.
   - _Requirements: 2, 7, 8.3, 8.4, 10_
 
 - [ ] 9. Steering, README and final checkpoint

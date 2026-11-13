@@ -177,6 +177,8 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 3. WHEN the height resizes in that check, THE main window SHALL be transparent, and its frame SHALL be drawn by the page with the theme radius on all four corners (16 px Blue Bot, 18 px Strawberry Milk).
 4. WHEN the height does not resize, THE main window SHALL stay opaque, with square corners (radius 0) and the same colors.
 5. THE requirements SHALL record the outcome with date and versions, and the design and the README known limits SHALL follow it.
+
+   **Outcome (O5, 2026-11-13): transparent.** Criterion 8.3 applies; 8.4 does not. See Observations.
 6. Pop-ups SHALL keep their transparent window (MA design) and SHALL use the theme radius on their card.
 
 ## Requirement 9: Contrast and accessibility in both themes
@@ -227,6 +229,25 @@ It builds on the finished messenger-app spec (`.kiro/specs/messenger-app/`). Tha
 5. Downloading Jua SHALL wait for the builder's OK (as for the other fonts in MA task 9).
 
 ---
+
+## Observations
+
+### O5. Transparent main window (2026-11-13, 01:56 UTC, Electron 45.3.1, macOS 26.6.2)
+A throwaway app (`scripts/o5/`, deleted afterwards) showed one frameless, transparent, resizable 320 × 620 window (`minHeight` 420, `hasShadow: true`) with a page-drawn 3 px frame and 16 px corners, and logged its window events.
+- `isResizable()` was `true`.
+- Bottom edge (7.5–7.9 s): the height changed from 620 to 702 and back to 617 px, `y` unchanged.
+- Top edge (9.4–11.2 s): `y` and the height changed together (`y` 33–124, height 683 down to 592). Electron reported this drag as `edge=bottom` as well.
+- Title bar (5.3–6.0 s, 12.0–12.8 s): the window moved.
+- The height never went below 592 px, so the 420 px minimum was not exercised.
+- The builder saw the four corners round. The shadow was not watched (UNVERIFIED).
+- Procedure: the check was started with `&` inside the tool call, so the call returned at once instead of waiting; the next call found the app's four processes still running at about 13 s and stopped them at about 29 s, before the app's own 30-second exit. Nothing was left afterwards (0 processes, temp data, log and output deleted, nothing under `~/Library/Application Support`). Later checks run the app in the foreground of the tool call.
+
+## Unverified behavior
+
+| Behavior | Status | Handling until observed |
+|---|---|---|
+| The transparent main window's shadow | not watched in O5 | `hasShadow: true` as in O5; looked at in task 8 |
+| The 420 px minimum height of a transparent window | not exercised in O5 | `minHeight` as today; tried in task 8 |
 
 ## Decisions (builder, 2026-11-13)
 
