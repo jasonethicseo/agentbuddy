@@ -1,61 +1,70 @@
-/* The pop-up card, from docs/mockups/PopupBot.dc.html and PopupCute.dc.html (themes Requirements 7.4–7.6).
+/* The pop-up card, from docs/mockups/PopupBot2000.dc.html and PopupCute2000.dc.html (retro-skin Requirement 11).
    The window is transparent and a little taller than the card; the card sits at its bottom and rises inside it,
-   so the window itself never moves (messenger-app Requirement 9.1). Colors and radii: themes/*.css. */
+   so the window itself never moves (messenger-app Requirement 9.1). Content, buttons and clicks are unchanged
+   (MA 9.5, decision D4); the markup of popup.html is too, so the materials are given here by element. */
 html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
 body { display: flex; flex-direction: column; justify-content: flex-end; }
 button { font: inherit; margin: 0; cursor: pointer; }
-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
-
+/* The turn-done (and notice) tokens by default; needs-OK below. */
 .card {
-  box-sizing: border-box; width: 300px; margin-bottom: 4px; overflow: hidden; cursor: pointer;
-  font-family: var(--font-text); font-size: 12px; color: var(--text); background: var(--card-bg);
-  border: var(--frame-width) solid var(--popup-done-frame); border-radius: var(--radius-window); box-shadow: var(--popup-shadow);
+  --head-1: var(--popup-done-1); --head-2: var(--popup-done-2); --head-3: var(--popup-done-3); --head-4: var(--popup-done-4);
+  --head-text: var(--popup-done-text); --head-shadow: var(--popup-done-shadow); --tint: var(--popup-done-tint);
+  box-sizing: border-box; width: calc(100% - 2px); margin-bottom: 2px; overflow: hidden; cursor: pointer;
+  font-family: var(--font-text); font-size: 12px; color: var(--text); background: var(--panel);
+  border: 1px solid var(--popup-done-line); border-radius: var(--popup-radius) var(--popup-radius) 0 0;
+  box-shadow: 2px 2px 0 var(--hard-shadow);
   animation: rise 220ms ease-out;
+}
+.card[data-state='WAITING_APPROVAL'] {
+  --head-1: var(--popup-ok-1); --head-2: var(--popup-ok-2); --head-3: var(--popup-ok-3); --head-4: var(--popup-ok-4);
+  --head-text: var(--popup-ok-text); --head-shadow: var(--popup-ok-shadow); --tint: var(--popup-ok-tint);
+  border-color: var(--popup-ok-line);
 }
 @keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
-
-/* Header: the turn-done (and notice) colors by default, needs-OK below */
+/* Header: the kind's gloss; its focus ring takes the header's text color (S14). */
 .card-title {
-  display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 12px; color: var(--popup-done-text);
-  background: linear-gradient(90deg, var(--popup-done-from) 0%, var(--popup-done-to) 100%);
+  display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 7px; font-weight: 700;
+  color: var(--head-text); text-shadow: 1px 1px 0 var(--head-shadow);
+  background: linear-gradient(var(--head-1) 0%, var(--head-2) 48%, var(--head-3) 52%, var(--head-4) 100%);
 }
-.card-head { flex-grow: 1; margin: 0; font-family: var(--font-text); font-size: 14px; font-weight: 400; white-space: nowrap; overflow: hidden; }
-.card-time { font-size: 11px; font-weight: 700; }
+.card-head { flex-grow: 1; margin: 0; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; }
+.card-time { font-family: var(--font-small); font-size: 10px; font-weight: 400; }
 .card-close {
-  width: 20px; height: 20px; padding: 0; font-size: 10px; font-weight: 700; line-height: 1;
-  color: var(--popup-done-close-glyph); background: var(--popup-done-close-bg);
-  border: 2px solid var(--popup-done-close-line); border-radius: var(--tbtn-radius);
+  width: 17px; height: 15px; padding: 0; font-size: 10px; line-height: 1; text-shadow: none;
+  color: var(--popup-done-close-glyph); background: linear-gradient(var(--popup-done-close-from), var(--popup-done-close-to));
+  border: 1px solid var(--tbtn-line); border-radius: 3px;
 }
-
-.card-body { display: flex; gap: 12px; padding: 10px 12px 8px; }
-.card-icon { flex-shrink: 0; display: flex; }
+.card[data-state='WAITING_APPROVAL'] .card-close { color: var(--badge-line); background: var(--popup-ok-close-bg); }
+.card-title :focus-visible { outline: 2px solid var(--head-text); outline-offset: 2px; }
+/* Body: white to the kind's tint, the 36 px sprite in a sunken frame. */
+.card-body { display: flex; gap: 8px; padding: 8px; background: linear-gradient(var(--panel), var(--tint)); }
+.card-icon {
+  flex-shrink: 0; display: flex; align-self: flex-start; padding: 2px; background: var(--field);
+  border: 1px solid; border-color: var(--sunk-dark) var(--sunk-light) var(--sunk-light) var(--sunk-dark); box-shadow: inset 1px 1px 0 var(--sunk-inner);
+}
 .card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex-grow: 1; }
 .card-who, .card-detail { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-agent { font-family: var(--font-text); font-size: 15px; font-weight: 400; }
-.card-at { font-size: 11px; color: var(--text-2); }
-.phrase { font-weight: 800; color: var(--st-done); }
+.card-agent { font-weight: 700; }
+.card-at { font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
+.phrase { font-weight: 700; color: var(--st-done); }
+.card[data-state='WAITING_APPROVAL'] .phrase { color: var(--st-wait); }
 .card-detail { color: var(--text-2); }
-
-/* Both kinds keep ×, Later and Go there (decision D4) */
-.card-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 0 12px 12px; }
-.card-later, .card-go { height: 28px; font-family: var(--font-text); font-size: 13px; border-radius: var(--button-radius); }
-.card-later { padding: 0 12px; color: var(--quiet-text); background: var(--quiet-bg); border: 2px solid var(--quiet-line); }
+/* Both kinds keep ×, Later and Go there (decision D4): Later raised, Go there primary. */
+.card-actions { display: flex; justify-content: flex-end; gap: 4px; padding: 0 8px 8px; background: var(--tint); }
+.card-later, .card-go { padding: 3px 10px; }
+.card-later {
+  color: var(--quiet-text); background: linear-gradient(var(--bevel-from), var(--bevel-to));
+  border: 1px solid; border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+}
+.card-later:active { background: var(--pressed); border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark); }
 .card-go {
-  padding: 0 14px; color: var(--primary-text); background: var(--primary-bg);
-  border: 2px solid var(--primary-line); box-shadow: var(--primary-shadow);
+  font-weight: 700; color: var(--primary-text); background: linear-gradient(var(--primary-from), var(--primary-to));
+  border: 1px solid; border-color: var(--primary-light) var(--primary-dark) var(--primary-dark) var(--primary-light);
 }
 .go-mark::before { content: " " var(--go-mark); }
-
-/* Needs your OK */
-.card[data-state='WAITING_APPROVAL'] { border-color: var(--popup-ok-frame); }
-.card[data-state='WAITING_APPROVAL'] .card-title {
-  color: var(--popup-ok-text); background: linear-gradient(90deg, var(--popup-ok-from) 0%, var(--popup-ok-to) 100%);
-}
-.card[data-state='WAITING_APPROVAL'] .card-close { color: var(--popup-ok-close-glyph); background: var(--popup-ok-close-bg); border-color: var(--close-line); }
-.card[data-state='WAITING_APPROVAL'] .phrase { color: var(--st-wait); }
-
+.card-actions button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* A notice: the turn-done card with one line and only × */
 .card[data-state='notice'] { cursor: default; }
 .card[data-state='notice'] .phrase { font-weight: 400; color: var(--text); white-space: normal; }

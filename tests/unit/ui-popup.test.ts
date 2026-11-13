@@ -40,3 +40,17 @@ describe('screens/popup.ts', () => {
     expect(code).toMatch(/bridge\.onTheme\(\(t\) => \{\s*applyTheme\(t\);\s*if \(last !== null\) fill\(last\);/);
   });
 });
+describe('pop-up look (retro-skin Requirement 11)', () => {
+  const css = readFileSync(join(ROOT, 'src/ui/styles/popup.css'), 'utf8');
+  it('a gloss header by kind, a hard 2 px shadow, a 36 px sprite in a sunken frame, inside the 300 px window', () => {
+    expect(css).toContain('background: linear-gradient(var(--head-1) 0%, var(--head-2) 48%, var(--head-3) 52%, var(--head-4) 100%);');
+    expect(css).toContain('box-shadow: 2px 2px 0 var(--hard-shadow);');
+    expect(css).toContain('width: calc(100% - 2px); margin-bottom: 2px;');
+    expect(code).toContain('stateSprite(theme, c.agentId, c.state, 36)');
+  });
+  it('Later is raised and Go there is the primary gradient with ▶ from a token', () => {
+    expect(css).toMatch(/\.card-later \{[^}]*linear-gradient\(var\(--bevel-from\), var\(--bevel-to\)\)/);
+    expect(css).toMatch(/\.card-go \{[^}]*linear-gradient\(var\(--primary-from\), var\(--primary-to\)\)/);
+    expect(css).toContain('.go-mark::before { content: " " var(--go-mark); }');
+  });
+});
