@@ -101,7 +101,7 @@ The brief's finding (`✓ ✎` in all three, `▸ −` in Bold) is expected to r
 export const TIP_IDS = ['skin-blue-bot', 'skin-strawberry-milk', 'click-buddy', 'sound', 'unread', 'hide-sessions'] as const;
 export type TipId = (typeof TIP_IDS)[number];
 export type TipAction = 'skin' | 'sound' | 'inbox' | 'next';
-export interface TipContext { theme: ThemeId; sound: boolean; unread: number }
+export interface TipContext { theme: ThemeId; sound: boolean; unread: number; skinChangedToday: boolean }   // S19
 export interface TipText { headline: string; body: string; berry: boolean }   // berry: the pixel strawberry after the body
 
 export function dayNumber(year: number, month: number, day: number): number;   // Math.floor(Date.UTC(year, month - 1, day) / 86_400_000)
@@ -116,8 +116,8 @@ export function tipText(id: TipId, c: TipContext): TipText;
 
 | ID | Applies when | Headline | Body | Action |
 |---|---|---|---|---|
-| `skin-blue-bot` | `theme === 'strawberry-milk'` | `★ NEW! Blue Bot skin ★` | `try it now~ click here`, `berry: true` | `skin` |
-| `skin-strawberry-milk` | `theme === 'blue-bot'` | `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | `skin` |
+| `skin-blue-bot` | `theme === 'strawberry-milk' && !skinChangedToday` | `★ NEW! Blue Bot skin ★` | `try it now~ click here`, `berry: true` | `skin` |
+| `skin-strawberry-milk` | `theme === 'blue-bot' && !skinChangedToday` | `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | `skin` |
 | `click-buddy` | always | `TIP ▶ click a buddy` | `to jump straight to its window~` | `next` |
 | `sound` | `sound` | `Too many dings?` | `turn the sound off here` | `sound` |
 | `unread` | `unread > 0` | `1 unread message waiting!` / `${n} unread messages waiting!` | `click to open your inbox` | `inbox` |
@@ -364,6 +364,7 @@ export function tipContext(s: AppSnapshot): TipContext;   // { theme, sound, unr
 ```
 
 `main.ts` state: `let tip: TipId | null = null`.
+- S19: `main.ts` keeps `skinChangedDay: number | null` in memory; a snapshot whose skin differs from the previous one sets it to today's day number (only the user changes the skin). `tipsNow(s) = tipContext(s, skinChangedDay === today())`. Nothing stores it, so a restart forgets it.
 - In `onSnapshot`: when `tip === null` and the mode is not `browser`, `const d = new Date(); tip = startTip(dayNumber(d.getFullYear(), d.getMonth() + 1, d.getDate()), tipContext(s))` (Req 9.3). Otherwise `tip = keepTip(tip, tipContext(s))` (Req 9.7). Both run before `render()`.
 - `nextTip` runs only in the two click handlers.
 

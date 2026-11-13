@@ -12,9 +12,12 @@ export interface BannerVM {
   berry: boolean;
   action: TipAction;
 }
-/** What the tips' conditions read: the skin, the Ding! sound switch and the Inbox count. */
-export function tipContext(s: AppSnapshot): TipContext {
-  return { theme: s.settings.theme, sound: s.settings.sound, unread: unreadCount(s.inbox) };
+/**
+ * What the tips' conditions read: the skin, the Ding! sound switch, the Inbox count, and whether the user changed
+ * the skin earlier today (S19; the caller keeps that day in memory only).
+ */
+export function tipContext(s: AppSnapshot, skinChangedToday = false): TipContext {
+  return { theme: s.settings.theme, sound: s.settings.sound, unread: unreadCount(s.inbox), skinChangedToday };
 }
 /** null while the banner is not shown: the browser page, the Inbox and Settings screens, or hideBanner (Requirement 9.9). */
 export function bannerView(s: AppSnapshot, tab: Tab, tip: TipId | null): BannerVM | null {

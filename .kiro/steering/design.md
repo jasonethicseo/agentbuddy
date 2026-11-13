@@ -172,8 +172,8 @@ The 2000s messenger grammar: one line per buddy, the status message in parenthes
 
 | Headline | Body | Action | Shown when |
 |---|---|---|---|
-| `★ NEW! Blue Bot skin ★` | `try it now~ click here` + pixel strawberry | open the Skin group | skin is Strawberry Milk |
-| `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | open the Skin group | skin is Blue Bot |
+| `★ NEW! Blue Bot skin ★` | `try it now~ click here` + pixel strawberry | open the Skin group | skin is Strawberry Milk, and not on a day the user changed the skin |
+| `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | open the Skin group | skin is Blue Bot, and not on a day the user changed the skin |
 | `TIP ▶ click a buddy` | `to jump straight to its window~` | next tip | always |
 | `Too many dings?` | `turn the sound off here` | open Settings at the Ding! sound row | Ding! sound is on |
 | `n unread messages waiting!` (`1 unread message waiting!` for 1) | `click to open your inbox` | open Inbox | n > 0 (n = the Inbox count) |

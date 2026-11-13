@@ -95,6 +95,11 @@ How to work through this list:
     | (d) `rovingTarget` returns `null` for `End` | `toolbar` → and ← move by one and wrap; Home and End go to the ends (1) |
     The first runs of (b)–(d) were started in parallel by mistake, so their mutations overlapped and the load made two timing tests of `codex-notify.test.ts` (0.9 s hook limit) fail as well; the table above is from the reruns, one at a time.
 
+- [x] 6a. S19: no skin tip on a day the user changed the skin (builder, 2026-11-13)
+  - `TipContext.skinChangedToday`; both skin tips require it to be false. `main.ts` keeps the day of the last skin change in memory only (`skinChangedDay`), set when a snapshot brings another skin than the one before. Tests: the unit cases (both skins, keepTip after a switch through the skin tip lands on `click-buddy`), a property (on such a day no start, next or keep tip is a skin tip), and a source check that the day is never stored or sent.
+  - _Requirements: 9.1, 9.2, 9.7_
+  - Result (2026-11-13): 813 tests pass.
+
 - [ ] 7. Screen check with the builder
   - Announced right before it runs with what will appear and for how long. Run once in the foreground of the tool call with a fixed time limit: the app from this build with a temp `HOME` and port 4399 (its own relay), fake events with `/Users/dev/...` paths and no real prompts (a Kiro buddy with a temp `tasks.md`, a Claude buddy waiting for approval, a Codex turn done), so that all three screens, both skins, a selected row, the banner and both pop-up kinds show.
   - The builder compares with the `*2000` mockups and checks: Galmuri at 12 / 10 px with smoothing off, the hair, the berry, the pixel check and pencil, the uneven pixel rows at 16 / 28 px (design "Known limits"), the toolbar with ←/→/Home/End and Enter, `Skin` landing on the checked radio, the focus rings on the title bar, the banner and a selected row, a skin change with a pop-up open, the banner after a skin switch from its own tip.

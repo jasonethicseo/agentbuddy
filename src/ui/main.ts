@@ -46,6 +46,14 @@ const showMore = new Set<string>();
 let selected: string | null = null;
 /** The shown tip: picked from the date on the first app snapshot, then changed only by the user (retro-skin Requirement 9). */
 let tip: TipId | null = null;
+/** The local day the user last changed the skin; memory only, gone when the app restarts (S19). */
+let skinChangedDay: number | null = null;
+function today(): number {
+  const now = new Date();
+  return dayNumber(now.getFullYear(), now.getMonth() + 1, now.getDate());
+}
+/** The tip conditions now: no skin tip on a day the user changed the skin (S19). */
+const tipsNow = (s: AppSnapshot) => tipContext(s, skinChangedDay === today());
 /** Browser only: groups toggled locally, since nothing is saved there. */
 const localGroups = new Set<string>();
 
@@ -116,7 +124,7 @@ const openSkin = () => {
 /** `▶`, or a tip without an action: the next tip that applies (Requirement 9.6). */
 function showNextTip(): void {
   if (snap === null || tip === null) return;
-  tip = nextTip(tip, tipContext(snap));
+  tip = nextTip(tip, tipsNow(snap));
   render();
 }
 /** A click on the banner: only screen changes or the next tip; nothing goes to the main process (Requirement 9.10). */
@@ -137,11 +145,12 @@ setupChrome(
 );
 
 const onSnapshot = (s: AppSnapshot) => {
+  // Only the user changes the skin (Settings); remember the day, in memory only (S19).
+  if (snap !== null && snap.settings.theme !== s.settings.theme) skinChangedDay = today();
   snap = s;
   if (s.mode !== 'browser') {
     // The first app snapshot picks the tip from the local date; later ones keep it while it applies (S15, S18).
-    const now = new Date();
-    tip = tip === null ? startTip(dayNumber(now.getFullYear(), now.getMonth() + 1, now.getDate()), tipContext(s)) : keepTip(tip, tipContext(s));
+    tip = tip === null ? startTip(today(), tipsNow(s)) : keepTip(tip, tipsNow(s));
   }
   applyTheme(s.settings.theme);
   render();

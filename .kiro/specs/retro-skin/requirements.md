@@ -174,14 +174,14 @@ Everything else of MA and TH stays: what pings, what acknowledges, what a click 
 
    | ID | Headline | Body | Action | Applies when |
    |---|---|---|---|---|
-   | `skin-blue-bot` | `★ NEW! Blue Bot skin ★` | `try it now~ click here` (+ pixel strawberry) | open the Skin group (Req 6.4) | the skin is Strawberry Milk |
-   | `skin-strawberry-milk` | `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | open the Skin group | the skin is Blue Bot |
+   | `skin-blue-bot` | `★ NEW! Blue Bot skin ★` | `try it now~ click here` (+ pixel strawberry) | open the Skin group (Req 6.4) | the skin is Strawberry Milk, and the user has not changed the skin today (S19) |
+   | `skin-strawberry-milk` | `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | open the Skin group | the skin is Blue Bot, and the user has not changed the skin today (S19) |
    | `click-buddy` | `TIP ▶ click a buddy` | `to jump straight to its window~` | next tip | always |
    | `sound` | `Too many dings?` | `turn the sound off here` | open Settings and focus the Ding! sound checkbox | Ding! sound is on |
    | `unread` | `n unread messages waiting!` | `click to open your inbox` | open Inbox | the Inbox count `n` is above 0 |
    | `hide-sessions` | `Busy? hide old sessions` | `press × on a session row` | next tip | always |
 
-2. Choosing tips SHALL be pure core logic with the day number and the conditions' inputs passed in; it SHALL never read the clock, the file system or the network.
+2. Choosing tips SHALL be pure core logic with the day number and the conditions' inputs passed in (including whether the skin changed today, S19, which the main window keeps in memory only and never stores); it SHALL never read the clock, the file system or the network.
 3. WHEN the main window's page gets its first state, THE banner SHALL show the applicable tip at position `d mod n` of the applicable tips in list order, where `d` is the day number of the local date at that moment and `n` the number of applicable tips. THE same day and the same conditions SHALL give the same starting tip.
 4. THE banner SHALL change its tip only because of something the user did: a click on it or on `▶`, or a change of Req 9.7. No timer and no passing of time (including a new day) SHALL change it.
 5. THE banner body SHALL be a `<button>` whose accessible name is the headline and the body. Clicking it SHALL run the tip's action; for a tip whose action is "next tip", it SHALL show the next tip.
@@ -287,4 +287,5 @@ Everything else of MA and TH stays: what pings, what acknowledges, what a click 
 | S16 | `1 unread messages waiting!` | `1 unread message waiting!` for 1. |
 | S17 | The `sound` tip while the sound is off | Skipped; it applies only while Ding! sound is on. |
 | S18 | Day number | Days from 1970-01-01 to the local calendar date. |
+| S19 | After a skin switch, S15 moved the banner to the other skin tip, which asks to switch back | On a local day the user changed the skin, both skin tips are skipped. The day is kept in memory only, never stored; a restart forgets it (builder, 2026-11-13). |
 

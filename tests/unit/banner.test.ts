@@ -27,8 +27,10 @@ describe('bannerView (Requirement 9.9)', () => {
     expect(bannerView(pink, 'list', 'sound')).toMatchObject({ action: 'sound' });
     expect(bannerView(pink, 'list', 'click-buddy')).toMatchObject({ headline: 'TIP ▶ click a buddy', action: 'next' });
   });
-  it('reads the skin, the sound switch and the Inbox count', () => {
-    expect(tipContext(snapshot([], { inbox: unread(2) }, { sound: false, theme: 'strawberry-milk' }))).toEqual({ theme: 'strawberry-milk', sound: false, unread: 2 });
+  it('reads the skin, the sound switch, the Inbox count and whether the skin changed today', () => {
+    const s = snapshot([], { inbox: unread(2) }, { sound: false, theme: 'strawberry-milk' });
+    expect(tipContext(s)).toEqual({ theme: 'strawberry-milk', sound: false, unread: 2, skinChangedToday: false });
+    expect(tipContext(s, true).skinChangedToday).toBe(true);
   });
 });
 describe('wiring (Requirements 9.3–9.6, 9.10, 9.11)', () => {
@@ -45,12 +47,22 @@ describe('wiring (Requirements 9.3–9.6, 9.10, 9.11)', () => {
     expect(handlers).toContain("if (vm.action === 'skin') openSkin();");
     expect(handlers).toContain("else if (vm.action === 'sound') openScreen('settings', 'set:sound');");
     expect(handlers).toContain("else if (vm.action === 'inbox') openScreen('inbox');");
-    expect(handlers).toContain('tip = nextTip(tip, tipContext(snap));');
+    expect(handlers).toContain('tip = nextTip(tip, tipsNow(snap));');
   });
   it('the tip starts from the local date on the first app snapshot and is kept after; no timer changes it', () => {
-    expect(main).toContain('startTip(dayNumber(now.getFullYear(), now.getMonth() + 1, now.getDate()), tipContext(s))');
-    expect(main).toContain(': keepTip(tip, tipContext(s));');
+    expect(main).toContain('return dayNumber(now.getFullYear(), now.getMonth() + 1, now.getDate());');
+    expect(main).toContain('tip = tip === null ? startTip(today(), tipsNow(s)) : keepTip(tip, tipsNow(s));');
     expect(main.match(/nextTip\(/g)).toHaveLength(1); // only in showNextTip
     expect(main.match(/setInterval\([^)]*\)/g)).toEqual(['setInterval(render, AGE_TICK_MS)']);
+  });
+});
+describe('the skin change day (S19)', () => {
+  const main = read('src/ui/main.ts');
+  it('is set when a snapshot brings another skin than the last one, and kept in memory only', () => {
+    expect(main).toContain('if (snap !== null && snap.settings.theme !== s.settings.theme) skinChangedDay = today();');
+    expect(main).toContain('const tipsNow = (s: AppSnapshot) => tipContext(s, skinChangedDay === today());');
+    const uses = main.split('\n').filter((l) => l.includes('skinChangedDay'));
+    expect(uses.every((l) => !/bridge|setSetting|localStorage|sessionStorage|indexedDB/.test(l))).toBe(true);
+    expect(main).not.toMatch(/localStorage|sessionStorage|indexedDB/);
   });
 });

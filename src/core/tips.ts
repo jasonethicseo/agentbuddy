@@ -10,6 +10,8 @@ export interface TipContext {
   theme: ThemeId;
   sound: boolean;
   unread: number;
+  /** The user changed the skin earlier today (kept in memory only): no skin tip that day (S19). */
+  skinChangedToday: boolean;
 }
 export interface TipText {
   headline: string;
@@ -30,13 +32,13 @@ const ACTIONS: Readonly<Record<TipId, TipAction>> = {
 export function dayNumber(year: number, month: number, day: number): number {
   return Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
 }
-/** A tip that points at something that does not apply is skipped (Requirement 9.1, S17). */
+/** A tip that points at something that does not apply is skipped (Requirement 9.1, S17, S19). */
 export function applies(id: TipId, c: TipContext): boolean {
   switch (id) {
     case 'skin-blue-bot':
-      return c.theme === 'strawberry-milk';
+      return c.theme === 'strawberry-milk' && !c.skinChangedToday;
     case 'skin-strawberry-milk':
-      return c.theme === 'blue-bot';
+      return c.theme === 'blue-bot' && !c.skinChangedToday;
     case 'sound':
       return c.sound;
     case 'unread':

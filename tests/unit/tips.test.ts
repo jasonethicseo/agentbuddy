@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TIP_IDS, applicableTips, applies, dayNumber, keepTip, nextTip, startTip, tipAction, tipText } from '../../src/core/tips';
 import type { TipContext } from '../../src/core/tips';
-const blue: TipContext = { theme: 'blue-bot', sound: true, unread: 0 };
-const pink: TipContext = { theme: 'strawberry-milk', sound: true, unread: 2 };
+const blue: TipContext = { theme: 'blue-bot', sound: true, unread: 0, skinChangedToday: false };
+const pink: TipContext = { theme: 'strawberry-milk', sound: true, unread: 2, skinChangedToday: false };
 describe('conditions (Requirement 9.1)', () => {
   it('each skin tip only in the other skin; sound only while it is on; unread only above 0', () => {
     expect(applicableTips(blue)).toEqual(['skin-strawberry-milk', 'click-buddy', 'sound', 'hide-sessions']);
@@ -15,7 +15,7 @@ describe('conditions (Requirement 9.1)', () => {
   it('click-buddy and hide-sessions always apply', () => {
     for (const theme of ['blue-bot', 'strawberry-milk'] as const) {
       for (const sound of [true, false]) {
-        const c = { theme, sound, unread: 0 };
+        const c = { theme, sound, unread: 0, skinChangedToday: true };
         expect([applies('click-buddy', c), applies('hide-sessions', c)]).toEqual([true, true]);
       }
     }
@@ -73,5 +73,22 @@ describe('texts and actions', () => {
   it('reads no clock (Requirement 9.2)', () => {
     const code = readFileSync(join(import.meta.dirname, '../../src/core/tips.ts'), 'utf8');
     expect(code).not.toMatch(/Date\.now|new Date\(|performance|setTimeout|setInterval/);
+  });
+});
+describe('no skin tip on the day the user changed the skin (S19)', () => {
+  it('skips both skin tips in either skin, and nothing else', () => {
+    expect(applicableTips({ ...blue, skinChangedToday: true })).toEqual(['click-buddy', 'sound', 'hide-sessions']);
+    expect(applicableTips({ ...pink, skinChangedToday: true })).toEqual(['click-buddy', 'sound', 'unread', 'hide-sessions']);
+  });
+  it('after switching from Strawberry Milk to Blue Bot through the skin tip, the banner moves to a non-skin tip', () => {
+    expect(keepTip('skin-blue-bot', { ...pink, theme: 'blue-bot', skinChangedToday: true })).toBe('click-buddy');
+  });
+  it('the start and next tips of that day are never skin tips', () => {
+    for (let day = 0; day < 20; day++) {
+      for (const c of [{ ...blue, skinChangedToday: true }, { ...pink, skinChangedToday: true }]) {
+        expect(startTip(day, c).startsWith('skin-')).toBe(false);
+        expect(nextTip(startTip(day, c), c).startsWith('skin-')).toBe(false);
+      }
+    }
   });
 });
