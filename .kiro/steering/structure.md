@@ -23,6 +23,7 @@ inclusion: always
 │  │  ├─ pings.ts      pings: sessions entering an attention state between two lists
 │  │  ├─ attention.ts  inbox records, acknowledgements, menu bar count, hidden sessions
 │  │  ├─ snapshot.ts   types between the app's main process and its windows
+│  │  ├─ theme.ts      the two theme IDs and parseTheme
 │  │  └─ text.ts       truncation, status phrases and lines, the "me" status message
 │  ├─ hook/
 │  │  └─ cli.ts        agentbuddy-hook entry: read payload, normalize, POST, exit 0
@@ -52,12 +53,15 @@ inclusion: always
 │  │  ├─ main.ts       entry; state from the app's bridge, or from the relay's stream in a browser
 │  │  ├─ bridge.ts     the app bridge type and the browser source
 │  │  ├─ chrome.ts     title bar, alert strip, tabs, footer
-│  │  ├─ dom.ts, icons.ts   createElement helpers; SVG state icons and the bubble
-│  │  ├─ model/        pure view models: list, chrome, inbox, me
+│  │  ├─ dom.ts        createElement helpers
+│  │  ├─ theme.ts      puts the theme (and the window frame) on <html>
+│  │  ├─ sprites/      types.ts, blue-bot.ts, strawberry-milk.ts (pixels by role, no colors), render.ts (sprite + state badge)
+│  │  ├─ model/        pure view models: list, progress, chrome, inbox, me, theme
 │  │  ├─ screens/      buddy list, "me" row, inbox, settings, message pop-up
 │  │  ├─ sound.ts      Web Audio "ding"
 │  │  ├─ public/fonts/ Nanum Gothic and Jua with their OFL licenses
-│  │  └─ styles/       tokens.css (the only hex colors), fonts, icons, main, popup
+│  │  └─ styles/       themes.css + themes/blue-bot.css, themes/strawberry-milk.css (the only files with colors),
+│  │                   fonts, sprites, main, list, inbox, settings, popup
 │  └─ setup/           (later spec)
 │     └─ snippets.ts   prints hook snippets for Kiro, Claude Code, Codex
 ├─ demo/               (later spec)

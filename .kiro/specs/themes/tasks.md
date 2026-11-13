@@ -86,11 +86,23 @@ How to work through this list:
     - (c) `parseTheme` returning any string: 5 failed — `theme.prop.test.ts` (any JSON value; any string), `theme-core.test.ts` "parseTheme keeps a theme…", `theme-setting.test.ts` "keeps strawberry-milk and turns any other value into blue-bot", `inbox.prop.test.ts` P25 "never throws, and keeps only known keys of the right type".
     - After the three reverts the tree was clean and 637 tests passed again. No mutation went unnoticed, so no test was added.
 
-- [ ] 8. Visual check with the builder
+- [x] 8. Visual check with the builder
   - Announced first with what appears and for how long, run once with a fixed time limit, results written to a file while it runs, nothing left running afterwards (MA working rules). With a temp HOME and port 4399 so the app starts its own relay, and fake events with `/Users/dev/...` paths and no real prompts: the three tabs in both themes next to the mockups; switching the theme while a pop-up is open (it changes, does not move, does not close); the Theme card with the keyboard (Tab, arrow keys, Space); the corners as O5 decided, the transparent window's shadow and its 420 px minimum height (both not checked in O5); the menu bar icon unchanged. Run the app in the foreground of the tool call, so the call returns only after it has ended. Then the relay's page in a browser shows Blue Bot.
   - _Requirements: 2, 7, 8.3, 8.4, 10_
+  - Run (2026-11-13, 03:32:13–03:35:13 UTC, 180 s, run in the foreground of the tool call, temp HOME, port 4399, the app's own relay): 16 fake events without launcher fields (`/Users/dev/demo`, `/Users/dev/blueline`, and a temp folder holding a 6-task `tasks.md` for the Kiro cells); 7 pings, all in the inbox; 4 acknowledgements by the builder. The saved theme was `blue-bot` at 105 s, 150 s and the end. Exit 0; no Electron process, no listener on 4399, the builder's relay (pid 86955) unchanged, the settings file mode 600, the temp home removed, nothing new under `~/Library/Application Support`.
+  - Builder confirmed (2026-11-13): the three tabs in both themes against the mockups, a theme change with a pop-up open (it changed, did not move or close), the `▸` glyph, the menu bar icon unchanged. Not checked: the Theme card with the keyboard, and the corners, shadow and 420 px minimum of the transparent window (recorded as UNVERIFIED in the requirements).
+  - Browser (2026-11-13, 03:53:14–03:54:12 UTC, 60 s): a relay from this build on port 4398 with a temp home and three fake events; its page held the window markup and was opened once in the default browser; the relay then stopped (exit 0), the port was free, the temp home removed, and only the builder's relay was left running.
 
-- [ ] 9. Steering, README and final checkpoint
+- [x] 9. Steering, README and final checkpoint
   - structure.md (`src/core/theme.ts`, `src/ui/sprites/`, `src/ui/theme.ts`, `model/theme.ts`, `styles/themes.css` as the only file with colors, no `icons.ts`); tech.md property list (theme properties); README (the Theme setting, Jua, the corner outcome in the known limits).
   - All tests pass and `npm run build` succeeds. `.gitignore` does not list `.kiro`.
   - _Requirements: 5.4, 8.5, 11.4_
+  - Result (2026-11-13): structure.md (`core/theme.ts`, `ui/theme.ts`, `ui/sprites/`, `model/progress.ts` and `model/theme.ts`, the theme files as the only ones with colors, the new stylesheets, no `icons.ts`); tech.md property list (theme properties); README (the Theme setting, a Themes note, `app-settings.json` holds the theme, known limits for the transparent window and `▸`; the font table already lists Jua). 637 tests pass; `npm run build` succeeds; `.gitignore` does not list `.kiro`.
+
+## Handoff (2026-11-13)
+
+State: tasks 1–9 of this spec are done and committed; 637 tests pass. The builder's relay runs from an older build (pid 86955); restart it from the new build when convenient so the browser page shows the themes too. No app or check process is running.
+
+Open (UNVERIFIED, see requirements): the transparent window's shadow and its 420 px minimum height; the Theme card with the keyboard.
+
+Next: a new spec `retro-skin` (2000s materials: pixel fonts, raised borders, a glass title bar, "Theme" renamed "Skin", a toolbar, a TIP banner at the bottom). The builder brings the material. Messenger-app task 14 (packaged `.app`) waits until after the demo-mode spec.

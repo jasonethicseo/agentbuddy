@@ -48,7 +48,8 @@ npm run app       # builds, then starts the app from source (Electron)
 - **Jump.** A click on a buddy, a session, a pop-up or an inbox entry brings that agent's app forward with `/usr/bin/open -b <bundle ID>`, after `/usr/bin/lsappinfo` confirms it is running (it never starts an app). A Kiro session also passes its folder, so the right Kiro window comes forward. The bundle ID comes from the environment of the agent's hook process.
 - **Hiding.** × on a session (or on a buddy with one visible session) hides that row until the session does something new.
 - **"me" row.** Your own status message at the top of the list. It stays in the settings file and is never sent anywhere.
-- **Settings.** Ding sound, message pop-ups, macOS notifications (off by default), always on top, and "Hide prompt and reply text", which keeps every agent's text off the screen, pop-ups and notifications.
+- **Settings.** The theme (Blue Bot, the default, or Strawberry Milk; it changes the window and open pop-ups at once), ding sound, message pop-ups, macOS notifications (off by default), always on top, and "Hide prompt and reply text", which keeps every agent's text off the screen, pop-ups and notifications.
+- **Themes.** Each theme is one block of CSS custom properties (`src/ui/styles/themes/`) and one module of pixel sprites (`src/ui/sprites/`), drawn from the mockups in `docs/mockups/`. The buddies are original pixel art.
 
 ## Connect your agents
 
@@ -95,7 +96,7 @@ All in `~/.agentbuddy/` (folder mode 700, files mode 600):
 | `hook-errors.log` | fixed error codes only (no payload, no text, no token) |
 | `bin/codex-notify.sh` | the installed Codex relay script |
 | `inbox-YYYY-MM-DD.jsonl` | the app's inbox: one line per ping (buddy name, session key, session name, state, time) and per "read" mark |
-| `app-settings.json` | the app's settings, closed groups, hidden sessions and your "me" status message |
+| `app-settings.json` | the app's settings (including the theme), closed groups, hidden sessions and your "me" status message |
 | `electron/` | Electron's own data for the app (caches, local storage) |
 
 Old daily logs and inbox files are not deleted yet. Run from source, the app is the Electron binary, so macOS also keeps a small preferences file for it at `~/Library/Preferences/com.github.Electron.plist`.
@@ -115,7 +116,8 @@ Old daily logs and inbox files are not deleted yet. Run from source, the app is 
 - The ding and pop-ups do not follow macOS Focus modes; turn them off in Settings.
 - At midnight, earlier entries leave the inbox and stop counting.
 - Run from source, macOS does not allow Electron to post notifications, so turning macOS notifications on shows a notice instead. The pop-ups and the ding keep working.
-- The window's bottom corners are rounded like its top corners (10 px), following macOS for frameless windows.
+- The main window is transparent so that the page can draw the theme's round corners (16 or 18 px); its macOS shadow and its 420 px minimum height have not been checked by eye yet.
+- Blue Bot's `▸` is in neither bundled font, so macOS draws it with a system font; `✓` and `✎` likewise.
 - Terminal tabs are never selected; a jump brings the terminal app forward.
 - The desktop app runs on macOS only and is not packaged or signed.
 

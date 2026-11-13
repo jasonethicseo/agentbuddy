@@ -56,6 +56,7 @@ inclusion: always
   - jump: never runs a bundle ID that fails the events.md form; a folder only for Kiro sessions under the messenger-app rule; `-b` is the only argument starting with `-`.
   - app files: settings and inbox records parse without throwing and keep only known keys of the right type.
   - buddy list model: every buddy is in exactly one group; the offline group holds exactly the buddies whose sessions are all `OFFLINE` or `ENDED`.
+  - themes: reading a theme gives one of the two themes for any JSON value or string; saving and reading the settings back gives the same theme; every token name of one theme is defined by the other.
 - **Unit tests**: one test per row of the mapping table in events.md, using the sanitized payloads.
 
 ## Commands

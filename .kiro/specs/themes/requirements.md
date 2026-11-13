@@ -246,8 +246,10 @@ A throwaway app (`scripts/o5/`, deleted afterwards) showed one frameless, transp
 
 | Behavior | Status | Handling until observed |
 |---|---|---|
-| The transparent main window's shadow | not watched in O5 | `hasShadow: true` as in O5; looked at in task 8 |
-| The 420 px minimum height of a transparent window | not exercised in O5 | `minHeight` as today; tried in task 8 |
+| The transparent main window's shadow | not watched in O5 nor in task 8 (the builder could not check it) | `hasShadow: true` as in O5 |
+| The 420 px minimum height of a transparent window | not exercised in O5 nor in task 8 | `minHeight` 420 as today |
+| The Theme card with the keyboard (Tab to the checked tile, arrow keys, Space) | not checked in task 8; native radio behavior | native radios with one `name` |
+| How macOS draws `▸` (in neither bundled font) | seen by the builder in task 8 and accepted | system fallback font |
 
 ## Decisions (builder, 2026-11-13)
 
