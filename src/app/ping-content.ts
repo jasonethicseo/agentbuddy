@@ -21,6 +21,7 @@ export function popupContent(t: PingText, views: readonly BuddyView[], p: Ping, 
   const content: Extract<PopupContent, { kind: 'ping' }> = {
     kind: 'ping',
     state: p.state,
+    ...(b ? { agentId: b.agent } : {}),
     agent: b ? AGENT_NAMES[b.agent] : p.buddyName,
     folder: b ? folderName(b.cwd) : '',
     time: t.formatTime(nowMs, false),

@@ -7,9 +7,9 @@
   <body>
     <div class="card" data-state="TURN_DONE" hidden>
       <header class="card-title">
-        <span class="card-head"></span>
+        <h1 class="card-head"></h1>
         <span class="card-time"></span>
-        <button type="button" class="card-close" aria-label="Close message">×</button>
+        <button type="button" class="card-close" aria-label="Close and mark as read">×</button>
       </header>
       <div class="card-body">
         <span class="card-icon"></span>
@@ -21,7 +21,7 @@
       </div>
       <div class="card-actions">
         <button type="button" class="card-later">Later</button>
-        <button type="button" class="card-go">Go there →</button>
+        <button type="button" class="card-go">Go there<span class="go-mark" aria-hidden="true"></span></button>
       </div>
     </div>
     <script type="module" src="/src/ui/screens/popup.ts"></script>

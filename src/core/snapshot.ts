@@ -3,6 +3,7 @@
 // Types only.
 import type { BuddyView } from './buddies';
 import type { InboxEntry, MenuCount } from './attention';
+import type { AgentId } from './event';
 import type { AttentionState } from './pings';
 import type { ThemeId } from './theme';
 
@@ -47,5 +48,6 @@ export interface AppSnapshot {
 export type ClickTarget = { kind: 'buddy' | 'session' | 'inbox'; key: string };
 
 export type PopupContent =
-  | { kind: 'ping'; state: AttentionState; agent: string; folder: string; time: string; phrase: string; detail?: string }
+  /** `agentId` names the sprite (themes Requirement 6.4); absent when the buddy left the list before the ping was shown. */
+  | { kind: 'ping'; state: AttentionState; agentId?: AgentId; agent: string; folder: string; time: string; phrase: string; detail?: string }
   | { kind: 'notice'; text: string };

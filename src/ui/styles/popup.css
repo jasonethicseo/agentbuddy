@@ -1,56 +1,61 @@
-/* The pop-up card, from docs/mockups/Popup.dc.html. The window is transparent and exactly the card's size;
-   the card rises inside it, so the window itself never moves (messenger-app Requirement 9.1). */
+/* The pop-up card, from docs/mockups/PopupBot.dc.html and PopupCute.dc.html (themes Requirements 7.4–7.6).
+   The window is transparent and a little taller than the card; the card sits at its bottom and rises inside it,
+   so the window itself never moves (messenger-app Requirement 9.1). Colors and radii: themes/*.css. */
 html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
+body { display: flex; flex-direction: column; justify-content: flex-end; }
 button { font: inherit; margin: 0; cursor: pointer; }
-button:focus-visible { outline: 2px solid var(--frame); outline-offset: -2px; }
+button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
 .card {
-  box-sizing: border-box; width: 300px; height: 136px; overflow: hidden; cursor: pointer;
-  font-family: var(--font-text); font-size: 12px; color: var(--text);
-  background: var(--row); border: 2px solid var(--frame); border-radius: 8px 8px 3px 3px;
+  box-sizing: border-box; width: 300px; margin-bottom: 4px; overflow: hidden; cursor: pointer;
+  font-family: var(--font-text); font-size: 12px; color: var(--text); background: var(--card-bg);
+  border: var(--frame-width) solid var(--popup-done-frame); border-radius: var(--radius-window); box-shadow: var(--popup-shadow);
   animation: rise 220ms ease-out;
 }
 @keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
 
+/* Header: the turn-done (and notice) colors by default, needs-OK below */
 .card-title {
-  display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 8px; color: var(--on-fill);
-  background: linear-gradient(180deg, var(--title-top) 0%, var(--frame) 100%);
-  text-shadow: 1px 0 var(--deep), -1px 0 var(--deep), 0 1px var(--deep), 0 -1px var(--deep);
+  display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 12px; color: var(--popup-done-text);
+  background: linear-gradient(90deg, var(--popup-done-from) 0%, var(--popup-done-to) 100%);
 }
-.card-head { flex-grow: 1; font-family: var(--font-title); font-size: 11px; white-space: nowrap; overflow: hidden; }
-.card-time { font-size: 10px; }
+.card-head { flex-grow: 1; margin: 0; font-family: var(--font-title); font-size: 14px; font-weight: 400; white-space: nowrap; overflow: hidden; }
+.card-time { font-size: 11px; font-weight: 700; }
 .card-close {
-  width: 18px; height: 18px; padding: 0; font-size: 10px; line-height: 1; text-shadow: none;
-  color: var(--on-fill); background: var(--button); border: 1px solid var(--button-line); border-radius: 3px;
+  width: 20px; height: 20px; padding: 0; font-size: 10px; font-weight: 700; line-height: 1;
+  color: var(--popup-done-close-glyph); background: var(--popup-done-close-bg);
+  border: 2px solid var(--popup-done-close-line); border-radius: var(--tbtn-radius);
 }
 
-.card-body { display: flex; gap: 10px; padding: 10px 10px 8px; }
+.card-body { display: flex; gap: 12px; padding: 10px 12px 8px; }
 .card-icon { flex-shrink: 0; display: flex; }
 .card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex-grow: 1; }
 .card-who, .card-detail { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-agent { font-weight: 800; }
-.card-at { color: var(--text-2); }
-.phrase { font-weight: 700; color: var(--done-text); }
+.card-agent { font-family: var(--font-title); font-size: 15px; font-weight: 400; }
+.card-at { font-size: 11px; color: var(--text-2); }
+.phrase { font-weight: 800; color: var(--st-done); }
 .card-detail { color: var(--text-2); }
 
-.card-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 0 10px 10px; }
-.card-later, .card-go { height: 26px; border-radius: 4px; font-size: 12px; }
-.card-later { padding: 0 10px; color: var(--band-text); background: var(--body); border: 1px solid var(--band-line); }
-.card-go { padding: 0 12px; font-weight: 700; color: var(--on-fill); background: var(--frame); border: 1px solid var(--deep); }
+/* Both kinds keep ×, Later and Go there (decision D4) */
+.card-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 0 12px 12px; }
+.card-later, .card-go { height: 28px; font-family: var(--font-title); font-size: 13px; border-radius: var(--button-radius); }
+.card-later { padding: 0 12px; color: var(--quiet-text); background: var(--quiet-bg); border: 2px solid var(--quiet-line); }
+.card-go {
+  padding: 0 14px; color: var(--primary-text); background: var(--primary-bg);
+  border: 2px solid var(--primary-line); box-shadow: var(--primary-shadow);
+}
+.go-mark::before { content: " " var(--go-mark); }
 
 /* Needs your OK */
-.card[data-state='WAITING_APPROVAL'] { border-color: var(--alert); box-shadow: 0 2px 0 var(--alert-shadow); }
+.card[data-state='WAITING_APPROVAL'] { border-color: var(--popup-ok-frame); }
 .card[data-state='WAITING_APPROVAL'] .card-title {
-  background: linear-gradient(180deg, var(--alert-top) 0%, var(--alert) 100%);
-  text-shadow: 1px 0 var(--alert-text), -1px 0 var(--alert-text), 0 1px var(--alert-text), 0 -1px var(--alert-text);
+  color: var(--popup-ok-text); background: linear-gradient(90deg, var(--popup-ok-from) 0%, var(--popup-ok-to) 100%);
 }
-.card[data-state='WAITING_APPROVAL'] .card-close { background: var(--alert-strong); border-color: var(--close-line); }
-.card[data-state='WAITING_APPROVAL'] .phrase { color: var(--alert-text); }
-.card[data-state='WAITING_APPROVAL'] .card-later { color: var(--alert-later); background: var(--alert-tint); border-color: var(--alert-strip-line); }
-.card[data-state='WAITING_APPROVAL'] .card-go { background: var(--alert-strong); border-color: var(--alert-text); }
+.card[data-state='WAITING_APPROVAL'] .card-close { color: var(--popup-ok-close-glyph); background: var(--popup-ok-close-bg); border-color: var(--close-line); }
+.card[data-state='WAITING_APPROVAL'] .phrase { color: var(--st-wait); }
 
-/* A notice: the blue card with one line and only × */
+/* A notice: the turn-done card with one line and only × */
 .card[data-state='notice'] { cursor: default; }
 .card[data-state='notice'] .phrase { font-weight: 400; color: var(--text); white-space: normal; }

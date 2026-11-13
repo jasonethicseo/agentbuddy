@@ -71,8 +71,8 @@ describe('controller: pings', () => {
     t.c.onList(list('TURN_DONE', 'WAITING_APPROVAL', 'TURN_DONE'), false);
     expect(t.of('ding')).toHaveLength(1); // one ding for two pings
     expect(t.of('showPopup')).toEqual([
-      [A, { kind: 'ping', state: 'TURN_DONE', agent: 'Claude Code', folder: 'demo', time: '05:00', phrase: '★ done~ your turn!', detail: 'delete hello.txt?' }],
-      [K, { kind: 'ping', state: 'TURN_DONE', agent: 'Kiro', folder: 'agentbuddy', time: '05:00', phrase: '★ done~ your turn!', detail: '16. Kiro progress' }],
+      [A, { kind: 'ping', state: 'TURN_DONE', agentId: 'claude', agent: 'Claude Code', folder: 'demo', time: '05:00', phrase: '★ done~ your turn!', detail: 'delete hello.txt?' }],
+      [K, { kind: 'ping', state: 'TURN_DONE', agentId: 'kiro', agent: 'Kiro', folder: 'agentbuddy', time: '05:00', phrase: '★ done~ your turn!', detail: '16. Kiro progress' }],
     ]);
     expect(t.of('appendInbox').map((a) => (a[0] as InboxRecord).session)).toEqual([A, K]);
     expect(t.of('setCount').at(-1)).toEqual([3]);
