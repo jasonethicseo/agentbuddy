@@ -97,7 +97,7 @@ How to work through this list:
     - _Requirements: 6.13, 16.5, 17.1_
   - Result (2026-11-13): fonts downloaded once with the builder's OK from `https://raw.githubusercontent.com/google/fonts/main/ofl/{nanumgothic,silkscreen}/` (6.3 MB in all). SHA-256: NanumGothic-Regular `76f45ef4…2e2d31`, Bold `f96298f9…33c674`, ExtraBold `5c4568e5…e691ae`, Silkscreen-Regular `c8454733…642ebd8`, OFL-NanumGothic `eeacf160…6c30f`, OFL-Silkscreen `86c5e9c9…efbd3`. Both licenses read `SIL OPEN FONT LICENSE Version 1.1`. Also: `--on-fill` token, `styles/icons.css` (icon colors by class), `src/ui/env.d.ts` for stylesheet imports; the three stylesheets are imported by both pages already. Contrast: icon-only button glyphs count as graphics (3:1); footer dots join the rings as known exceptions (see design "Contrast").
 
-- [ ] 10. UI screens
+- [x] 10. UI screens
   - [x] 10.1 `model/list.ts`, `model/chrome.ts`, `model/inbox.ts`; unit tests (online counts, offline group, same-name folders, `[n]`, session rows only for two or more visible sessions, the buddy-row × only with exactly one visible session, the hidden-sessions line, alert strip, per-tab footer, connections, browser mode); P26
     - _Requirements: 5.10, 5.11, 6.1–6.10, 11.3, 14.1_
   - [x] 10.2 `index.html`, `chrome.ts` and `styles/main.css` (title bar, alert strip, tabs, footer)
@@ -106,15 +106,17 @@ How to work through this list:
     - _Requirements: 6, 11.3, 11.6, 13.1, 14.1_
   - [x] 10.4 `popup.html`, `screens/popup.ts`, `styles/popup.css`
     - _Requirements: 9.1, 9.5, 9.7, 9.9_
-  - [ ] 10.5 `sound.ts`; the builder hears the ding (not confirmed in O4) and tunes the two notes by ear, announced first
+  - [x] 10.5 `sound.ts`; the builder hears the ding (not confirmed in O4) and tunes the two notes by ear, announced first
     - _Requirements: 8.6, 8.7_
   - [x] 10.6 `bridge.ts` and `main.ts` (app and browser sources); remove the old table code and its test
     - _Requirements: 6.12_
-  - [ ] 10.7 Visual check with the builder, announced first: the three tabs next to `Main.dc.html`, `Inbox.dc.html` and `Settings.dc.html`, and a ping pop-up next to `Popup.dc.html`; the builder opens the relay's page in a browser and sees the same list without the app-only parts. Also from O4: height resize, title bar drag, the corners, and whether a transparent main window still resizes (if it does, the corners become 10/10/4/4)
+  - [x] 10.7 Visual check with the builder, announced first: the three tabs next to `Main.dc.html`, `Inbox.dc.html` and `Settings.dc.html`, and a ping pop-up next to `Popup.dc.html`; the builder opens the relay's page in a browser and sees the same list without the app-only parts. Also from O4: height resize, title bar drag, the corners, and whether a transparent main window still resizes (if it does, the corners become 10/10/4/4)
     - _Requirements: 6.11, 6.12_
 
+  - Result (2026-11-13, 00:08–00:11 UTC): one 3-minute run of the new build attached to the real relay (pid 688); the builder caused the pings with real Claude prompts in another folder. The builder confirmed the three tabs against the mockups, title bar drag, height resize, the ding (default notes, not changed), the pop-up, and that focus stayed in the app in use. The inbox got two Claude `TURN_DONE` pings and one `ack` 5 s after the first. Afterwards no Electron process, check script or watcher was left, no Electron singleton lock was left (clean quit), and the relay was unchanged. The tool call that ran the check was cut off before it reported, so the exit status and the watcher's focus log were lost. Not checked here, moved to task 11: the relay's page in a browser, and the window corners. The main window stays opaque with 10 px corners all round (a transparent main window was never tried).
+
 - [ ] 11. Checkpoint: builder checks
-  - Each check of Req 17.3 with the builder, each announced first and run once, plus a pop-up over a full-screen app (from O4).
+  - Each check of Req 17.3 with the builder, each announced first and run once, plus a pop-up over a full-screen app (from O4), and from 10.7: the relay's page in a browser (same list, no app-only parts) and the main window corners.
   - Menu bar icon (from 8.5): the builder looks for the bubble and its count. If it is not visible, count Control Center's menu bar windows (layer 25) on and off screen with the app running and quit; one more off-screen window means the icon exists but is hidden (a full menu bar on a notched display), none more means it was not created. Then decide with the builder what to do.
   - Read the launcher values the daily log collected since task 2 (only `agent`, `bundleId`, `termProgram`) and record them in events.md as observed, with date and versions; mark what did not arrive.
   - _Requirements: 17.3_
