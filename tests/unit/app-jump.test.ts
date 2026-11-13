@@ -43,6 +43,12 @@ describe('planJump', () => {
     expect(planJump(vscode, C, always)).toEqual({ kind: 'run', bundleId: 'com.microsoft.VSCode' });
   });
 
+  it('gives no folder to a Claude session running in a Kiro terminal (it reports the Kiro bundle ID)', () => {
+    const inKiro = views('TURN_DONE', { [C]: 'dev.kiro.desktop' });
+    inKiro[1]!.cwd = '/Users/dev/agentbuddy';
+    expect(planJump(inKiro, C, always)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
+  });
+
   it('asks isDirectory about the relay folder only, never another path', () => {
     const asked: string[] = [];
     planJump(views(), K, (p) => (asked.push(p), true));

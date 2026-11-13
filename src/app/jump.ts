@@ -26,8 +26,10 @@ function find(views: readonly BuddyView[], session: string): { buddy: BuddyView;
 /**
  * What a jump to `session` should do. Everything comes from the main process's own
  * copy of the relay's list; a window only sends the key (Requirement 12.2).
- * A folder is added only for Kiro sessions that are not offline or ended, when the
- * session folder is an absolute path to an existing directory right now (12.7).
+ * A folder is added only for sessions of the Kiro agent that run in Kiro (`dev.kiro.desktop`),
+ * are not offline or ended, and whose folder is an absolute path to an existing directory
+ * right now (12.7). A Claude or Codex session in a Kiro terminal also reports Kiro's bundle ID,
+ * but its folder need not be a Kiro window's workspace, so it gets no folder (2026-11-13).
  */
 export function planJump(views: readonly BuddyView[], session: string, isDirectory: (path: string) => boolean): JumpPlan {
   const found = find(views, session);
@@ -36,6 +38,7 @@ export function planJump(views: readonly BuddyView[], session: string, isDirecto
   if (!isBundleId(s.bundleId)) return { kind: 'notice', text: NOTICES.unknownApp };
   const folder = buddy.cwd;
   const withFolder =
+    buddy.agent === 'kiro' &&
     s.bundleId === FOLDER_APP &&
     s.state !== 'OFFLINE' &&
     s.state !== 'ENDED' &&

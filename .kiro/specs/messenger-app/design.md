@@ -264,7 +264,7 @@ type Exec = (file: string, args: readonly string[], opts: { timeout: number }) =
 `planJump`:
 1. Session not in the list → notice `this session is gone`.
 2. No `bundleId`, or `isBundleId` fails → notice `can't tell which app this session is in` (Req 12.3, 12.9).
-3. `folder` only when `bundleId === 'dev.kiro.desktop'`, the session's state is neither `OFFLINE` nor `ENDED`, and the buddy's `cwd` (the session folder from the relay's list) is absolute and `isDirectory` says yes at that moment (Req 12.7). The folder comes from the main process's copy of the list, never from the window.
+3. `folder` only when the buddy's agent is `kiro` (added 2026-11-13: a Claude CLI session in a Kiro terminal reports `dev.kiro.desktop` too), `bundleId === 'dev.kiro.desktop'`, the session's state is neither `OFFLINE` nor `ENDED`, and the buddy's `cwd` (the session folder from the relay's list) is absolute and `isDirectory` says yes at that moment (Req 12.7). The folder comes from the main process's copy of the list, never from the window.
 
 `runJump` (Req 12.4–12.6, 12.11), with `exec` = promisified `execFile` (no shell):
 1. `exec('/usr/bin/lsappinfo', ['find', 'bundleid=' + id], { timeout: 3000 })`. Empty stdout → notice `<id> is not running`, stop (A10).
@@ -634,7 +634,7 @@ P1–P15 are the core-pipeline properties. Changed ones are marked.
 | P21 | `statusParts` with hide-text on has no excerpt; otherwise its excerpt is at most 40 code points, and `statusLine` is the phrase or the phrase, ` · ` and the excerpt. The phrase is `♪ studying hard` exactly for `WORKING` with the spec-task flag. | 7.2–7.4 |
 | P22 | `placePopups`: every pop-up lies inside the area, none overlap, each later one is above the earlier ones, and `count <= popupCapacity`. | 9.1, 9.6 |
 | P23 | A hidden session stays hidden until its last event time passes the mark, and then shows again; a mark older than 24 hours is gone after `refreshHidden`. | 13.1, 13.5 |
-| P24 | `planJump` never returns `run` with a value that fails `isBundleId`; it returns a folder only for `dev.kiro.desktop`, a state other than `OFFLINE`/`ENDED`, an absolute path and `isDirectory` true; the argument arrays built by `runJump` contain `-b` as the only item starting with `-`. | 12.3–12.7 |
+| P24 | `planJump` never returns `run` with a value that fails `isBundleId`; it returns a folder only for Kiro-agent sessions with `dev.kiro.desktop`, a state other than `OFFLINE`/`ENDED`, an absolute path and `isDirectory` true; the argument arrays built by `runJump` contain `-b` as the only item starting with `-`. | 12.3–12.7 |
 | P25 | `parseSettings` and `validateInboxRecord` never throw for any JSON value, and their results only hold known keys of the right type. | 11.4, 14.3 |
 | P26 | `buildGroups`: every buddy appears in exactly one group; a buddy is in the offline group exactly when all its sessions are `OFFLINE` or `ENDED`; each folder group's `online` is at most its `total`; session rows exist only when two or more sessions are visible or the buddy is in `showMore`. | 6.1–6.6 |
 
