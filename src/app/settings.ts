@@ -1,5 +1,5 @@
-// App settings in ~/.agentbuddy/app-settings.json (mode 600): the five switches,
-// the theme, closed groups, hidden sessions and the "me" status message
+// App settings in ~/.agentbuddy/app-settings.json (mode 600): the six switches (hideBanner: retro-skin
+// Requirement 10), the theme, closed groups, hidden sessions and the "me" status message
 // (messenger-app Requirements 13.5, 14.2, 14.3, 18.5; themes Requirement 1).
 // `parseSettings` is pure and never throws; load and save touch the file system.
 import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   macNotifications: false,
   alwaysOnTop: true,
   theme: DEFAULT_THEME,
+  hideBanner: false,
   closedGroups: [],
   myStatus: '',
   hidden: new Map(),
@@ -76,8 +77,8 @@ export function serializeSettings(s: Settings): string {
       hidden[key] = { lastAt: new Date(m.lastAtMs).toISOString(), hiddenAt: new Date(m.hiddenAtMs).toISOString() };
     }
   }
-  const { hideText, sound, popups, macNotifications, alwaysOnTop, theme, closedGroups, myStatus } = s;
-  return `${JSON.stringify({ v: 1, hideText, sound, popups, macNotifications, alwaysOnTop, theme, closedGroups, myStatus, hidden })}\n`;
+  const { hideText, sound, popups, macNotifications, alwaysOnTop, theme, hideBanner, closedGroups, myStatus } = s;
+  return `${JSON.stringify({ v: 1, hideText, sound, popups, macNotifications, alwaysOnTop, theme, hideBanner, closedGroups, myStatus, hidden })}\n`;
 }
 
 /** The saved settings, or the defaults when the file is missing, unreadable or invalid. */

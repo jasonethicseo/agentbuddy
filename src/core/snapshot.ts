@@ -19,13 +19,15 @@ export interface PublicSettings {
   alwaysOnTop: boolean;
   /** The look of the main window and the pop-ups (themes Requirement 1). */
   theme: ThemeId;
+  /** Hides the TIP banner (retro-skin Requirement 10); false by default. */
+  hideBanner: boolean;
   /** Folders whose group is closed. */
   closedGroups: string[];
   /** The user's own status message in the "me" row; '' when unset (messenger-app Requirement 18). */
   myStatus: string;
 }
 
-/** The five on/off settings a window may change. */
+/** The six on/off settings a window may change. */
 export type SettingKey = Exclude<keyof PublicSettings, 'closedGroups' | 'myStatus' | 'theme'>;
 
 export interface AppSnapshot {

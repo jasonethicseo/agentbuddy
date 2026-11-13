@@ -43,7 +43,7 @@ export function browserSource(onSnapshot: (s: AppSnapshot) => void): void {
       hidden: [],
       unacked: [],
       inbox: [],
-      settings: { hideText: false, sound: false, popups: false, macNotifications: false, alwaysOnTop: false, theme: 'blue-bot', closedGroups: [], myStatus: '' },
+      settings: { hideText: false, sound: false, popups: false, macNotifications: false, alwaysOnTop: false, theme: 'blue-bot', hideBanner: true, closedGroups: [], myStatus: '' },
       count: { waiting: 0, unreadTurns: 0, total: 0 },
     });
   const connect = () => {

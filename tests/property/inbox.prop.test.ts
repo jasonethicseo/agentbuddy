@@ -113,6 +113,7 @@ describe('P25 settings', () => {
       macNotifications: fc.jsonValue({ maxDepth: 1 }),
       alwaysOnTop: fc.boolean(),
       theme: fc.oneof(fc.constantFrom('blue-bot', 'strawberry-milk'), fc.string(), fc.jsonValue({ maxDepth: 1 })),
+      hideBanner: fc.oneof(fc.boolean(), fc.jsonValue({ maxDepth: 1 })),
       closedGroups: fc.oneof(fc.array(fc.oneof(fc.constantFrom(...CWDS), fc.jsonValue({ maxDepth: 1 })), { maxLength: 5 }), fc.jsonValue({ maxDepth: 1 })),
       hidden: fc.oneof(
         fc.dictionary(fc.constantFrom(...KEYS), fc.record({ lastAt: fc.oneof(fc.constant(iso(T0)), fc.jsonValue({ maxDepth: 0 })), hiddenAt: fc.constant(iso(T0)) })),
@@ -123,13 +124,13 @@ describe('P25 settings', () => {
     },
     { requiredKeys: [] },
   );
-  const KNOWN = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'theme', 'closedGroups', 'myStatus', 'hidden'];
+  const KNOWN = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'theme', 'hideBanner', 'closedGroups', 'myStatus', 'hidden'];
   it('never throws, and keeps only known keys of the right type', () => {
     fc.assert(
       fc.property(fc.oneof(fc.jsonValue(), near), (value) => {
         const s = parseSettings(value);
         expect(Object.keys(s).sort()).toEqual([...KNOWN].sort());
-        for (const k of ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop'] as const) expect(typeof s[k]).toBe('boolean');
+        for (const k of ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'hideBanner'] as const) expect(typeof s[k]).toBe('boolean');
         expect(s.closedGroups.every((g) => typeof g === 'string' && g !== '')).toBe(true);
         expect(['blue-bot', 'strawberry-milk']).toContain(s.theme); // themes Requirement 1.2
         expect(cleanMyStatus(s.myStatus)).toBe(s.myStatus); // a clean string of at most 40 code points (Requirement 18.5)

@@ -1,6 +1,7 @@
 // Reading a theme always ends in one of the two themes (themes Requirements 1.2, 1.3, 11.2).
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { parseSettings } from '../../src/app/settings';
 import { THEMES, isTheme, parseTheme } from '../../src/core/theme';
 import { parseThemes } from '../unit/theme-tokens';
 
@@ -38,6 +39,17 @@ describe('token sets (themes Requirement 3.2)', () => {
       fc.property(fc.constantFrom(...THEMES), fc.constantFrom(...names), (th, name) => {
         const other = THEMES.find((x) => x !== th)!;
         expect([name, blocks[th].tokens.has(name), blocks[other].tokens.has(name)]).toEqual([name, true, true]);
+      }),
+      { numRuns: 1000 },
+    );
+  });
+});
+describe('hideBanner (retro-skin Requirement 10.1)', () => {
+  it('reads as a boolean for any JSON value, true only for true', () => {
+    fc.assert(
+      fc.property(fc.jsonValue(), (v) => {
+        const s = parseSettings({ hideBanner: v });
+        expect(s.hideBanner).toBe(v === true);
       }),
       { numRuns: 1000 },
     );

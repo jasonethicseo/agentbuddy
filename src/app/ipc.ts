@@ -29,7 +29,7 @@ export const CH = {
   popupTheme: 'popup:theme',
 } as const;
 
-export const SETTING_KEYS: readonly SettingKey[] = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop'];
+export const SETTING_KEYS: readonly SettingKey[] = ['hideText', 'sound', 'popups', 'macNotifications', 'alwaysOnTop', 'hideBanner'];
 export type WindowAction = 'minimize' | 'close';
 /** `go`: Go there or the card; `close`: × (acknowledges); `later`: Later (does not). */
 export type PopupAction = 'go' | 'close' | 'later';

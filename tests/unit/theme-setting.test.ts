@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createController } from '../../src/app/controller';
 import type { Ports } from '../../src/app/controller';
 import { DEFAULT_SETTINGS, SETTINGS_FILE, loadSettings, parseSettings, saveSettings } from '../../src/app/settings';
+import { UI_CHECKS } from '../../src/app/ipc';
 import type { AppSnapshot } from '../../src/core/snapshot';
 import { T0, buddyView, key } from '../fixtures/views';
 
@@ -99,5 +100,27 @@ describe('controller.onTheme (Requirement 2.6)', () => {
     const s = calls.find((x) => x[0] === 'pushState')![1][0] as AppSnapshot;
     expect([s.inbox, s.count.total]).toEqual([[], 0]);
     expect(calls.find((x) => x[0] === 'setCount')![1]).toEqual([0]);
+  });
+});
+describe('hideBanner in app-settings.json (retro-skin Requirement 10)', () => {
+  it('is false by default, in old files and for anything but a boolean', () => {
+    expect(DEFAULT_SETTINGS.hideBanner).toBe(false);
+    expect(parseSettings({ theme: 'strawberry-milk', sound: false }).hideBanner).toBe(false);
+    for (const hideBanner of ['true', 1, null, [], { on: true }, '']) {
+      const s = parseSettings({ hideBanner, sound: false, theme: 'strawberry-milk' });
+      expect([s.hideBanner, s.sound, s.theme]).toEqual([false, false, 'strawberry-milk']);
+    }
+    expect(parseSettings({ hideBanner: true }).hideBanner).toBe(true);
+  });
+  it('is saved and read back with the other settings', async () => {
+    const s = parseSettings({ hideBanner: true, theme: 'strawberry-milk', hideText: true });
+    await saveSettings(dir, s);
+    expect(JSON.parse(readFileSync(join(dir, SETTINGS_FILE), 'utf8'))).toMatchObject({ hideBanner: true, theme: 'strawberry-milk', hideText: true });
+    expect(await loadSettings(dir)).toEqual(s);
+  });
+  it('a window may change it only with a boolean (ui:setting)', () => {
+    expect(UI_CHECKS['ui:setting']({ key: 'hideBanner', value: true })).toEqual({ key: 'hideBanner', value: true });
+    expect(UI_CHECKS['ui:setting']({ key: 'hideBanner', value: 'yes' })).toBeNull();
+    expect(UI_CHECKS['ui:setting']({ key: 'hideBanner', value: 1 })).toBeNull();
   });
 });
