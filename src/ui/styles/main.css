@@ -68,16 +68,3 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 .relay-mark[data-dot='alert'] { color: var(--st-wait); }
 .relay-mark[data-dot='idle'] { color: var(--st-idle); }
 .relay-mark[data-dot='muted'] { color: var(--st-off); }
-
-/* Settings */
-.settings { display: flex; flex-direction: column; gap: 14px; padding: 12px 10px; }
-.set-card { display: flex; flex-direction: column; background: var(--row); border: 1px solid var(--line); border-radius: 6px; }
-.set-title { margin: 0; padding: 8px 10px 4px; font-size: 12px; font-weight: 800; color: var(--group-text); }
-.check { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; }
-.check + .check { border-top: 1px solid var(--line-soft); }
-.check > span { flex-grow: 1; }
-.check > input { width: 16px; height: 16px; margin: 0; accent-color: var(--frame); }
-.set-note { margin: 0; padding: 0 10px 8px; font-size: 11px; color: var(--text-2); }
-.set-conn { gap: 6px; padding: 8px 10px; }
-.set-conn .set-title { padding: 0; }
-.conn { display: flex; align-items: center; gap: 6px; }

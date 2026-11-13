@@ -336,9 +336,9 @@ Kiro progress model (T9, Req 7.3): `BuddyVM.progress` becomes `{ text: string; r
 <section class="set-card set-theme">
   <h2 class="set-title" id="theme-title">Theme</h2>
   <div class="theme-tiles" role="radiogroup" aria-labelledby="theme-title">
-    <label class="theme-tile" data-theme-preview="strawberry-milk">
+    <label class="theme-tile">
       <input type="radio" name="theme" value="strawberry-milk" class="theme-input" data-focus="theme:strawberry-milk">
-      <span class="theme-mini" aria-hidden="true"><span class="theme-mini-title"></span><span class="theme-mini-row">[22 px sprite][bar]</span></span>
+      <span class="theme-mini" data-theme-preview="strawberry-milk" aria-hidden="true"><span class="theme-mini-title"></span><span class="theme-mini-row">[22 px sprite][bar]</span></span>
       <span class="theme-name">Strawberry Milk</span><span class="theme-check" aria-hidden="true">✓</span>
     </label>
     …Blue Bot…

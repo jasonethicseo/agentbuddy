@@ -143,4 +143,8 @@
   --me-field-radius: 6px;
   --me-radius: var(--card-radius);
   --me-shadow: var(--card-shadow);
+  --preview-radius: 10px;
+  --preview-pattern-size: 8px 8px;
+  --preview-bar: var(--quiet-line);
+  --preview-bar-radius: 3px;
 }

@@ -8,6 +8,7 @@ import './styles/icons.css';
 import './styles/main.css';
 import './styles/list.css';
 import './styles/inbox.css';
+import './styles/settings.css';
 import type { AppSnapshot } from '../core/snapshot';
 import { appBridge, browserSource } from './bridge';
 import { renderChrome, setupChrome } from './chrome';
@@ -71,7 +72,10 @@ function render(): void {
       click: (session) => bridge.click('inbox', session),
       ackAll: () => bridge.ackAll(),
     });
-    renderSettings($('.screen-settings'), s.settings, connections(s), { setSetting: (key, value) => bridge.setSetting(key, value) });
+    renderSettings($('.screen-settings'), s.settings, connections(s), {
+      setSetting: (key, value) => bridge.setSetting(key, value),
+      setTheme: (theme) => bridge.setTheme(theme),
+    });
   });
 }
 
