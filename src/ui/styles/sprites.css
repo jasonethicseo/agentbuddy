@@ -42,3 +42,9 @@
 .badge[data-state="STALE"] { --badge-fill: var(--st-stale); --badge-glyph: var(--badge-stale); }
 .badge[data-state="IDLE"] { --badge-fill: var(--st-idle); --badge-glyph: var(--badge-idle); }
 .badge[data-state="ENDED"] { --badge-fill: var(--st-off); --badge-glyph: var(--badge-ended); }
+
+/* Text for screen readers only: the state name next to every sprite, `unread`, and the like. Both pages load this file. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

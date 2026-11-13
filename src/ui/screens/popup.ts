@@ -1,7 +1,6 @@
 // The pop-up page (messenger-app Requirements 9.1, 9.5, 9.7; themes Requirements 2.5, 7.4–7.6). Agent text goes
 // in with textContent only. × closes and acknowledges, Later only closes, Go there or anywhere else on the card
 // jumps, on both kinds (unchanged from the messenger-app spec).
-import '../styles/tokens.css';
 import '../styles/themes.css';
 import '../styles/sprites.css';
 import '../styles/fonts.css';

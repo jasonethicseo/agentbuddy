@@ -8,8 +8,7 @@ import { ROOT, THEMES_CSS, THEME_FILES, TOKEN_FILES, UI, hex, parseThemes, resol
 
 const blocks = parseThemes();
 
-/** UI files outside themes.css. `tokens.css` is the one exception until themes task 6.6 removes it. */
-const TEMPORARY = new Set([join(UI, 'styles/tokens.css')]);
+/** UI files outside the theme token files. */
 function uiFiles(): string[] {
   const out: string[] = [];
   const walk = (dir: string) => {
@@ -17,7 +16,7 @@ function uiFiles(): string[] {
       const p = join(dir, name);
       if (name === 'public') continue;
       if (statSync(p).isDirectory()) walk(p);
-      else if (/\.(css|ts)$/.test(name) && !TOKEN_FILES.includes(p) && !TEMPORARY.has(p)) out.push(p);
+      else if (/\.(css|ts)$/.test(name) && !TOKEN_FILES.includes(p)) out.push(p);
     }
   };
   walk(UI);

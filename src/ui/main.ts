@@ -1,10 +1,8 @@
 // UI entry for the main window and the relay's page (messenger-app Requirement 6.12).
 // In the app, state comes from the preload bridge; in a browser, from the relay's stream.
-import './styles/tokens.css';
 import './styles/themes.css';
 import './styles/sprites.css';
 import './styles/fonts.css';
-import './styles/icons.css';
 import './styles/main.css';
 import './styles/list.css';
 import './styles/inbox.css';

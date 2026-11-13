@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { DisplayState } from '../../src/core/state';
 import { THEMES } from '../../src/core/theme';
 import type { ThemeId } from '../../src/core/theme';
-import { SPRITES, hasBadge } from '../../src/ui/sprites/render';
+import { SPRITES, STATE_NAMES, hasBadge } from '../../src/ui/sprites/render';
 import type { SpriteSize, SpriteWho } from '../../src/ui/sprites/render';
 import { PIXEL_ROLES } from '../../src/ui/sprites/types';
 import type { Pixel } from '../../src/ui/sprites/types';
@@ -87,6 +87,15 @@ describe('sprites equal the mockups (Requirement 6.2)', () => {
   it.each(THEMES)('%s: the title icon and me of the Main mockup', (t) => {
     expect(colored(t, SPRITES[t].title, '--px-title-body')).toEqual(mockupSprites(MOCKUPS[t].main, 20)[0]);
     expect(colored(t, SPRITES[t].me, '--agent-me')).toEqual(mockupSprites(MOCKUPS[t].main, 34)[0]);
+  });
+});
+
+describe('state names', () => {
+  it('name every state for screen readers, next to every sprite (messenger-app Requirement 6.13)', () => {
+    expect(STATE_NAMES).toEqual({
+      WAITING_APPROVAL: 'waiting for approval', WORKING: 'working', TURN_DONE: 'turn done', STALE: 'no news',
+      IDLE: 'idle', OFFLINE: 'offline', ENDED: 'logged off',
+    });
   });
 });
 
