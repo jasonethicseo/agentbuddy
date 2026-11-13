@@ -1,7 +1,7 @@
 // UI models: buddy list, window chrome and inbox (messenger-app Requirements 5.10, 5.11, 6.1–6.12, 7, 11.3, 14.1, 17.1).
 import { describe, expect, it } from 'vitest';
 import type { InboxEntry } from '../../src/core/attention';
-import { alertText, connections, footer } from '../../src/ui/model/chrome';
+import { alertText, connections, statusPanels } from '../../src/ui/model/chrome';
 import { agentOfKey, inboxHeader, inboxRows, unreadCount } from '../../src/ui/model/inbox';
 import { OFFLINE_GROUP, age, buildGroups } from '../../src/ui/model/list';
 import type { Clock } from '../../src/ui/model/list';
@@ -126,18 +126,20 @@ describe('window chrome model', () => {
     expect(alertText({ waiting: 0, unreadTurns: 0, total: 0 })).toBeNull();
   });
 
-  it('footer per tab and connection', () => {
+  it('status bar panels per screen and connection: the footer texts, split (retro-skin Requirement 8)', () => {
     const s = snapshot([]);
-    expect(footer(s, 'list')).toEqual({ dot: 'ok', left: 'relay connected · local only', right: 'on top ✓' });
-    expect(footer(snapshot([], {}, { alwaysOnTop: false }), 'list')).toEqual({ dot: 'ok', left: 'relay connected · local only' });
-    expect(footer(s, 'list', "can't tell which app this session is in")).toMatchObject({ dot: 'alert', left: "can't tell which app this session is in" });
-    expect(footer(s, 'inbox')).toEqual({ left: 'kept on this computer only', right: 'click a message to go there' });
-    expect(footer(s, 'settings')).toBeNull();
-    expect(footer(snapshot([], { mode: 'connecting', connection: 'disconnected' }), 'list')!.left).toBe('connecting to relay…');
-    expect(footer(snapshot([], { connection: 'disconnected' }), 'list')!.left).toBe('relay disconnected');
-    expect(footer(snapshot([], { connection: 'foreign' }), 'list')!.left).toBe('port 4343 is used by another program');
-    expect(footer(snapshot([], { connection: 'error', errorCode: 'EACCES' }), 'list')!.left).toBe('relay error: EACCES');
-    expect(footer(snapshot([], { mode: 'browser' }), 'list')).not.toHaveProperty('right');
+    expect(statusPanels(s, 'list')).toEqual([{ dot: 'ok', text: 'relay connected', grow: true }, { text: 'local only' }, { text: 'on top', check: true }]);
+    expect(statusPanels(snapshot([], {}, { alwaysOnTop: false }), 'list')).toEqual([{ dot: 'ok', text: 'relay connected', grow: true }, { text: 'local only' }]);
+    expect(statusPanels(s, 'list', "can't tell which app this session is in")).toEqual([{ dot: 'alert', text: "can't tell which app this session is in", grow: true }, { text: 'on top', check: true }]);
+    expect(statusPanels(s, 'inbox')).toEqual([{ text: 'kept on this computer only', grow: true }, { text: 'click a message to go there' }]);
+    expect(statusPanels(s, 'settings')).toBeNull();
+    const first = (x: ReturnType<typeof snapshot>) => statusPanels(x, 'list')![0]!.text;
+    expect(first(snapshot([], { mode: 'connecting', connection: 'disconnected' }))).toBe('connecting to relay…');
+    expect(first(snapshot([], { connection: 'disconnected' }))).toBe('relay disconnected');
+    expect(first(snapshot([], { connection: 'foreign' }))).toBe('port 4343 is used by another program');
+    expect(first(snapshot([], { connection: 'error', errorCode: 'EACCES' }))).toBe('relay error: EACCES');
+    expect(statusPanels(snapshot([], { connection: 'disconnected' }), 'list')!.map((p) => p.text)).not.toContain('local only');
+    expect(statusPanels(snapshot([], { mode: 'browser' }), 'list')!.map((p) => p.text)).toEqual(['relay connected', 'local only']);
   });
 
   it('connections card', () => {

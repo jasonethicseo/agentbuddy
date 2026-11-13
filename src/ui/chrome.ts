@@ -3,7 +3,7 @@
 import type { AppSnapshot } from '../core/snapshot';
 import type { ThemeId } from '../core/theme';
 import { el } from './dom';
-import { alertText, footer } from './model/chrome';
+import { alertText, statusPanels } from './model/chrome';
 import type { Tab } from './model/chrome';
 import { unreadCount } from './model/inbox';
 import { TOOLS, rovingTarget, toolbarView } from './model/toolbar';
@@ -99,16 +99,20 @@ export function renderChrome(s: AppSnapshot, tab: Tab, notice: string | undefine
   }
 
   const bar = $('.statusbar');
-  const f = footer(s, tab, notice);
-  bar.hidden = f === null;
-  if (f === null) return;
-  const parts: Node[] = [];
-  if (f.dot !== undefined) {
-    const dot = mark('relay-mark');
-    dot.dataset['dot'] = f.dot;
-    parts.push(dot);
-  }
-  parts.push(el('span', 'status-text', f.left));
-  if (f.right !== undefined) parts.push(el('span', 'status-right', f.right));
-  bar.replaceChildren(...parts);
+  const panels = statusPanels(s, tab, notice);
+  bar.hidden = panels === null;
+  if (panels === null) return;
+  bar.replaceChildren(
+    ...panels.map((p) => {
+      const panel = el('span', p.grow ? 'panel sunken grow' : 'panel sunken');
+      if (p.dot !== undefined) {
+        const dot = mark('relay-mark');
+        dot.dataset['dot'] = p.dot;
+        panel.append(dot, ' ');
+      }
+      panel.append(el('span', 'panel-text', p.text));
+      if (p.check === true) panel.append(' ', icon('check', 7)); // `on top ✓`; Galmuri has no ✓ (retro-skin Requirement 4.5)
+      return panel;
+    }),
+  );
 }

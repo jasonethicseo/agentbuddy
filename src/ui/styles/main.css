@@ -1,18 +1,19 @@
-/* Main window, from docs/mockups/MainBot.dc.html and MainCute.dc.html (themes spec); Inbox and Settings keep the
-   layout of Inbox.dc.html and Settings.dc.html. Colors, radii and decoration characters: themes/*.css. */
+/* Main window, from docs/mockups/MainBot2000.dc.html and MainCute2000.dc.html (retro-skin spec); Inbox and Settings keep the
+   layout of Inbox.dc.html and SkinPicker2000.dc.html. Colors and decoration characters: themes/*.css; materials: materials.css. */
 html, body { height: 100%; margin: 0; background: transparent; }
 button { font: inherit; color: inherit; margin: 0; }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
-/* The window: the page draws the frame and the theme's round corners on a transparent window (O5). */
+/* The window: 1 px frame, 1 px inner line, 7 px top corners and square bottom ones, flat background
+   (retro-skin Requirements 2.4, 2.7). The page draws them on the transparent window (themes O5). */
 .window {
-  box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; overflow: hidden;
-  font-family: var(--font-text); font-size: 12px; color: var(--text);
-  background-color: var(--bg); background-image: var(--bg-pattern); background-size: var(--bg-pattern-size);
-  border: var(--frame-width) solid var(--frame); border-radius: var(--radius-window);
+  box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  font-family: var(--font-text); font-size: 12px; color: var(--text); background: var(--bg);
+  border: 1px solid var(--frame); border-radius: var(--radius-window) var(--radius-window) 0 0;
+  box-shadow: inset 0 0 0 1px var(--frame-inner);
 }
 body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
+.me-row, .alert-strip, .screen, .banner { margin: 5px 5px 0; }
 
 /* Title bar: the gloss material (materials.css), from MainBot2000 / MainCute2000 (retro-skin Requirement 5). */
 .titlebar { display: flex; align-items: center; gap: 6px; padding: 4px 5px 4px 7px; -webkit-app-region: drag; user-select: none; }
@@ -39,25 +40,22 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
   color: var(--count-text); background: var(--count-bg); border: 1px solid var(--count-line);
 }
 
-/* Alert strip */
+/* Alert strip: colors kept, 1 px solid and square, led by `!` in both skins (retro-skin Requirement 7.3, S13). */
 .alert-strip {
-  display: flex; align-items: center; gap: 6px; margin: 0 8px; padding: 6px 12px; font-weight: 700;
-  color: var(--alert-strip-text); background: var(--alert-strip-bg);
-  border: 2px dashed var(--alert-strip-line); border-radius: var(--alert-strip-radius);
+  display: flex; align-items: center; gap: 6px; padding: 3px 6px; font-weight: 700;
+  color: var(--alert-strip-text); background: var(--alert-strip-bg); border: 1px solid var(--alert-strip-line);
 }
 .alert-mark::before { content: var(--alert-mark); }
 
 .screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 
-/* Footer: on the window background, so its text uses --text-on-bg (decision D8) */
-.statusbar { display: flex; align-items: center; gap: 6px; padding: 0 14px; font-size: 11px; color: var(--text-on-bg); }
-.status-text { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.status-right { flex-shrink: 0; }
-/* The connection mark: a square dot (Blue Bot) or a ♥ (Strawberry Milk), in its state color. */
-.relay-mark {
-  display: inline-block; flex-shrink: 0; width: var(--relay-dot-size); height: var(--relay-dot-size);
-  border-radius: var(--relay-dot-radius); background: currentColor; color: var(--st-off); line-height: 1;
-}
+/* Status bar: sunken panels in Galmuri9 10 px (retro-skin Requirement 8). */
+.statusbar { display: flex; gap: 2px; padding: 4px 5px 5px; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
+.panel { display: flex; align-items: center; flex-shrink: 0; padding: 1px 4px; background: var(--field); white-space: pre; }
+.panel.grow { flex: 1 1 auto; min-width: 0; }
+.panel-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The connection mark `●`, in its state color; also on the Settings connection lines. */
+.relay-mark { flex-shrink: 0; color: var(--st-off); }
 .relay-mark::before { content: var(--relay-mark); }
 .relay-mark[data-dot='ok'] { color: var(--st-work); }
 .relay-mark[data-dot='alert'] { color: var(--st-wait); }

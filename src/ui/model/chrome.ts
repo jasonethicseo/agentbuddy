@@ -1,5 +1,5 @@
-// The window around the screens as plain data: alert strip, footer and the connections
-// card (messenger-app Requirements 5.10, 5.11, 6.10, 14.1). Pure.
+// The window around the screens as plain data: alert strip, status bar and the connections
+// card (messenger-app Requirements 5.10, 5.11, 6.10, 14.1; retro-skin Requirement 8). Pure.
 import type { MenuCount } from '../../core/attention';
 import type { AgentId } from '../../core/event';
 import type { AppSnapshot } from '../../core/snapshot';
@@ -8,10 +8,14 @@ import { AGENT_NAMES } from '../../core/text';
 export type Tab = 'list' | 'inbox' | 'settings';
 export type Dot = 'ok' | 'muted' | 'alert' | 'idle';
 
-export interface FooterVM {
+/** One sunken panel of the status bar. */
+export interface StatusPanel {
+  text: string;
   dot?: Dot;
-  left: string;
-  right?: string;
+  /** `on top`: the pixel check follows (Galmuri has no ✓). */
+  check?: boolean;
+  /** The panel that takes the free width. */
+  grow?: boolean;
 }
 
 /** `1 needs your OK · 1 done, unread`, or null when nothing needs the user. */
@@ -26,7 +30,7 @@ export function alertText(c: MenuCount): string | null {
 export function relayStatus(s: AppSnapshot): { dot: Dot; text: string } {
   switch (s.connection) {
     case 'ok':
-      return { dot: 'ok', text: 'relay connected · local only' };
+      return { dot: 'ok', text: 'relay connected' };
     case 'foreign':
       return { dot: 'alert', text: `port ${s.port} is used by another program` };
     case 'error':
@@ -37,18 +41,19 @@ export function relayStatus(s: AppSnapshot): { dot: Dot; text: string } {
 }
 
 /**
- * Buddies: the relay status (or a notice for a few seconds) and `on top ✓` while pinned.
- * Inbox: the privacy line. Settings: no footer.
+ * The status bar, with the texts of the footer it replaces, split into panels (retro-skin Requirement 8).
+ * Buddies: the relay status (or a notice for a few seconds), `local only` while connected, and `on top ✓` while pinned.
+ * Inbox: the privacy line. Settings: none.
  */
-export function footer(s: AppSnapshot, tab: Tab, notice?: string): FooterVM | null {
+export function statusPanels(s: AppSnapshot, tab: Tab, notice?: string): StatusPanel[] | null {
   if (tab === 'settings') return null;
-  if (tab === 'inbox') return { left: 'kept on this computer only', right: 'click a message to go there' };
+  if (tab === 'inbox') return [{ text: 'kept on this computer only', grow: true }, { text: 'click a message to go there' }];
   const status = notice !== undefined ? { dot: 'alert' as const, text: notice } : relayStatus(s);
-  const vm: FooterVM = { dot: status.dot, left: status.text };
-  if (s.mode !== 'browser' && s.settings.alwaysOnTop) vm.right = 'on top ✓';
-  return vm;
+  const panels: StatusPanel[] = [{ dot: status.dot, text: status.text, grow: true }];
+  if (notice === undefined && s.connection === 'ok') panels.push({ text: 'local only' });
+  if (s.mode !== 'browser' && s.settings.alwaysOnTop) panels.push({ text: 'on top', check: true });
+  return panels;
 }
-
 export function connections(s: AppSnapshot): Array<{ dot: Dot; text: string }> {
   const where = s.mode === 'own' ? ' · in this app' : s.mode === 'attached' ? ' · attached' : '';
   const lines: Array<{ dot: Dot; text: string }> = [{ dot: relayStatus(s).dot, text: `Relay · 127.0.0.1:${s.port}${where}` }];
