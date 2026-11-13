@@ -236,6 +236,16 @@ None of these characters is in a DOM text node, so `textContent` checks, screen 
 - `fonts.css`: `@font-face` for `Jua` (400, `font-display: block`); Silkscreen's rule and files go. `--font-title: Jua, 'Nanum Gothic', sans-serif`.
 - After the download, read Jua's `cmap` for `▸ ♡ ♥ ♪ ▶ ┗ ▼ ✓ ✎ ★`; anything it lacks falls back to Nanum Gothic, as Silkscreen did. The result goes into `fonts.css`'s comment.
 
+**Glyph coverage (cmap read 2026-11-13, task 2.2):**
+
+| Character | Jua | Nanum Gothic | Drawn by, in a Jua title |
+|---|---|---|---|
+| `♡` `♥` `★` `N` `!` `?` `z` `_`, Hangul (`띠링`) | yes | yes | Jua |
+| `♪` `▶` `┗` `▼` `▲` `×` | no | yes | Nanum Gothic |
+| `▸` `✓` `✎` | no | no | the system's fallback font |
+
+Only the missing characters leave Jua: the title stack `'Jua', 'Nanum Gothic', sans-serif` makes the browser fall back per character, so `띠링! ♪ new message` keeps Jua for everything but `♪`. A `unicode-range` on Jua's `@font-face` was not needed for that. `▸` is Blue Bot's working glyph and title mark and is in neither bundled font, so on macOS it comes from a system font (which one is UNVERIFIED; task 8 looks at it). `✓` and `✎` were already drawn that way before this spec.
+
 ### Sprites (Req 6)
 
 `src/ui/sprites/types.ts`:

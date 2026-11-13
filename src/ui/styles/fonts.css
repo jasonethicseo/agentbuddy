@@ -1,7 +1,9 @@
 /* Bundled fonts, served from the app's own files (dist/ui/fonts); nothing is fetched at run time
-   (messenger-app Requirement 16.5). Both are SIL OFL 1.1; the license texts sit next to the files.
-   Silkscreen has Latin only and lacks ♪ ★ → ▲ ▼ ▶ ├ └, so titles fall back to Nanum Gothic for those
-   and for Korean. Nanum Gothic lacks ✓, which falls back to the system font. */
+   (messenger-app Requirement 16.5, themes Requirement 5). Both are SIL OFL 1.1; the license texts sit next to the files.
+   Titles use Jua, then Nanum Gothic: the browser falls back per character along that list, so a character
+   Jua lacks is drawn by Nanum Gothic and the rest of the title stays in Jua (themes task 2.2, cmap read 2026-11-13):
+   Jua lacks ♪ ▶ ┗ ▼ ▲ ×, which Nanum Gothic has; Jua has ♡ ♥ ★ N ! ? z _ and Hangul.
+   Neither font has ▸ ✓ ✎; those come from the system's fallback font, in titles and in text. */
 @font-face {
   font-family: 'Nanum Gothic';
   src: url('/fonts/NanumGothic-Regular.ttf') format('truetype');
@@ -24,13 +26,13 @@
   font-display: block;
 }
 @font-face {
-  font-family: 'Silkscreen';
-  src: url('/fonts/Silkscreen-Regular.ttf') format('truetype');
+  font-family: 'Jua';
+  src: url('/fonts/Jua-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: block;
 }
 :root {
   --font-text: 'Nanum Gothic', sans-serif;
-  --font-title: 'Silkscreen', 'Nanum Gothic', monospace;
+  --font-title: 'Jua', 'Nanum Gothic', sans-serif;
 }

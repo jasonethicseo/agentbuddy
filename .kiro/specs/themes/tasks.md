@@ -17,11 +17,12 @@ How to work through this list:
   - _Requirements: 8.1, 8.2, 8.5_
   - Result (2026-11-13): transparent. Height resize from both edges and title bar drag worked; the builder saw round corners; the shadow and the 420 px minimum were not checked (moved to task 8). The tool call returned before the app ended (it was started with `&`); the app was stopped at about 29 s and nothing was left. Recorded in requirements O5.
 
-- [ ] 2. Jua
-  - [ ] 2.1 With the builder's OK, download `Jua-Regular.ttf` and `OFL.txt` (saved as `OFL-Jua.txt`) from `google/fonts` `ofl/jua/` into `src/ui/public/fonts/`. Check `METADATA.pb` says `license: "OFL"` and the license text reads `SIL OPEN FONT LICENSE Version 1.1`; record the SHA-256 of both here.
-  - [ ] 2.2 Read Jua's `cmap` for `▸ ♡ ♥ ♪ ▶ ┗ ▼ ✓ ✎ ★ N`. For each character Jua lacks, make only that character render in Nanum Gothic: a `unicode-range` on Jua's `@font-face` that leaves those code points out (or, if that is not possible, the font-family order), so Jua is never replaced by the system font for them. Record which characters fall back, and how, in the design ("Fonts") and in `fonts.css`'s comment.
-  - [ ] 2.3 `fonts.css`: Jua's `@font-face`, `--font-title: Jua, 'Nanum Gothic', sans-serif`; remove Silkscreen's rule, `Silkscreen-Regular.ttf` and `OFL-Silkscreen.txt`; update `ui-build.test.ts` (Jua and its license byte for byte, no Silkscreen file); README font table
+- [x] 2. Jua
+  - [x] 2.1 With the builder's OK, download `Jua-Regular.ttf` and `OFL.txt` (saved as `OFL-Jua.txt`) from `google/fonts` `ofl/jua/` into `src/ui/public/fonts/`. Check `METADATA.pb` says `license: "OFL"` and the license text reads `SIL OPEN FONT LICENSE Version 1.1`; record the SHA-256 of both here.
+  - [x] 2.2 Read Jua's `cmap` for `▸ ♡ ♥ ♪ ▶ ┗ ▼ ✓ ✎ ★ N`. For each character Jua lacks, make only that character render in Nanum Gothic: a `unicode-range` on Jua's `@font-face` that leaves those code points out (or, if that is not possible, the font-family order), so Jua is never replaced by the system font for them. Record which characters fall back, and how, in the design ("Fonts") and in `fonts.css`'s comment.
+  - [x] 2.3 `fonts.css`: Jua's `@font-face`, `--font-title: Jua, 'Nanum Gothic', sans-serif`; remove Silkscreen's rule, `Silkscreen-Regular.ttf` and `OFL-Silkscreen.txt`; update `ui-build.test.ts` (Jua and its license byte for byte, no Silkscreen file); README font table
   - _Requirements: 5, 12.3, 12.5_
+  - Result (2026-11-13): downloaded with the builder's OK from `https://raw.githubusercontent.com/google/fonts/main/ofl/jua/` (2.1 MB); `METADATA.pb` (not kept) says `license: "OFL"`; `OFL-Jua.txt` reads `Copyright 2018 The Jua Project Authors` and `SIL OPEN FONT LICENSE Version 1.1`. SHA-256: `Jua-Regular.ttf` `769677ae…8279f898`, `OFL-Jua.txt` `44a7c6e4…f2773e3c`. Jua lacks `♪ ▶ ┗ ▼ ▲ ×` (Nanum Gothic draws them through the font stack) and `▸ ✓ ✎` (in neither font; the system draws them). Recorded in design "Fonts". Silkscreen and its license removed; `ui-build.test.ts` checks the exact font folder and the title stack.
 
 - [ ] 3. Core: theme and phrase strings
   - [ ] 3.1 `src/core/theme.ts` (`THEMES`, `ThemeId`, `DEFAULT_THEME`, `THEME_NAMES`, `isTheme`, `parseTheme`); `PublicSettings.theme`

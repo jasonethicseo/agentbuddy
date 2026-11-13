@@ -148,7 +148,7 @@ Bundled with the UI (in `src/ui/public/fonts/`, with their license files):
 | Font | Use | License |
 |---|---|---|
 | [Nanum Gothic](https://fonts.google.com/specimen/Nanum+Gothic) (NHN Corporation) | all text, including Korean | SIL Open Font License 1.1, `OFL-NanumGothic.txt` |
-| [Silkscreen](https://fonts.google.com/specimen/Silkscreen) (The Silkscreen Project Authors) | titles | SIL Open Font License 1.1, `OFL-Silkscreen.txt` |
+| [Jua](https://fonts.google.com/specimen/Jua) (The Jua Project Authors) | titles, names, tabs, buttons | SIL Open Font License 1.1, `OFL-Jua.txt` |
 
 ## License
 

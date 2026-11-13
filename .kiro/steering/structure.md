@@ -55,7 +55,7 @@ inclusion: always
 │  │  ├─ model/        pure view models: list, chrome, inbox, me
 │  │  ├─ screens/      buddy list, "me" row, inbox, settings, message pop-up
 │  │  ├─ sound.ts      Web Audio "ding"
-│  │  ├─ public/fonts/ Nanum Gothic and Silkscreen with their OFL licenses
+│  │  ├─ public/fonts/ Nanum Gothic and Jua with their OFL licenses
 │  │  └─ styles/       tokens.css (the only hex colors), fonts, icons, main, popup
 │  └─ setup/           (later spec)
 │     └─ snippets.ts   prints hook snippets for Kiro, Claude Code, Codex

@@ -7,8 +7,8 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '../..');
-const FONTS = ['NanumGothic-Regular.ttf', 'NanumGothic-Bold.ttf', 'NanumGothic-ExtraBold.ttf', 'Silkscreen-Regular.ttf'];
-const LICENSES = ['OFL-NanumGothic.txt', 'OFL-Silkscreen.txt'];
+const FONTS = ['NanumGothic-Regular.ttf', 'NanumGothic-Bold.ttf', 'NanumGothic-ExtraBold.ttf', 'Jua-Regular.ttf'];
+const LICENSES = ['OFL-NanumGothic.txt', 'OFL-Jua.txt'];
 /** XML namespace names are identifiers, never fetched. */
 const ALLOWED_URLS = new Set(['http://www.w3.org/2000/svg']);
 let out: string;
@@ -52,5 +52,14 @@ describe('built UI', () => {
     const css = files(out).filter((f) => f.endsWith('.css')).map((f) => readFileSync(f, 'utf8')).join('\n');
     const srcs = [...css.matchAll(/@font-face\s*\{[^}]*?src:\s*url\(["']?([^"')]+)["']?\)/g)].map((m) => m[1]);
     expect(srcs.sort()).toEqual(FONTS.map((f) => `/fonts/${f}`).sort());
+  });
+
+  it('ships exactly the bundled fonts and licenses, and no Silkscreen (themes Requirement 5.2)', () => {
+    expect(readdirSync(join(out, 'fonts')).sort()).toEqual([...FONTS, ...LICENSES].sort());
+  });
+
+  it('titles use Jua, then Nanum Gothic for the characters Jua lacks (themes task 2.2)', () => {
+    const css = readFileSync(join(ROOT, 'src/ui/styles/fonts.css'), 'utf8');
+    expect(css).toMatch(/--font-title:\s*'Jua',\s*'Nanum Gothic',\s*sans-serif;/);
   });
 });
