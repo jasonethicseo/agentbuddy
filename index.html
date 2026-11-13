@@ -7,23 +7,24 @@
   </head>
   <body>
     <div class="window">
-      <header class="titlebar">
+      <header class="titlebar gloss">
         <span class="tb-sprite" aria-hidden="true"></span>
         <span class="app-title">AgentBuddy<span class="title-mark" aria-hidden="true"></span></span>
         <button type="button" class="tb-btn tb-pin" aria-label="Pin on top" aria-pressed="true">▲</button>
         <button type="button" class="tb-btn tb-min" aria-label="Minimize">_</button>
         <button type="button" class="tb-btn tb-close" aria-label="Close to menu bar">×</button>
       </header>
+      <div class="toolbar" role="toolbar" aria-label="Screens">
+        <button type="button" class="tool raised" data-tool="list" data-focus="tool:list"><span class="tool-icon"></span><span class="tool-label">Buddies</span></button>
+        <button type="button" class="tool raised" data-tool="inbox" data-focus="tool:inbox"><span class="tool-icon"></span><span class="tool-label">Inbox</span><span class="tool-count" hidden></span></button>
+        <button type="button" class="tool raised" data-tool="settings" data-focus="tool:settings"><span class="tool-icon"></span><span class="tool-label">Settings</span></button>
+        <button type="button" class="tool raised" data-tool="skin" data-focus="tool:skin"><span class="tool-icon"></span><span class="tool-label">Skin</span></button>
+      </div>
       <div class="me-row" hidden></div>
       <div class="alert-strip" role="status" hidden></div>
-      <nav class="tabs" role="tablist" aria-label="Screens">
-        <button type="button" class="tab" role="tab" data-tab="list" aria-selected="true">Buddies</button>
-        <button type="button" class="tab" role="tab" data-tab="inbox" aria-selected="false">Inbox</button>
-        <button type="button" class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
-      </nav>
-      <main class="screen screen-list" role="tabpanel" aria-label="Buddies"></main>
-      <section class="screen screen-inbox" role="tabpanel" aria-label="Inbox" hidden></section>
-      <section class="screen screen-settings" role="tabpanel" aria-label="Settings" hidden></section>
+      <main class="screen screen-list" aria-label="Buddies"></main>
+      <section class="screen screen-inbox" aria-label="Inbox" hidden></section>
+      <section class="screen screen-settings" aria-label="Settings" hidden></section>
       <footer class="statusbar"></footer>
     </div>
     <script type="module" src="/src/ui/main.ts"></script>

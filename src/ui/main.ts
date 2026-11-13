@@ -17,6 +17,7 @@ import type { Tab } from './model/chrome';
 import { inboxHeader, inboxRows } from './model/inbox';
 import { meView } from './model/me';
 import { buildGroups } from './model/list';
+import { skinFocusId } from './model/toolbar';
 import type { Clock } from './model/list';
 import { renderInbox } from './screens/inbox';
 import { renderList } from './screens/list';
@@ -78,12 +79,23 @@ function render(): void {
   });
 }
 
+/** Opens a screen and, when asked, moves focus to one of its controls by its fixed `data-focus` id. */
+function openScreen(t: Tab, focusId?: string): void {
+  tab = t;
+  render();
+  if (focusId === undefined) return;
+  const target = [...document.querySelectorAll<HTMLElement>('[data-focus]')].find((e) => e.dataset['focus'] === focusId);
+  target?.scrollIntoView({ block: 'nearest' });
+  target?.focus();
+}
+/** `Skin`: Settings at the Skin group, focus on the checked radio (retro-skin Requirement 6.4). */
+const openSkin = () => {
+  if (snap !== null) openScreen('settings', skinFocusId(snap.settings.theme));
+};
 setupChrome(
   {
-    setTab: (t) => {
-      tab = t;
-      render();
-    },
+    setTab: (t) => openScreen(t),
+    openSkin,
     pin: (on) => bridge?.setSetting('alwaysOnTop', on),
     windowAction: (action) => bridge?.windowAction(action),
   },

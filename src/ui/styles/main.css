@@ -14,23 +14,30 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); out
 }
 body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 
-/* Title bar */
-.titlebar {
-  display: flex; align-items: center; gap: 8px; padding: 7px 10px; color: var(--title-text);
-  background: linear-gradient(90deg, var(--title-from) 0%, var(--title-to) 100%); border-bottom: 2px solid var(--title-line);
-  -webkit-app-region: drag; user-select: none;
-}
+/* Title bar: the gloss material (materials.css), from MainBot2000 / MainCute2000 (retro-skin Requirement 5). */
+.titlebar { display: flex; align-items: center; gap: 6px; padding: 4px 5px 4px 7px; -webkit-app-region: drag; user-select: none; }
 .tb-sprite { display: flex; }
-.app-title { flex-grow: 1; font-family: var(--font-text); font-size: 17px; }
-.title-mark { margin-left: 4px; color: var(--title-mark-color); }
-.title-mark::before { content: var(--title-mark); }
+.app-title { flex-grow: 1; display: flex; align-items: center; gap: 4px; }
+.title-mark { display: flex; }
 .tb-btn {
-  -webkit-app-region: no-drag; width: 22px; height: 22px; padding: 0; font-size: 11px; line-height: 1; cursor: pointer;
-  color: var(--tbtn-glyph); background: var(--tbtn-bg); border: 2px solid var(--tbtn-line); border-radius: var(--tbtn-radius);
+  -webkit-app-region: no-drag; width: 19px; height: 17px; padding: 0; font-size: 11px; line-height: 1; cursor: pointer; text-shadow: none;
+  color: var(--tbtn-glyph); background: linear-gradient(var(--tbtn-from), var(--tbtn-to)); border: 1px solid var(--tbtn-line); border-radius: 3px;
 }
-.tb-pin { font-size: 10px; }
+.tb-pin { font-size: 9px; }
 .tb-pin[aria-pressed='false'] { opacity: 0.6; }
-.tb-close { font-weight: 700; color: var(--on-fill); background: var(--close-bg); border-color: var(--close-line); }
+.tb-close { font-weight: 700; color: var(--close-glyph); background: linear-gradient(var(--close-from), var(--close-to)); }
+
+/* Toolbar: four raised buttons, icon above label (retro-skin Requirement 6.1). */
+.toolbar { display: flex; gap: 2px; padding: 3px 3px 2px; background: var(--toolbar-bg); border-bottom: 1px solid var(--toolbar-line); }
+.tool {
+  position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 3px;
+  font-family: var(--font-small); font-size: 10px; color: var(--toolbar-text); cursor: pointer;
+}
+.tool-icon { display: flex; }
+.tool-count {
+  position: absolute; top: -2px; right: 6px; padding: 0 3px; font-family: var(--font-small); font-size: 10px; line-height: 11px;
+  color: var(--count-text); background: var(--count-bg); border: 1px solid var(--count-line);
+}
 
 /* Alert strip */
 .alert-strip {
@@ -39,18 +46,6 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
   border: 2px dashed var(--alert-strip-line); border-radius: var(--alert-strip-radius);
 }
 .alert-mark::before { content: var(--alert-mark); }
-
-/* Tabs: separate rounded buttons */
-.tabs { display: flex; gap: 6px; padding: 0 8px; }
-.tab {
-  padding: 5px 12px; font-family: var(--font-text); font-size: 13px; cursor: pointer;
-  color: var(--group-text); background: var(--group-bg); border: 2px solid transparent; border-radius: var(--tab-radius);
-}
-.tab[aria-selected='true'] { color: var(--tab-active-text); background: var(--tab-active-bg); border-color: var(--tab-active-line); }
-.count-badge {
-  display: inline-block; min-width: 16px; padding: 0 4px; box-sizing: border-box; text-align: center;
-  font-family: var(--font-text); font-size: 10px; font-weight: 800; color: var(--on-fill); background: var(--count-bg); border-radius: var(--count-radius);
-}
 
 .screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 
