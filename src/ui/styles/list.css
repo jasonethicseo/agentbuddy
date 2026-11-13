@@ -107,3 +107,18 @@ button.buddy-main, button.session-main { cursor: pointer; }
 .session-age { flex-shrink: 0; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
 .more { padding: 2px 4px 3px 52px; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
 .more-toggle { padding: 0; font: inherit; color: var(--text-2); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
+/* TIP banner (retro-skin Requirement 9.9): 44 px, 2 px stripes, mascot, headline, one body line, the ▶ button. */
+.banner {
+  flex-shrink: 0; display: flex; align-items: center; gap: 8px; box-sizing: border-box; height: 44px; padding: 0 8px;
+  background: repeating-linear-gradient(90deg, var(--banner-1) 0 2px, var(--banner-2) 2px 4px); border: 1px solid var(--banner-line);
+}
+.banner-main {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: 1 1 auto; min-width: 0; padding: 0;
+  text-align: left; white-space: nowrap; cursor: pointer; background: transparent; border: 0;
+}
+.banner-head { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--banner-head); }
+.banner-body { display: flex; align-items: center; gap: 0; max-width: 100%; overflow: hidden; white-space: pre; font-family: var(--font-small); font-size: 10px; color: var(--banner-body); }
+.banner-next {
+  flex-shrink: 0; width: 20px; height: 20px; padding: 0; font-size: 10px; cursor: pointer; color: var(--focus-on-dark); background: var(--banner-btn-bg);
+  border: 1px solid; border-color: var(--bevel-light) var(--banner-btn-dark) var(--banner-btn-dark) var(--bevel-light);
+}

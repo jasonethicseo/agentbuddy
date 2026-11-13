@@ -9,9 +9,13 @@ import './styles/list.css';
 import './styles/inbox.css';
 import './styles/settings.css';
 import type { AppSnapshot } from '../core/snapshot';
+import { dayNumber, keepTip, nextTip, startTip } from '../core/tips';
+import type { TipId } from '../core/tips';
 import { appBridge, browserSource } from './bridge';
 import { renderChrome, setupChrome } from './chrome';
 import { keepFocus } from './dom';
+import { bannerView, tipContext } from './model/banner';
+import type { BannerVM } from './model/banner';
 import { connections } from './model/chrome';
 import type { Tab } from './model/chrome';
 import { inboxHeader, inboxRows } from './model/inbox';
@@ -19,6 +23,7 @@ import { meView } from './model/me';
 import { buildGroups } from './model/list';
 import { skinFocusId } from './model/toolbar';
 import type { Clock } from './model/list';
+import { renderBanner } from './screens/banner';
 import { renderInbox } from './screens/inbox';
 import { renderList } from './screens/list';
 import { renderMe } from './screens/me';
@@ -39,6 +44,8 @@ let notice: { text: string; timer: ReturnType<typeof setTimeout> } | undefined;
 const showMore = new Set<string>();
 /** The buddy row clicked last: the selected row while no buddy row has focus (retro-skin Requirement 7.6). Not stored. */
 let selected: string | null = null;
+/** The shown tip: picked from the date on the first app snapshot, then changed only by the user (retro-skin Requirement 9). */
+let tip: TipId | null = null;
 /** Browser only: groups toggled locally, since nothing is saved there. */
 const localGroups = new Set<string>();
 
@@ -81,6 +88,7 @@ function render(): void {
       },
     });
     if (bridge === null) return;
+    renderBanner($('.banner'), s.settings.theme, bannerView(s, tab, tip), { run: runTip, next: showNextTip });
     renderInbox($('.screen-inbox'), s.settings.theme, inboxHeader(s.inbox), inboxRows(s.inbox, s.settings.hideText, c), {
       click: (session) => bridge.click('inbox', session),
       ackAll: () => bridge.ackAll(),
@@ -105,6 +113,19 @@ function openScreen(t: Tab, focusId?: string): void {
 const openSkin = () => {
   if (snap !== null) openScreen('settings', skinFocusId(snap.settings.theme));
 };
+/** `▶`, or a tip without an action: the next tip that applies (Requirement 9.6). */
+function showNextTip(): void {
+  if (snap === null || tip === null) return;
+  tip = nextTip(tip, tipContext(snap));
+  render();
+}
+/** A click on the banner: only screen changes or the next tip; nothing goes to the main process (Requirement 9.10). */
+function runTip(vm: BannerVM): void {
+  if (vm.action === 'skin') openSkin();
+  else if (vm.action === 'sound') openScreen('settings', 'set:sound');
+  else if (vm.action === 'inbox') openScreen('inbox');
+  else showNextTip();
+}
 setupChrome(
   {
     setTab: (t) => openScreen(t),
@@ -117,6 +138,11 @@ setupChrome(
 
 const onSnapshot = (s: AppSnapshot) => {
   snap = s;
+  if (s.mode !== 'browser') {
+    // The first app snapshot picks the tip from the local date; later ones keep it while it applies (S15, S18).
+    const now = new Date();
+    tip = tip === null ? startTip(dayNumber(now.getFullYear(), now.getMonth() + 1, now.getDate()), tipContext(s)) : keepTip(tip, tipContext(s));
+  }
   applyTheme(s.settings.theme);
   render();
 };
