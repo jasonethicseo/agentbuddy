@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AgentBuddy theme picker</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&amp;family=Jua&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1A5CC0}a:hover{color:#173A78}
+</style>
+</helmet>
+<div style="width: 320px; height: 260px; box-sizing: border-box; padding: 12px; display: flex; flex-direction: column; gap: 10px; background-color: #EEF6FF; background-image: linear-gradient(#DCEBFF 1px, transparent 1px), linear-gradient(90deg, #DCEBFF 1px, transparent 1px); background-size: 16px 16px; font-family: 'Nanum Gothic', sans-serif; font-size: 12px; color: #1B2B4F">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #FFFFFF; border: 1px solid #CFE3FF; border-radius: 12px; box-shadow: 0 3px 0 #D3E4F8">
+<span style="font-family: Jua, sans-serif; font-size: 15px; color: #2A4C8A">Theme</span>
+<div role="radiogroup" aria-label="Theme" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px; border: 2px solid #CFE3FF; border-radius: 12px; background: #FFFFFF; color: #2A4C8A; font-family: inherit; font-size: 12px">
+<span style="width: 100%; height: 64px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #FF9EC4; border-radius: 10px; overflow: hidden; background-color: #FFF7FB; background-image: radial-gradient(#FFDCEB 1.2px, transparent 1.4px); background-size: 8px 8px">
+<span style="height: 12px; background: linear-gradient(90deg, #FFC2DC, #D9C2FF)"></span>
+<span style="display: flex; align-items: center; gap: 4px; padding: 6px">
+<svg width="22" height="22" viewBox="0 0 12 12" aria-hidden="true"><rect x="3" y="0" width="6" height="1" fill="#FFC9A8"/><rect x="2" y="1" width="8" height="1" fill="#FFC9A8"/><rect x="1" y="2" width="10" height="7" fill="#FFC9A8"/><rect x="2" y="9" width="8" height="1" fill="#FFC9A8"/><rect x="3" y="10" width="6" height="1" fill="#FFC9A8"/><rect x="3" y="5" width="1" height="1" fill="#3B2A4A"/><rect x="4" y="4" width="1" height="1" fill="#3B2A4A"/><rect x="5" y="5" width="1" height="1" fill="#3B2A4A"/><rect x="6" y="5" width="1" height="1" fill="#3B2A4A"/><rect x="7" y="4" width="1" height="1" fill="#3B2A4A"/><rect x="8" y="5" width="1" height="1" fill="#3B2A4A"/><rect x="2" y="7" width="1" height="1" fill="#FF8FB1"/><rect x="9" y="7" width="1" height="1" fill="#FF8FB1"/></svg>
+<span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #F3C6DA"></span>
+</span>
+</span>
+<span style="font-family: Jua, sans-serif; font-size: 13px">Strawberry Milk</span>
+</button>
+<button type="button" role="radio" aria-checked="true" style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px; border: 2px solid #3D8BFF; border-radius: 12px; background: #EAF4FF; color: #173A78; font-family: inherit; font-size: 12px; box-shadow: 0 0 0 3px #BFE0FF">
+<span style="width: 100%; height: 64px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #8EC2FF; border-radius: 10px; overflow: hidden; background-color: #EEF6FF; background-image: linear-gradient(#DCEBFF 1px, transparent 1px), linear-gradient(90deg, #DCEBFF 1px, transparent 1px); background-size: 8px 8px">
+<span style="height: 12px; background: linear-gradient(90deg, #A9D3FF, #CFE8FF)"></span>
+<span style="display: flex; align-items: center; gap: 4px; padding: 6px">
+<svg width="22" height="22" viewBox="0 0 12 12" aria-hidden="true"><rect x="6" y="0" width="1" height="1" fill="#5FE3A1"/><rect x="6" y="1" width="1" height="1" fill="#6C8CFF"/><rect x="2" y="2" width="8" height="1" fill="#6C8CFF"/><rect x="1" y="3" width="10" height="4" fill="#6C8CFF"/><rect x="2" y="7" width="8" height="1" fill="#6C8CFF"/><rect x="0" y="4" width="1" height="2" fill="#7DF9FF"/><rect x="11" y="4" width="1" height="2" fill="#7DF9FF"/><rect x="2" y="3" width="8" height="4" fill="#1E2A4D"/><rect x="3" y="5" width="1" height="1" fill="#7DF9FF"/><rect x="4" y="4" width="1" height="1" fill="#7DF9FF"/><rect x="5" y="5" width="1" height="1" fill="#7DF9FF"/><rect x="6" y="5" width="1" height="1" fill="#7DF9FF"/><rect x="7" y="4" width="1" height="1" fill="#7DF9FF"/><rect x="8" y="5" width="1" height="1" fill="#7DF9FF"/><rect x="3" y="8" width="6" height="3" fill="#6C8CFF"/><rect x="3" y="11" width="2" height="1" fill="#6C8CFF"/><rect x="7" y="11" width="2" height="1" fill="#6C8CFF"/></svg>
+<span style="flex-grow: 1; height: 6px; border-radius: 1px; background: repeating-linear-gradient(90deg, #36B9F0 0 6px, #F2F8FF 6px 8px)"></span>
+</span>
+</span>
+<span style="font-family: Jua, sans-serif; font-size: 13px">Blue Bot ✓</span>
+</button>
+</div>
+<span style="color: #4E6290">Changes the window and the popups at once. Saved on this computer only.</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":320,"height":260}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

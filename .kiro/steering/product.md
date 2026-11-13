@@ -54,7 +54,7 @@ The buddy list was designed to answer "who is around and what are they doing rig
 - Agents other than Kiro, Claude Code and Codex
 
 ## Language and tone
-- UI text in English for international judges.
+- UI text in English for international judges. One exception: the pop-up title starts with the Korean `띠링!` ("ding"), as the design shows; screen readers read it as `Ding!` (themes spec, 2026-11-13).
 - Status messages carry 2000s messenger flavor: `♪`, `~`, `T_T`, `brb`, short and playful.
 - The look is an original design inspired by 2000s messengers. No logos, names, icons or screens copied from any real messenger product.
 
