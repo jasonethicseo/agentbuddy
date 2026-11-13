@@ -59,3 +59,13 @@ describe('inbox (Requirement 12.1)', () => {
     expect(inbox).toContain('const row = button(\'inbox-row\', \'\', () => a.click(r.session), `i:${i}:${r.session}`);');
   });
 });
+describe('layout fix F2 (two scrollbars after opening the offline group)', () => {
+  const mainCss = read('src/ui/styles/main.css');
+  it('the window and the screens hold the absolutely placed screen-reader texts, so the page never scrolls', () => {
+    expect(mainCss).toMatch(/\.window \{\n  position: relative;/);
+    expect(mainCss).toContain('.screen { position: relative; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }');
+  });
+  it('long buddy names shrink with an ellipsis instead of widening the list', () => {
+    expect(css).toMatch(/\.buddy-name \{ flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;/);
+  });
+});

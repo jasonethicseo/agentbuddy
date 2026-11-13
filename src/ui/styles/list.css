@@ -43,7 +43,7 @@
 }
 button.buddy-main, button.session-main { cursor: pointer; }
 .buddy-main { gap: 5px; padding: 2px 4px 2px 16px; }
-.buddy-name { font-weight: 700; }
+.buddy-name { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 700; } /* long offline names shrink (fix F2) */
 .buddy-count { color: var(--text-2); }
 .buddy-status { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
 /* The phrase first, bold, in its state color (design.md "Status phrases"). */

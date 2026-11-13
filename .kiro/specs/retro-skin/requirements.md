@@ -289,3 +289,12 @@ Everything else of MA and TH stays: what pings, what acknowledges, what a click 
 | S18 | Day number | Days from 1970-01-01 to the local calendar date. |
 | S19 | After a skin switch, S15 moved the banner to the other skin tip, which asks to switch back | On a local day the user changed the skin, both skin tips are skipped. The day is kept in memory only, never stored; a restart forgets it (builder, 2026-11-13). |
 
+## Fixes after the spec (builder, 2026-11-13)
+
+These two change behavior outside B1–B4; the builder found them after task 8 and chose the fixes.
+
+| # | Found | Cause | Fix |
+|---|---|---|---|
+| F1 | A click on a Kiro ping opened a new Kiro window instead of the session's open one | A jump ran `open -b dev.kiro.desktop <session folder>` (MA 12.7, Q1 (b)). The builder's Kiro window is a two-folder workspace (`workspace.json` lists `agentbuddy` and `agentbuddy-themes`), so no window had that folder as its only folder, and Kiro opened one (as in O3: "folder not open → a new window"). Read from Kiro's `storage.json` and the workspace file, read-only; not reproduced by clicking, which would open windows. | The builder chose (a): no jump passes a folder. `planJump` returns only the bundle ID; the `isDirectory` port and the folder branch are gone. With several Kiro windows, Kiro comes forward with its last used window. Replaces MA 12.7 and decision Q1 (b). |
+| F2 | Opening the `offline` group gave two scrollbars on the right and narrowed the screen; the outer one scrolled to blank space | The screen-reader texts (`.sr-only`, absolutely placed) had no positioned ancestor, so they were placed against the page and, below a grown list, made the page itself scroll (measured in a hidden window: 140 px of page scroll, a 15 px page scrollbar). Long offline buddy names (`Kiro @ <folder>`) also overflowed the list sideways by 26 px. | `.window` and `.screen` are `position: relative`; screens hide horizontal overflow; buddy names shrink with an ellipsis. Measured again: no page scroll and no sideways overflow at 420 and 700 px; the list alone scrolls when it is taller than the window. |
+

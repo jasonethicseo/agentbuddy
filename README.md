@@ -45,7 +45,7 @@ npm run app       # builds, then starts the app from source (Electron)
 - **Window and menu bar.** A 320 px window in the top-right corner, always on top by default (the ▲ pin button or Settings). A toolbar under the title bar switches between Buddies, Inbox and Settings, and its Skin button opens the Skin group; from the keyboard it is one Tab stop, and ←/→, Home and End move between its buttons. Closing it keeps the app in the menu bar; the bubble icon there shows a count of sessions waiting for your OK plus finished turns you have not looked at, and its menu shows the list or the inbox, or quits. There is no Dock icon. Cmd+Q also quits.
 - **Pings.** When a session finishes a turn or needs your OK, the app plays a synthesized ding and slides up a pop-up in the bottom-right corner. Pop-ups never take focus, close by themselves after 6 s and stack upward. `Go there ▶` (or a click on the card) brings forward the app the session runs in, × closes and marks it read, `Later` only closes. States the app finds when it connects never ping.
 - **Inbox.** Every ping of the day, newest first, with the ones you have not looked at marked. A click goes there; `Mark all read` marks everything read.
-- **Jump.** A click on a buddy, a session, a pop-up or an inbox entry brings that agent's app forward with `/usr/bin/open -b <bundle ID>`, after `/usr/bin/lsappinfo` confirms it is running (it never starts an app). A Kiro session also passes its folder, so the right Kiro window comes forward. The bundle ID comes from the environment of the agent's hook process.
+- **Jump.** A click on a buddy, a session, a pop-up or an inbox entry brings that agent's app forward with `/usr/bin/open -b <bundle ID>`, after `/usr/bin/lsappinfo` confirms it is running (it never starts an app). No folder is passed, so a click never opens a new window. The bundle ID comes from the environment of the agent's hook process.
 - **Hiding.** × on a session (or on a buddy with one visible session) hides that row until the session does something new.
 - **"me" row.** Your own status message at the top of the list. It stays in the settings file and is never sent anywhere.
 - **TIP banner.** A small strip at the bottom of the buddy list with one built-in tip (nothing is downloaded). The first tip of the day follows the date; after that it changes only when you click it or its ▶ button. A click on a tip that points somewhere opens that place. Settings › Banner hides it.
@@ -112,7 +112,7 @@ Old daily logs and inbox files are not deleted yet. Run from source, the app is 
 - After a restart, progress comes back only if the last Kiro task run is within the last 24 hours.
 - The app's first list after every connection is a baseline: a turn that finishes while the app is closed or reconnecting gives no ping and no count.
 - An attached relay built before the desktop app sends no launcher and shows ended sessions as `offline`; a click then says `can't tell which app this session is in`.
-- A Kiro folder jump opens a new Kiro window if that project's window was closed. Right after a new Kiro window opened, it once brought the wrong window forward.
+- With several Kiro windows open, a jump brings Kiro forward with the window used last, which may not be the session's own window.
 - Inside `tmux`, the bundle ID is that of the app that started the tmux server.
 - The ding and pop-ups do not follow macOS Focus modes; turn them off in Settings.
 - At midnight, earlier entries leave the inbox and stop counting.

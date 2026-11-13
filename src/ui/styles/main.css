@@ -6,8 +6,10 @@ button { font: inherit; color: inherit; margin: 0; }
 
 /* The window: 1 px frame, 1 px inner line, 7 px top corners and square bottom ones, flat background
    (retro-skin Requirements 2.4, 2.7). The page draws them on the transparent window (themes O5). */
+/* `position: relative` here and on `.screen`: the containing block of the absolutely placed screen-reader texts
+   (`.sr-only`); without one they were placed against the page and made it scroll once the list grew (fix F2). */
 .window {
-  box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  position: relative; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
   font-family: var(--font-text); font-size: 12px; color: var(--text); background: var(--bg);
   border: 1px solid var(--frame); border-radius: var(--radius-window) var(--radius-window) 0 0;
   box-shadow: inset 0 0 0 1px var(--frame-inner);
@@ -47,7 +49,7 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 }
 .alert-mark::before { content: var(--alert-mark); }
 
-.screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.screen { position: relative; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
 
 /* Status bar: sunken panels in Galmuri9 10 px (retro-skin Requirement 8). */
 .statusbar { display: flex; gap: 2px; padding: 4px 5px 5px; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
