@@ -1,6 +1,6 @@
-// Blue Bot sprites (themes Requirement 6.2): every rectangle copied, in order, from
-// docs/mockups/FacesBot.dc.html (the seven faces) and MainBot.dc.html (the 20 px title icon and the
-// 34 px `me`), with each mockup color replaced by its role. tests/unit/sprites.test.ts compares them with the mockups.
+// Blue Bot sprites (themes Requirement 6.2, retro-skin Requirement 4.1): every rectangle copied, in order, from
+// docs/mockups/FacesBot.dc.html (the seven faces) and MainBot2000.dc.html (the 16 px title icon, the 36 px `me`
+// and the 28 px banner mascot), with each mockup color replaced by its role. tests/unit/sprites.test.ts compares them with the mockups.
 import { px } from './types';
 import type { SpriteModule } from './types';
 
@@ -130,15 +130,24 @@ export const sprites: SpriteModule = {
     ],
   },
   title: [
-    px(6, 0, 1, 1, 'title-ink'),
+    px(6, 0, 1, 1, 'ink'),
     px(6, 1, 1, 1, 'title-body'),
     px(2, 2, 8, 1, 'title-body'),
     px(1, 3, 10, 4, 'title-body'),
     px(2, 7, 8, 1, 'title-body'),
+    px(0, 4, 1, 2, 'ink'),
+    px(11, 4, 1, 2, 'ink'),
     px(2, 3, 8, 4, 'visor'),
-    px(4, 4, 1, 2, 'title-ink'),
-    px(7, 4, 1, 2, 'title-ink'),
+    px(3, 5, 1, 1, 'ink'),
+    px(4, 4, 1, 1, 'ink'),
+    px(5, 5, 1, 1, 'ink'),
+    px(6, 5, 1, 1, 'ink'),
+    px(7, 4, 1, 1, 'ink'),
+    px(8, 5, 1, 1, 'ink'),
     px(3, 8, 6, 3, 'title-body'),
+    px(5, 9, 2, 1, 'ink'),
+    px(3, 11, 2, 1, 'title-body'),
+    px(7, 11, 2, 1, 'title-body'),
   ],
   me: [
     px(6, 0, 1, 1, 'ink'),
@@ -156,9 +165,25 @@ export const sprites: SpriteModule = {
     px(7, 4, 1, 1, 'ink'),
     px(8, 5, 1, 1, 'ink'),
     px(3, 8, 6, 3, 'body'),
-    px(2, 9, 1, 1, 'body'),
-    px(9, 9, 1, 1, 'body'),
     px(5, 9, 2, 1, 'ink'),
+    px(3, 11, 2, 1, 'body'),
+    px(7, 11, 2, 1, 'body'),
+  ],
+  banner: [
+    px(6, 0, 1, 1, 'acc-done'),
+    px(6, 1, 1, 1, 'body'),
+    px(2, 2, 8, 1, 'body'),
+    px(1, 3, 10, 4, 'body'),
+    px(2, 7, 8, 1, 'body'),
+    px(0, 4, 1, 2, 'acc-done'),
+    px(11, 4, 1, 2, 'acc-done'),
+    px(2, 3, 8, 4, 'visor'),
+    px(4, 3, 1, 3, 'acc-done'),
+    px(3, 4, 3, 1, 'acc-done'),
+    px(7, 3, 1, 3, 'acc-done'),
+    px(6, 4, 3, 1, 'acc-done'),
+    px(3, 8, 6, 3, 'body'),
+    px(5, 9, 2, 1, 'acc-done'),
     px(3, 11, 2, 1, 'body'),
     px(7, 11, 2, 1, 'body'),
   ],

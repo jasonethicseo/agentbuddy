@@ -1,4 +1,4 @@
-/* Sprites and badges (themes Requirement 6; design "Sprites"). Colors and glyphs come from themes.css. */
+/* Sprites, badges and pixel icons (themes Requirement 6; retro-skin Requirement 4). Colors and glyphs come from the skin tokens. */
 .sprite { position: relative; display: inline-block; flex-shrink: 0; line-height: 0; vertical-align: middle; }
 .sprite svg { display: block; }
 
@@ -17,25 +17,30 @@
 .px-grey-visor { fill: var(--px-grey-visor); }
 .px-grey-ink { fill: var(--px-grey-ink); }
 .px-title-body { fill: var(--px-title-body); }
-.px-title-ink { fill: var(--px-title-ink); }
-.px-title-cheek { fill: var(--px-title-cheek); }
-.px-me-cheek { fill: var(--px-me-cheek); }
+.px-hair { fill: var(--px-hair); }
+.px-hair-hi { fill: var(--px-hair-hi); }
+.px-clip { fill: var(--px-clip); }
+.px-grey-hair { fill: var(--px-grey-hair); }
+.px-grey-hair-hi { fill: var(--px-grey-hair-hi); }
 .px-body { fill: var(--px-body); }
 .sprite[data-agent="claude"] { --px-body: var(--agent-claude); }
 .sprite[data-agent="kiro"] { --px-body: var(--agent-kiro); }
 .sprite[data-agent="codex"] { --px-body: var(--agent-codex); }
 .sprite[data-agent="me"] { --px-body: var(--agent-me); }
+.sprite[data-agent="banner"] { --px-body: var(--agent-banner); }
 
-/* The state badge: an HTML element over the sprite, so its glyph is a token (decision D3). */
+/* The state badge: an HTML element over the sprite, so its glyph is a token (decision D3); 11 px on rows and 13 px on
+   pop-ups, square in Blue Bot and round in Strawberry Milk, a white border and a frame-colored outline (retro-skin
+   Requirement 4.4). Regular weight, because Galmuri11 Bold has no ▸; `✓` is the pixel check (Requirement 4.5). */
 .badge {
   position: absolute; display: flex; align-items: center; justify-content: center; box-sizing: border-box;
-  border: 1.5px solid var(--badge-line); border-radius: var(--badge-radius);
-  background: var(--badge-fill); color: var(--on-fill);
-  font-family: var(--font-text); font-weight: 700; line-height: 1;
+  border: 1px solid var(--badge-line); outline: 1px solid var(--badge-outline); border-radius: var(--badge-radius);
+  background: var(--badge-fill); color: var(--badge-line);
+  font-family: var(--font-small); font-size: 10px; font-weight: 400; line-height: 1;
 }
 .badge::before { content: var(--badge-glyph); }
-.sprite[data-size="26"] .badge { width: 12px; height: 12px; right: -3px; bottom: -3px; font-size: 9px; }
-.sprite[data-size="44"] .badge { width: 18px; height: 18px; right: -4px; bottom: -4px; font-size: 13px; }
+.sprite[data-size="24"] .badge { width: 11px; height: 11px; right: -3px; bottom: -3px; }
+.sprite[data-size="36"] .badge { width: 13px; height: 13px; right: -3px; bottom: -3px; }
 .badge[data-state="WAITING_APPROVAL"] { --badge-fill: var(--st-wait); --badge-glyph: var(--badge-wait); }
 .badge[data-state="WORKING"] { --badge-fill: var(--st-work); --badge-glyph: var(--badge-work); }
 .badge[data-state="TURN_DONE"] { --badge-fill: var(--st-done); --badge-glyph: var(--badge-done); }
@@ -43,6 +48,20 @@
 .badge[data-state="IDLE"] { --badge-fill: var(--st-idle); --badge-glyph: var(--badge-idle); }
 .badge[data-state="ENDED"] { --badge-fill: var(--st-off); --badge-glyph: var(--badge-ended); }
 
+/* Pixel icons (sprites/icons.ts): `ink` is the text color; the other roles are skin tokens. */
+.icon { display: inline-block; flex-shrink: 0; vertical-align: middle; }
+.ic-ink { fill: currentColor; }
+.ic-tree-box { fill: var(--tree-box); }
+.ic-tree-box-bg { fill: var(--tree-box-bg); }
+.ic-berry-leaf { fill: var(--px-berry-leaf); }
+.ic-berry-red { fill: var(--px-berry-red); }
+.ic-berry-seed { fill: var(--px-berry-seed); }
+.ic-icon-1 { fill: var(--icon-1); }
+.ic-icon-2 { fill: var(--icon-2); }
+.ic-icon-paper { fill: var(--icon-paper); }
+.ic-icon-swatch-a { fill: var(--icon-swatch-a); }
+.ic-icon-swatch-b { fill: var(--icon-swatch-b); }
+.ic-icon-frame { fill: var(--icon-frame); }
 /* Text for screen readers only: the state name next to every sprite, `unread`, and the like. Both pages load this file. */
 .sr-only {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;

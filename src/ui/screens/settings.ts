@@ -39,7 +39,7 @@ function themeCard(current: ThemeId, a: SettingsActions): HTMLElement {
     mini.dataset['themePreview'] = tile.id;
     mini.setAttribute('aria-hidden', 'true');
     const row = el('span', 'theme-mini-row');
-    row.append(sprite(tile.id, 'claude', 'WORKING', 22), el('span', 'theme-mini-bar'));
+    row.append(sprite(tile.id, 'claude', 'WORKING', 16), el('span', 'theme-mini-bar'));
     mini.append(el('span', 'theme-mini-title'), row);
     const check = el('span', 'theme-check', ' ✓');
     check.setAttribute('aria-hidden', 'true');

@@ -129,9 +129,6 @@
   --px-grey-visor: transparent;
   --px-grey-ink: #6E6078;
   --px-title-body: #FFFFFF;
-  --px-title-ink: #5A2D6E;
-  --px-title-cheek: #FF8FB1;
-  --px-me-cheek: #FF6F9C;
   --me-bg: var(--card-bg);
   --me-line: var(--box-line);
   --me-line-width: var(--card-line-width);
@@ -232,4 +229,9 @@
   --px-berry-leaf: #2E9E4F;
   --px-berry-red: #E5466B;
   --px-berry-seed: #FFE6A8;
+  --px-hair: #8A5A44;
+  --px-hair-hi: #B07A5E;
+  --px-clip: #E5466B;
+  --px-grey-hair: #B9AEC4;
+  --px-grey-hair-hi: #CFC6D8;
 }

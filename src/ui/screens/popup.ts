@@ -56,7 +56,7 @@ function fill(c: PopupContent): void {
     head.setAttribute('aria-label', TITLES[c.state].label);
     $('.card-time').textContent = c.time;
     const theme = parseTheme(document.documentElement.dataset['theme']);
-    $('.card-icon').replaceChildren(...(c.agentId !== undefined ? stateSprite(theme, c.agentId, c.state, 44) : [el('span', 'sr-only', STATE_NAMES[c.state])]));
+    $('.card-icon').replaceChildren(...(c.agentId !== undefined ? stateSprite(theme, c.agentId, c.state, 36) : [el('span', 'sr-only', STATE_NAMES[c.state])]));
     $('.card-agent').textContent = c.agent;
     $('.card-at').textContent = c.folder === '' ? '' : `@ ${c.folder}`;
     $('.phrase').textContent = c.phrase;

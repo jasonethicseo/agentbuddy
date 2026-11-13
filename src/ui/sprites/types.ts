@@ -19,13 +19,15 @@ export type PixelRole =
   | 'grey-visor'
   | 'grey-ink'
   | 'title-body'
-  | 'title-ink'
-  | 'title-cheek'
-  | 'me-cheek';
+  | 'hair'
+  | 'hair-hi'
+  | 'clip'
+  | 'grey-hair'
+  | 'grey-hair-hi';
 
 export const PIXEL_ROLES: readonly PixelRole[] = [
   'body', 'ink', 'tear', 'cheek', 'visor', 'acc-wait', 'acc-work', 'acc-done', 'acc-stale', 'acc-idle', 'dim',
-  'grey-body', 'grey-visor', 'grey-ink', 'title-body', 'title-ink', 'title-cheek', 'me-cheek',
+  'grey-body', 'grey-visor', 'grey-ink', 'title-body', 'hair', 'hair-hi', 'clip', 'grey-hair', 'grey-hair-hi',
 ];
 
 /** One rectangle on the 12 × 12 grid. */
@@ -40,10 +42,12 @@ export interface Pixel {
 export interface SpriteModule {
   /** One face per displayed state; `body` pixels take the agent's color. */
   readonly faces: Readonly<Record<DisplayState, readonly Pixel[]>>;
-  /** The 20 px title-bar icon (no badge). */
+  /** The 16 px title-bar icon (no badge). */
   readonly title: readonly Pixel[];
-  /** The 34 px `me` sprite (no badge); its `body` takes `--agent-me`. */
+  /** The 36 px `me` sprite (no badge); its `body` takes `--agent-me`. */
   readonly me: readonly Pixel[];
+  /** The 28 px TIP banner mascot, star eyes (no badge); its `body` takes `--agent-banner` (retro-skin Requirement 9.9). */
+  readonly banner: readonly Pixel[];
 }
 
 /** A rectangle, in the mockups' attribute order. */

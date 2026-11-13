@@ -1,31 +1,36 @@
-// Builds a sprite and its state badge (themes Requirements 6.4–6.9; design "Sprites").
+// Builds a sprite and its state badge (themes Requirements 6.4–6.9; retro-skin Requirement 4; design "Sprites").
 // Only attributes and createElementNS; no colors here: sprites.css colors each role from themes.css.
 import type { AgentId } from '../../core/event';
 import type { DisplayState } from '../../core/state';
 import type { ThemeId } from '../../core/theme';
 import { sprites as blueBot } from './blue-bot';
+import { icon } from './icons';
 import { sprites as strawberryMilk } from './strawberry-milk';
 import type { Pixel, SpriteModule } from './types';
 
 export const SPRITES: Readonly<Record<ThemeId, SpriteModule>> = { 'blue-bot': blueBot, 'strawberry-milk': strawberryMilk };
 
-/** 16 session rows, 20 title bar, 22 Theme card tiles, 26 buddy and inbox rows, 34 `me`, 44 pop-ups. */
-export type SpriteSize = 16 | 20 | 22 | 26 | 34 | 44;
-export type SpriteWho = AgentId | 'me' | 'title';
+/** 12 session rows, 16 title bar and Skin tiles, 24 buddy and inbox rows, 28 TIP banner, 36 `me` and pop-ups. */
+export type SpriteSize = 12 | 16 | 24 | 28 | 36;
+export type SpriteWho = AgentId | 'me' | 'title' | 'banner';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
-/** The pixels of one sprite: a state face for an agent, else the title icon or `me`. */
+/** The pixels of one sprite: a state face for an agent, else the title icon, `me` or the banner mascot. */
 export function spritePixels(theme: ThemeId, who: SpriteWho, state: DisplayState | null): readonly Pixel[] {
   const m = SPRITES[theme];
   if (who === 'title') return m.title;
   if (who === 'me') return m.me;
+  if (who === 'banner') return m.banner;
   return m.faces[state ?? 'WORKING'];
 }
 
-/** A badge sits on agent sprites of 26 px and larger, for every state but OFFLINE (Requirement 6.5). */
+/**
+ * A badge sits on agent sprites of 24 px and larger, for every state but OFFLINE. In use that is exactly
+ * buddy rows (24), inbox rows (24) and pop-ups (36): never session rows (12) or Skin tiles (16) (retro-skin Requirement 4.4, S10).
+ */
 export function hasBadge(who: SpriteWho, state: DisplayState | null, size: SpriteSize): boolean {
-  return who !== 'me' && who !== 'title' && state !== null && state !== 'OFFLINE' && size >= 26;
+  return who !== 'me' && who !== 'title' && who !== 'banner' && state !== null && state !== 'OFFLINE' && size >= 24;
 }
 
 /** The state's name for screen readers, next to every sprite (messenger-app Requirement 6.13). */
@@ -74,6 +79,7 @@ export function sprite(theme: ThemeId, who: SpriteWho, state: DisplayState | nul
     const badge = document.createElement('span');
     badge.className = 'badge';
     badge.dataset['state'] = state!;
+    if (state === 'TURN_DONE') badge.append(icon('check', 7)); // Galmuri has no ✓ (retro-skin Requirement 4.5)
     wrap.append(badge);
   }
   return wrap;

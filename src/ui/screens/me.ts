@@ -25,7 +25,7 @@ function statusButton(root: HTMLElement, a: MeActions): HTMLButtonElement {
 }
 
 function draw(root: HTMLElement, a: MeActions): HTMLButtonElement {
-  const tile = sprite(shown!.theme, 'me', null, 34); // aria-hidden (Requirement 18.8)
+  const tile = sprite(shown!.theme, 'me', null, 36); // aria-hidden (Requirement 18.8)
   const text = el('div', 'me-text');
   const b = statusButton(root, a);
   text.append(el('span', 'me-name', 'me'), b);

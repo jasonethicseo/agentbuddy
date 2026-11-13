@@ -54,7 +54,7 @@ function sessionRow(theme: ThemeId, agent: BuddyVM['agent'], s: SessionVM, inter
   const tree = el('span', 'tree', s.tree);
   tree.setAttribute('aria-hidden', 'true');
   const main = rowMain('session-main', interactive, () => a.click('session', s.key), `s:${s.key}`);
-  main.append(...stateSprite(theme, agent, s.state, 16), el('span', 'session-name', s.name), ' ', sessionPhrase(s), ' ', el('span', 'session-age', s.age));
+  main.append(...stateSprite(theme, agent, s.state, 12), el('span', 'session-name', s.name), ' ', sessionPhrase(s), ' ', el('span', 'session-age', s.age));
   if (s.unread) main.append(el('span', 'sr-only', 'unread'));
   row.append(tree, main);
   if (s.canHide) {
@@ -102,7 +102,7 @@ function buddyBlock(theme: ThemeId, vm: BuddyVM, interactive: boolean, a: ListAc
   const line = el('div', 'buddy-line');
   const main = rowMain('buddy-main', interactive, () => a.click('buddy', vm.key), `b:${vm.key}`);
   if (vm.hover !== undefined) main.title = vm.hover;
-  main.append(...stateSprite(theme, vm.agent, vm.state, 26), el('span', 'buddy-name', vm.name));
+  main.append(...stateSprite(theme, vm.agent, vm.state, 24), el('span', 'buddy-name', vm.name));
   if (vm.count !== undefined) main.append(' ', el('span', 'buddy-count', `[${vm.count}]`));
   main.append(' ', statusSpan(vm));
   if (vm.progress !== undefined) main.append(el('span', 'progress-text', vm.progress.text));

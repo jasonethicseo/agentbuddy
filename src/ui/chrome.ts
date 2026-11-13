@@ -40,7 +40,7 @@ export function renderChrome(s: AppSnapshot, tab: Tab, notice: string | undefine
   const app = s.mode !== 'browser';
   if (titleTheme !== s.settings.theme) {
     titleTheme = s.settings.theme;
-    $('.tb-sprite').replaceChildren(sprite(titleTheme, 'title', null, 20));
+    $('.tb-sprite').replaceChildren(sprite(titleTheme, 'title', null, 16));
   }
   // Title bar: the pin button belongs to the Buddies tab; every button is app-only (Requirement 5.9).
   const pin = $('.tb-pin');

@@ -128,10 +128,7 @@
   --px-grey-body: #B7C3D9;
   --px-grey-visor: #8E9BB5;
   --px-grey-ink: #5E6C88;
-  --px-title-body: #3D8BFF;
-  --px-title-ink: #7DF9FF;
-  --px-title-cheek: transparent;
-  --px-me-cheek: transparent;
+  --px-title-body: #FFFFFF;
   --me-bg: var(--card-bg);
   --me-line: var(--box-line);
   --me-line-width: var(--card-line-width);
@@ -232,4 +229,9 @@
   --px-berry-leaf: transparent;
   --px-berry-red: transparent;
   --px-berry-seed: transparent;
+  --px-hair: transparent;
+  --px-hair-hi: transparent;
+  --px-clip: transparent;
+  --px-grey-hair: transparent;
+  --px-grey-hair-hi: transparent;
 }

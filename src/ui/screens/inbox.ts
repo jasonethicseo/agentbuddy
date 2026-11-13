@@ -32,7 +32,7 @@ export function renderInbox(
       side.append(mark, el('span', 'sr-only', 'unread'));
     }
     // A key of another form names no agent: no sprite, but the state is still given as text.
-    const icon = r.agentId !== undefined ? stateSprite(theme, r.agentId, r.state, 26) : [el('span', 'sr-only', STATE_NAMES[r.state])];
+    const icon = r.agentId !== undefined ? stateSprite(theme, r.agentId, r.state, 24) : [el('span', 'sr-only', STATE_NAMES[r.state])];
     row.append(...icon, text, side);
     list.append(row);
   });
