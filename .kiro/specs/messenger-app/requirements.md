@@ -364,12 +364,12 @@ It builds on the finished core-pipeline spec (`.kiro/specs/core-pipeline/`). Tha
 | A pop-up shown without activating the app or taking focus | observed in O4 run A: frontmost app unchanged, pop-up not focused | as designed |
 | Clicks reaching a pop-up that never takes focus | observed in O4 run B: the click arrived, the app was not activated | as designed |
 | `open -b` after a pop-up click, with another app in front | observed in task 8.5 run 3: KakaoTalk in front, a click on the pop-up, Kiro in front 1 s later | as designed |
-| Pop-ups over full-screen apps | UNVERIFIED (not tried) | task 11 |
+| Pop-ups over full-screen apps | confirmed by the builder in task 11 | as designed |
 | macOS notifications from Electron run from source | observed in O4 run A: `show()` failed with `UNErrorDomain` error 1 (not allowed) | optional and off by default; a failure shows a notice (design) |
 | Ding without a gesture while the main window is hidden | observed in O4 run A: the context was `running` with no gesture in a `show: false` window | as designed |
 | Where a minimized main window goes when the app has no Dock icon, and how it comes back | observed in O4 run C: into the Dock as a minimized window; it came back from there | native minimize, as designed |
 | Height resize and title bar drag of the frameless main window; its corners; whether a transparent window still resizes | UNVERIFIED (not tried in O4) | opaque window with 10 px corners all round; checked in task 10.7 |
-| The tray icon and its title being visible; a Dock icon flash at start | tray: not visible to the builder in task 8.5 run 1 (cause UNVERIFIED; a full menu bar on a notched display can hide new items); Dock: not watched; `UIElement` app type while running (runs 1–3) | task 11 |
+| The tray icon and its title being visible; a Dock icon flash at start | tray: not visible in task 8.5 run 1, seen by the builder in task 11 (cause of the first miss UNVERIFIED); Dock: `UIElement` app type while running, a flash at start not watched | as designed |
 | Claude `Notification` (`permission_prompt`, `idle_prompt`) since connecting | not observed since connecting (events.md) | handled by the core rules; no extra handling |
 
 ## Observations
