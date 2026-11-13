@@ -1,0 +1,78 @@
+# Implementation Plan: Retro skin
+
+How to work through this list:
+- One top-level task at a time. When it is done, run `npm test` and `npm run typecheck`, make one commit for that task, then stop and report to the builder in Korean: what changed, test results, anything left open.
+- Task 5 is split by screen: each of its sub-tasks passes `npm test` and `npm run typecheck` and gets its own commit. Until 5.8, the old tokens stay in the token files next to the new ones, so screens not yet rewritten keep working.
+- This spec changes the look, not the behavior. The only behavior changes are B1–B4 of the requirements (toolbar, TIP banner with `hideBanner`, Skin naming, toolbar keyboard). If a step seems to need any other behavior change, stop and ask.
+- Existing behavior tests (controller, IPC, settings, pop-up clicks, acknowledgement, jump) keep their assertions; only fixtures may gain `hideBanner: false`.
+- Stage files by name. Never commit real home paths, user names, session IDs, tokens or prompts; fixtures use `/Users/dev/...` and shortened IDs.
+- Ask the builder before every download (Galmuri). Before changing any file outside this repository: back it up, show the diff, wait for approval.
+- Never change what the user sees without warning (tech.md). A check that opens a window or plays a sound is announced right before it runs with what will appear and for how long, runs once, ends by itself, and is stopped and confirmed stopped before the tool call returns. `npm test` never opens a window.
+- The builder's relay (`agentbuddy`) stays running while working.
+- Optional tasks are marked `- [ ]*`.
+
+- [ ] 1. Galmuri
+  - [ ] 1.1 Ask the builder for the OK to download. Then run `npm pack galmuri@2.40.3 --pack-destination <temp folder>` once; record the tarball name and the `integrity` it reports. List the tarball (`tar -tzf`) and record the paths of the Galmuri11 Regular, Galmuri11 Bold and Galmuri9 woff2 files and `LICENSE.txt`. Extract only those four. Check that the license reads `SIL OPEN FONT LICENSE Version 1.1` (if not, stop and ask). Copy them to `src/ui/public/fonts/` as `Galmuri11.woff2`, `Galmuri11-Bold.woff2`, `Galmuri9.woff2`, `OFL-Galmuri.txt`. Record each file's size and SHA-256 here. Delete the temp folder. Nothing is added to `package.json`.
+    - _Requirements: 3.1, 3.2, 15.2_
+  - [ ] 1.2 `tests/unit/font-cmap.ts`: read a woff2 file's `cmap` without a dependency (WOFF2 header and table directory, `zlib.brotliDecompressSync`, format 4 and 12 subtables), as in design "Fonts"; unit-test it on the three files (for example `A`, `가` and `띠링` present). Run it once over the UI's character set as planned in the design (today's UI strings plus the tip texts, toolbar labels, `●`, `└`, `▶`, `★`) and record the missing characters per file here and in a first `src/ui/fallback.ts` (`GALMURI_MISSING`). Compare with the brief's finding (`✓ ✎` in all three, `▸ −` in Bold) and report any difference to the builder.
+    - _Requirements: 3.8_
+  - [ ] 1.3 `fonts.css`: `@font-face` for `Galmuri11` (400, 700) and `Galmuri9` (400), woff2, `font-display: block`; `--font-text: 'Galmuri11', 'Nanum Gothic', sans-serif`, `--font-small: 'Galmuri9', 'Nanum Gothic', sans-serif`; `-webkit-font-smoothing: none` on `html`; every `--font-title` use becomes `--font-text` (bold where it was a title). Delete `Jua-Regular.ttf`, `OFL-Jua.txt` and Jua's rule. `ui-build.test.ts`: the new font and license list byte for byte, the recorded SHA-256, no Jua, `@font-face` sources, no `http:` / `https:`. README font table: Galmuri (OFL 1.1, `OFL-Galmuri.txt`) in place of Jua.
+    - _Requirements: 3.3–3.7, 14.1_
+
+- [ ] 2. Core: tips and the `hideBanner` setting
+  - [ ] 2.1 `src/core/tips.ts` as in design "Core": `TIP_IDS`, `TipId`, `TipAction`, `TipContext`, `TipText`, `dayNumber`, `applies`, `applicableTips`, `startTip` (non-negative `mod`), `nextTip`, `keepTip`, `tipAction`, `tipText` (singular `1 unread message waiting!`; `berry` on `skin-blue-bot`). Pure: imports only theme types; no clock.
+    - _Requirements: 9.1–9.3, 9.7, 9.8_
+  - [ ] 2.2 `tests/unit/tips.test.ts` (each condition, `startTip` for injected day numbers and contexts, `nextTip` order, wrapping and skipping, `keepTip` after a skin change, sound off and an emptied inbox, the singular and plural headline, no `Date.now` / `new Date(` / `performance` in `tips.ts`); `tests/property/tips.prop.test.ts` (any day number, negatives included, and any context: the start tip applies and is the same for the same inputs; `n` presses of next from an applicable tip visit each applicable tip once and return)
+    - _Requirements: 9.2, 9.3, 9.6, 14.1, 14.2_
+  - [ ] 2.3 `PublicSettings.hideBanner`; `DEFAULT_SETTINGS.hideBanner = false`; `SETTING_KEYS` gains `hideBanner`; `serializeSettings` writes it after `theme`; the browser source sets `hideBanner: true`. Tests: old files, missing value, wrong types give `false`; `ui:setting` accepts `hideBanner` only with a boolean; the round-trip property includes `hideBanner`; any JSON value as `hideBanner` reads as a boolean, `true` only for `true`. Fixtures gain `hideBanner: false`.
+    - _Requirements: 10.1–10.3, 14.1, 14.2_
+
+- [ ] 3. Tokens and materials
+  - [ ] 3.1 Add the new tokens of design "Tokens" to both skin files, with the same names in both; keep the old tokens for now (removed in 5.8). `styles/materials.css` (raised, pressed, sunken, gloss, focus rules) imported by both pages after `themes.css`. The themes test still finds equal token sets.
+    - _Requirements: 2.1, 2.2, 2.6, 13.3_
+  - [ ] 3.2 `contrast.test.ts`: a new block with every pair of design "Contrast" (all gradient stops, `--banner-btn-bg` as 15 % white over each stripe), text at 4.5:1 and graphics at 3:1, and the named exceptions; the old pairs stay until 5.8. Every pair of brief 2 is named in it.
+    - _Requirements: 13.1, 13.2, 14.1_
+
+- [ ] 4. Sprites and pixel icons
+  - [ ] 4.1 `sprites/types.ts`: roles `hair`, `hair-hi`, `clip`, `grey-hair`, `grey-hair-hi` added, `title-ink`, `title-cheek`, `me-cheek` removed; `SpriteModule.banner`. `strawberry-milk.ts` rewritten from `FacesCute2000` (faces) and `MainCute2000` (title, me, banner); `blue-bot.ts` title, me and banner from `MainBot2000`, faces unchanged. Role tokens in both skin files (`transparent` where unused; Blue Bot `--px-title-body: #FFFFFF`). `render.ts`: `SpriteSize = 12 | 16 | 24 | 28 | 36`, `who` `'banner'`, the badge threshold 24, the pixel check inside the `TURN_DONE` badge; callers move to the new sizes.
+    - _Requirements: 4.1–4.4, 4.9, 4.10, 15.1_
+  - [ ] 4.2 `sprites/icons.ts`: `icon(name, size)` for `berry`, `tool-buddies`, `tool-inbox`, `tool-settings`, `tool-skin`, `check`, `pencil`, `box-open`, `box-closed`, with the rectangles of design "Pixel icons" (the drawn ones as in design.md "Drawn icons"); roles colored in `sprites.css` from tokens (`--px-berry-*` and `--icon-*`; `transparent` where a skin does not draw them).
+    - _Requirements: 4.5, 4.6, 4.8, 4.9_
+  - [ ] 4.3 `sprites.css`: new role fills, `--agent-banner`, badges 11 px at 24 and 13 px at 36, 1 px white border and `frame` outline, `--badge-radius`, Galmuri9 at weight 400. `sprites.test.ts`: Blue Bot faces vs `FacesBot`, title/me/banner vs `MainBot2000`; Strawberry Milk faces vs `FacesCute2000`, title/me/banner vs `MainCute2000`; berry and toolbar icons vs the mockups; badges exactly at buddy-row, inbox-row and pop-up sizes and never on `OFFLINE`; every rectangle inside its grid; every role has a token in both skins.
+    - _Requirements: 4.4, 14.1_
+
+- [ ] 5. Screens, one commit per sub-task
+  - [ ] 5.1 Title bar and toolbar (B1, B4). `index.html`: `.titlebar gloss`, the toolbar markup of design "Toolbar" above the me row, screens as labelled regions (no `tablist`, `tab`, `tabpanel`). `model/toolbar.ts` (`TOOLS`, `rovingTarget`, `toolbarView`, `skinFocusId`). `chrome.ts`: title sprite 16 px and the berry mark in Strawberry Milk only; toolbar icons, `aria-current`, roving tabindex, the Inbox count badge with ` unread`, one `keydown` listener using `rovingTarget` (moving focus never opens a screen). `main.ts`: `openScreen(tab, focusId?)`, `openSkin()`. `main.css`: title buttons 19 × 17, toolbar band and buttons. `tests/unit/toolbar.test.ts` as in design "Tests".
+    - _Requirements: 5, 6, 7.1, 14.1_
+  - [ ] 5.2 Window frame, alert strip and status bar. `main.css`: 1 px `frame` border, 1 px inner line, 7 px top / 0 bottom radius, flat `--bg`; alert strip 1 px solid, square, `!`. `model/chrome.ts`: `statusPanels()` (connected text `relay connected`, then `local only`, then `on top` with the check icon); `chrome.ts` draws sunken panels in `--font-small`. `ui-model.test.ts` updated for the panels.
+    - _Requirements: 2.4, 2.7, 7.3, 8_
+  - [ ] 5.3 Buddies screen. Me row (gradient panel, `box-line`, 36 px sprite in a sunken frame, `(online)` in the working color, sunken status field, pencil icon). List in a sunken white panel. Group heads with the box icons, `(online/total)` plus ` online` for screen readers, no fill. Rows at 24 / 12 px, `└`, ages in `--font-small`. `unreadMark(theme)`: `N` tag, or the berry with `role="img"` and `aria-label="new"`. Selection: `selected` in `main.ts` set before `bridge.click`, cleared when the buddy leaves; `data-selected`; the CSS of design "Buddies screen" (white text, inset white focus ring, framed unread marker). Progress in a sunken track. Unit tests for the group count text and the selection rules that live in models.
+    - _Requirements: 4.6, 4.7, 7.2, 7.4–7.7_
+  - [ ] 5.4 TIP banner (B2). `model/banner.ts` (`bannerView`, `tipContext`); `screens/banner.ts`; the banner slot in `index.html` between the list and the status bar; `main.ts`: `tip` set by `startTip` on the first app snapshot (from the local date) and by `keepTip` on every later one; `.banner-main` runs the action (`openSkin`, `openSound`, `openScreen('inbox')` or `nextTip`), `▶` runs `nextTip`; nothing goes to the bridge. Banner styles (stripes, 28 px mascot, Galmuri9 body, the `▶` button). `tests/unit/banner.test.ts` as in design "Tests".
+    - _Requirements: 9, 14.1_
+  - [ ] 5.5 Inbox. Rows in a sunken white panel, 24 px sprites with badges, `unreadMark(theme)`, `Mark all read` raised, times in `--font-small`; content, order and clicks unchanged.
+    - _Requirements: 12.1_
+  - [ ] 5.6 Settings and the Skin naming (B3). `model/theme.ts` → `model/skin.ts` (`skinTiles` Blue Bot first, `SKIN_NOTE`, `BANNER_NOTE`). `screens/settings.ts`: fieldsets with legends in the order Skin, Banner, Window, When an agent needs you, Privacy, Connections; Skin tiles as raised labels with the mini window, a visible native radio (`name="skin"`, `data-focus="theme:<id>"`), the name, `data-pressed` when checked, no `✓`; the Banner group with `Hide the TIP banner` and its note; `accent-color: var(--accent)`. Every user-facing "Theme" becomes "Skin". `ui-theme.test.ts` updated (tile order, radio group name `Skin`).
+    - _Requirements: 1, 10.4, 12.2, 12.3_
+  - [ ] 5.7 Pop-up. `popup.html` header `gloss`; `popup.css` by kind (four stops, text, shadow, line, close button, tint, `--focus-on-gloss` from the header text), 1 px border, 6 px top radius, `2px 2px 0` hard shadow inside the 300 × 144 window, 36 px sprite in a sunken frame, `Later` raised, `Go there ▶` primary, the notice kind with the turn-done tokens. `screens/popup.ts`: sprite size 36 only. `ui-popup.test.ts` keeps its click and title assertions.
+    - _Requirements: 11, 13.3_
+  - [ ] 5.8 Remove the old tokens listed in design "Tokens" from both skin files and the old pairs from `contrast.test.ts`; no stylesheet refers to a removed token. `themes.test.ts`: equal token sets, no color outside the token files, no blurred `box-shadow` / `text-shadow`, no user-facing "Theme" (text nodes, `aria-label`, `title`, string literals given as text; not identifiers, `data-theme`, CSS or comments).
+    - _Requirements: 1.1, 2.2, 2.3, 2.5, 14.1_
+
+- [ ] 6. Checkpoint: fonts, all tests, mutation check
+  - [ ] 6.1 `tests/unit/fonts.test.ts`: the UI's character set as in design "Fonts" (now final); `GALMURI_MISSING` equals the computed missing set per file; `✓` and `✎` are not in the UI's character set; `▸` appears only in places set to weight 400. Update `src/ui/fallback.ts` and the comment in `fonts.css` with the final record, and record it in the requirements' Unverified table (it becomes observed).
+    - _Requirements: 3.8, 4.5, 14.1_
+  - [ ] 6.2 All tests pass, `npm run typecheck` and `npm run build` succeed, every changed file stays under about 200 lines.
+  - [ ] 6.3 Mutation check, once, each alone and reverted with `git checkout -- <file>`: (a) remove `--px-hair` from Blue Bot's token file; (b) set Blue Bot `--primary-from` back to `#5AA6F0`; (c) make `startTip` ignore `day`; (d) make `rovingTarget` return `null` for `End`. Record which tests failed for each.
+    - _Requirements: 14.3_
+
+- [ ] 7. Screen check with the builder
+  - Announced right before it runs with what will appear and for how long. Run once in the foreground of the tool call with a fixed time limit: the app from this build with a temp `HOME` and port 4399 (its own relay), fake events with `/Users/dev/...` paths and no real prompts (a Kiro buddy with a temp `tasks.md`, a Claude buddy waiting for approval, a Codex turn done), so that all three screens, both skins, a selected row, the banner and both pop-up kinds show.
+  - The builder compares with the `*2000` mockups and checks: Galmuri at 12 / 10 px with smoothing off, the hair, the berry, the pixel check and pencil, the uneven pixel rows at 16 / 28 px (design "Known limits"), the toolbar with ←/→/Home/End and Enter, `Skin` landing on the checked radio, the focus rings on the title bar, the banner and a selected row, a skin change with a pop-up open, the banner after a skin switch from its own tip.
+  - Afterwards: `pgrep` shows no process of this check, port 4399 is free, the temp home is deleted; this is confirmed before the tool call returns. Record the run (time, length, what was shown, what the builder confirmed, what was not checked) here, and anything unverified in the requirements.
+  - _Requirements: 15.4_
+
+- [ ] 8. Steering, README and final checkpoint
+  - structure.md: `src/core/tips.ts`; `model/toolbar.ts`, `model/banner.ts`, `model/skin.ts` (was `theme.ts`); `screens/banner.ts`; `sprites/icons.ts`; `src/ui/fallback.ts`; `styles/materials.css`; Galmuri in `public/fonts`. tech.md: the property list gains the tip and `hideBanner` properties. design.md: anything the screen check changed. README: "skin" for the feature, the Banner setting, `app-settings.json` holds `hideBanner`, Galmuri in the font table, the known limits.
+  - All tests pass and `npm run build` succeeds. `.gitignore` does not list `.kiro`. A short handoff at the end of this file: state, open items, next.
+  - _Requirements: 1.1, 3.7, 14.4_
