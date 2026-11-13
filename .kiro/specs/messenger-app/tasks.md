@@ -119,6 +119,7 @@ How to work through this list:
   - Each check of Req 17.3 with the builder, each announced first and run once, plus a pop-up over a full-screen app (from O4), and from 10.7: the relay's page in a browser (same list, no app-only parts) and the main window corners.
   - Menu bar icon (from 8.5): the builder looks for the bubble and its count. If it is not visible, count Control Center's menu bar windows (layer 25) on and off screen with the app running and quit; one more off-screen window means the icon exists but is hidden (a full menu bar on a notched display), none more means it was not created. Then decide with the builder what to do.
   - Read the launcher values the daily log collected since task 2 (only `agent`, `bundleId`, `termProgram`) and record them in events.md as observed, with date and versions; mark what did not arrive.
+    - Done 2026-11-13: Claude app `com.anthropic.claudefordesktop` (no `TERM_PROGRAM`), Claude CLI in VS Code `com.microsoft.VSCode` / `vscode`, Claude CLI in a Kiro terminal `dev.kiro.desktop` / `kiro`, Kiro IDE chat `dev.kiro.desktop` (no `TERM_PROGRAM`). Not arrived: Kiro task runs, Codex.
   - _Requirements: 17.3_
 
 - [ ] 12. Steering, README and final checkpoint

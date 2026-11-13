@@ -168,15 +168,16 @@ Launcher values seen so far:
 
 | Agent / launcher | `__CFBundleIdentifier` | `TERM_PROGRAM` | Source |
 |---|---|---|---|
-| Claude app (`claude-desktop`) hook | `com.anthropic.claudefordesktop` | not recorded | probe, 2026-11-12 (see "Observed after connecting") |
-| Claude Code CLI hook, in a VS Code terminal | `com.microsoft.VSCode` | `vscode` | probe, 2026-11-12. The bundle ID is from the builder's reading of the probe file, which was deleted afterwards; `vscode` is recorded above. |
+| Claude app (`claude-desktop`) hook | `com.anthropic.claudefordesktop` | unset | probe, 2026-11-12; daily log, 24 events 2026-11-12 13:10–23:59 UTC |
+| Claude Code CLI hook, in a VS Code terminal | `com.microsoft.VSCode` | `vscode` | probe, 2026-11-12. The bundle ID is from the builder's reading of the probe file, which was deleted afterwards; `vscode` is recorded above. Confirmed by the daily log: 1 event 2026-11-12 08:46 UTC. |
 | Kiro IDE agent command shell (not a hook process) | `dev.kiro.desktop` | `kiro` (`TERM_PROGRAM_VERSION=1.4.154`) | the Kiro agent's own shell, Kiro IDE 1.4.154, 2026-11-12 |
-| Kiro IDE chat hook (`Stop`, `UserPromptSubmit`) | `dev.kiro.desktop` | unset | temporary launcher probe hooks, Kiro IDE 1.4.154, 2026-11-12 (05:50 and 06:42 UTC, one call each); removed afterwards |
-| Kiro IDE task-run hook (`PreTaskExec`, `PostTaskExec`) | unverified | unverified | |
+| Kiro IDE chat hook (`Stop`, `UserPromptSubmit`) | `dev.kiro.desktop` | unset | temporary launcher probe hooks, Kiro IDE 1.4.154, 2026-11-12 (05:50 and 06:42 UTC, one call each); daily log, 38 events 2026-11-12 08:37 – 2026-11-13 00:11 UTC |
+| Kiro IDE task-run hook (`PreTaskExec`, `PostTaskExec`) | unverified | unverified | no task run since the hook began sending the fields (2026-11-12 08:36 UTC) |
 | Shell in a VS Code terminal (not a hook process) | `com.microsoft.VSCode` | `vscode` | the builder's own shell check, 2026-11-12 |
+| Claude Code CLI hook, in a Kiro IDE terminal | `dev.kiro.desktop` | `kiro` | daily log, 6 events 2026-11-13 00:09 UTC. The bundle ID is Kiro's, although the agent is Claude Code |
 | Shell in Terminal (not a hook process) | `com.apple.Terminal` | `Apple_Terminal` | the builder's own shell check, 2026-11-12 |
 | Kiro CLI hook | unverified | unverified | |
-| Codex CLI, Codex in the ChatGPT app | unverified (no `notify` call observed yet) | unverified | |
+| Codex CLI, Codex in the ChatGPT app | unverified (no `notify` call observed yet) | unverified | the daily logs up to 2026-11-13 hold no Codex event at all |
 | Shell inside a private `tmux` server started from the Kiro agent's shell (not a hook process) | `dev.kiro.desktop` (inherited from the shell that started the server) | `tmux` | tmux 3.5a, 2026-11-12 |
 | Inside `screen` | unverified | unverified | |
 
