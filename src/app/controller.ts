@@ -6,36 +6,18 @@ import { ackRecords, foldInbox, hide, isHidden, menuCount, pingRecord, refreshHi
 import type { InboxEntry, InboxRecord, MenuCount } from '../core/attention';
 import { detectPings } from '../core/pings';
 import type { Ping } from '../core/pings';
-import type { AppSnapshot, ClickTarget, Connection, PopupContent, RelayMode, SettingKey } from '../core/snapshot';
+import type { AppSnapshot, Connection, PopupContent, RelayMode, SettingKey } from '../core/snapshot';
 import { AGENT_NAMES, PHRASES, folderName, statusParts } from '../core/text';
+import type { ClickFrom, Ports } from './controller-ports';
 import type { PopupAction, WindowAction } from './ipc';
 import { NOTICES, planJump } from './jump';
-import type { JumpPlan } from './jump';
 import { MAX_CLOSED_GROUPS } from './settings';
 import type { Settings } from './settings';
 
-export interface Ports {
-  now(): number;
-  /** Local date `YYYY-MM-DD` of a time. */
-  dayKey(ms: number): string;
-  /** Local `HH:MM`, or `HH:MM:SS` with `seconds`. */
-  formatTime(ms: number, seconds: boolean): string;
-  appendInbox(r: InboxRecord): void;
-  saveSettings(s: Settings): void;
-  pushState(s: AppSnapshot): void;
-  setCount(total: number): void;
-  ding(): void;
-  showPopup(session: string | null, content: PopupContent): void;
-  closePopups(sessions: readonly string[]): void;
-  notify(session: string, title: string, body: string): void;
-  jump(plan: JumpPlan): void;
-  notice(text: string): void;
-  applyAlwaysOnTop(on: boolean): void;
-  windowAction(action: WindowAction): void;
-  isDirectory(path: string): boolean;
-}
 
-export type ClickFrom = ClickTarget | { kind: 'notification'; key: string };
+export type { ClickFrom, Ports } from './controller-ports';
+
+
 
 /** A view without agent text, for hide-text (Requirement 7.4). */
 function stripText(b: BuddyView): BuddyView {

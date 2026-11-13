@@ -125,11 +125,12 @@ How to work through this list:
     - Done 2026-11-13: Claude app `com.anthropic.claudefordesktop` (no `TERM_PROGRAM`), Claude CLI in VS Code `com.microsoft.VSCode` / `vscode`, Claude CLI in a Kiro terminal `dev.kiro.desktop` / `kiro`, Kiro IDE chat `dev.kiro.desktop` (no `TERM_PROGRAM`). Not arrived: Kiro task runs, Codex.
   - _Requirements: 17.3_
 
-- [ ] 12. Steering, README and final checkpoint (after task 13, builder's order of 2026-11-13)
+- [x] 12. Steering, README and final checkpoint (after task 13, builder's order of 2026-11-13)
   - Steering: tech.md "Pieces", "Commands", "Sound"; structure.md (`src/app`, the new core and UI files, who touches files and network); product.md core flow step 2.
   - README: `npm run app`, own and attached relays, the new files in `~/.agentbuddy/`, Electron and the two fonts with their licenses in the third-party table, and the known limits from the design.
   - All tests pass and `npm run build` succeeds. Grep for `/Users/` paths other than `/Users/dev/`, user names and token-like strings. `.gitignore` does not list `.kiro`.
   - _Requirements: 17.4, 17.5_
+  - Result (2026-11-13): tech.md (stack, Pieces 2, 3 and a new 5, Local only, Sound, Commands, the messenger-app properties), structure.md (`src/app`, the new core and UI files, import and side-effect rules), product.md (core flow step 2), README (desktop app section, stored files, known limits, Electron and the two fonts). 505 tests pass, typecheck and `npm run build` succeed. `src/app/controller.ts` had grown to 221 lines, so its port types moved to `src/app/controller-ports.ts` (now 203 and 30 lines). Grep of every tracked and untracked file: no `/Users/` path other than `/Users/dev/`, no user name, no token-like string; the real token is in no file and in no commit. `.gitignore` lists `node_modules/`, `dist/`, `.DS_Store` only. `master` holds no commit with the old author e-mail (the one with the machine's host name); the local branch `backup/before-author-rewrite` still does (30 commits) and is not to be pushed.
 
 - [x] 13. My status row (required since 2026-11-13, Req 18)
   - [x] 13.1 Spec: Requirement 18, design "My status row", decisions A13 and A14 (corners stay 10 px all round)
@@ -146,14 +147,12 @@ How to work through this list:
 - [ ]* 14. Packaged `.app` (optional, unsigned)
   - Only if time allows and the builder asks for it.
 
-## Handoff for the next session (2026-11-13, updated)
+## Handoff for the next session (2026-11-13, after task 12)
 
-State: tasks 1–11 and 13 are done and committed; 505 tests pass. The relay runs detached from an earlier build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`). No app or check process is running.
+State: tasks 1–13 are done and committed; 505 tests pass. Optional task 14 (packaged `.app`) is open. The relay runs detached from an earlier build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`); restarting it from the latest build is not needed for this spec. No app or check process is running.
 
-Next, in this order (builder, 2026-11-13):
-1. Task 12: steering, README, final checks. Add `myStatus` and the "me" row to the README's stored-files text.
-2. Then the builder brings the material for a theme spec (Blue Bot / Strawberry Milk). It changes the main window corners (16–18 px) and runs the transparent-window check once (A14).
+Next: the builder brings the material for a theme spec (Blue Bot / Strawberry Milk). Starting points for it: the `--me-*` tokens in `src/ui/styles/tokens.css` (values only), `--me-hint` (no palette color lighter than `--text-2` keeps 4.5:1 on white), the main window corners (16–18 px) with one transparent-window check (A14), and `tests/unit/contrast.test.ts`, which already resolves alias tokens.
 
-Still unanswered by the builder: whether a new Kiro window opened on the two clicks on a Claude-in-Kiro-terminal session (00:09 and 00:21 UTC). The builder's reply left the answer blank; the rule stays as it is (no folder for those sessions).
+Open, outside this spec: the local branch `backup/before-author-rewrite` holds 30 commits with the old author e-mail (machine host name); whether to delete it is the builder's call. `~/Library/Preferences/com.github.Electron.plist` is written again by every run from source. The builder left blank whether a new Kiro window opened on the two Claude-in-Kiro-terminal clicks; the rule stays.
 
 Working rules used so far: report to the builder in Korean; one commit per task, files staged by name; announce every check that shows windows or plays sound, say "지금 띄웁니다" right before it, run it once with a fixed time limit, write its results to a file while it runs (a detached script that stops the app by itself), and confirm no process is left before reporting.

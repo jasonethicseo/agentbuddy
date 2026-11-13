@@ -32,7 +32,7 @@ The buddy list was designed to answer "who is around and what are they doing rig
 
 ## Core flow (MVP)
 1. **Install once**: add the AgentBuddy hook command to each agent (Kiro hooks, Claude Code hooks, Codex `notify`). A setup command prints the exact snippets.
-2. **Run the relay**: `agentbuddy` starts a local relay and opens the buddy list in the browser.
+2. **Open the app**: `npm run app` opens a small buddy-list window in a corner of the screen and a menu bar icon. The app starts its own local relay, or attaches to an `agentbuddy` relay that already runs. The relay also serves the buddy list to a browser at `http://127.0.0.1:4343/`.
 3. **Work as usual**: each agent's hook sends a small event to the relay. The buddy list updates live.
 4. **Get pinged**: when an agent finishes a turn or asks for approval, a "ding" sound plays and a message window pops up.
 5. **Kiro progress**: for Kiro spec tasks, the status shows `task n/m` read from the spec's `tasks.md`.

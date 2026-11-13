@@ -19,7 +19,11 @@ inclusion: always
 │  │  ├─ state.ts      per-session state fold, time-based states, session names
 │  │  ├─ buddies.ts    sessions grouped into buddies: urgency, removal, views
 │  │  ├─ progress.ts   tasks.md text -> { done, total }; spec path check
-│  │  └─ text.ts       truncation and status message wording
+│  │  ├─ launcher.ts   bundleId / termProgram forms
+│  │  ├─ pings.ts      pings: sessions entering an attention state between two lists
+│  │  ├─ attention.ts  inbox records, acknowledgements, menu bar count, hidden sessions
+│  │  ├─ snapshot.ts   types between the app's main process and its windows
+│  │  └─ text.ts       truncation, status phrases and lines, the "me" status message
 │  ├─ hook/
 │  │  └─ cli.ts        agentbuddy-hook entry: read payload, normalize, POST, exit 0
 │  ├─ relay/
@@ -31,15 +35,33 @@ inclusion: always
 │  │  ├─ store.ts      in-memory state + daily events log append and restore
 │  │  ├─ stream.ts     Server-Sent Events
 │  │  └─ tasks.ts      reads tasks.md for Kiro progress
+│  ├─ app/             Electron desktop app (main process and two preloads)
+│  │  ├─ main.ts       entry: single instance, no Dock icon, protocol, windows, tray, wiring (Electron)
+│  │  ├─ controller.ts app state and decisions; effects through ports (types in controller-ports.ts), no I/O of its own
+│  │  ├─ relay-link.ts own relay or attach; SSE client; retries
+│  │  ├─ sse.ts        SSE text parser and BuddyView[] check
+│  │  ├─ jump.ts       planJump (pure) and runJump (execFile lsappinfo, open -b)
+│  │  ├─ inbox-file.ts today's inbox file, ordered appends
+│  │  ├─ settings.ts   app-settings.json: parse (pure), load, atomic save
+│  │  ├─ ipc.ts        channel names and checks of every window message
+│  │  ├─ config.ts, window-options.ts, popup-layout.ts, icon.ts   plain modules
+│  │  ├─ security.ts, protocol.ts, windows.ts, popups.ts, tray.ts, notify.ts   (Electron)
+│  │  └─ preload-main.ts, preload-popup.ts   the two window bridges (Electron, sandboxed)
 │  ├─ ui/
-│  │  ├─ main.ts       entry; picks relay mode or demo mode
-│  │  ├─ screens/      buddy list, message pop-up, inbox, settings
+│  │  ├─ main.ts       entry; state from the app's bridge, or from the relay's stream in a browser
+│  │  ├─ bridge.ts     the app bridge type and the browser source
+│  │  ├─ chrome.ts     title bar, alert strip, tabs, footer
+│  │  ├─ dom.ts, icons.ts   createElement helpers; SVG state icons and the bubble
+│  │  ├─ model/        pure view models: list, chrome, inbox, me
+│  │  ├─ screens/      buddy list, "me" row, inbox, settings, message pop-up
 │  │  ├─ sound.ts      Web Audio "ding"
-│  │  └─ styles/
-│  └─ setup/
+│  │  ├─ public/fonts/ Nanum Gothic and Silkscreen with their OFL licenses
+│  │  └─ styles/       tokens.css (the only hex colors), fonts, icons, main, popup
+│  └─ setup/           (later spec)
 │     └─ snippets.ts   prints hook snippets for Kiro, Claude Code, Codex
-├─ demo/
+├─ demo/               (later spec)
 │  └─ events.json      recorded, sanitized events for the demo build
+├─ index.html, popup.html   the main window page and the pop-up page
 ├─ tests/
 │  ├─ fixtures/        sanitized raw payloads (from events.md)
 │  ├─ unit/
@@ -49,8 +71,9 @@ inclusion: always
 ```
 
 ## Rules
-- `src/core` must not import from `hook`, `relay`, `ui` or `setup`.
-- Only `src/hook` and `src/relay` touch the file system or network. Only `src/ui` touches the DOM.
+- `src/core` must not import from `hook`, `relay`, `app`, `ui` or `setup`, nor any Node built-in.
+- `src/app` may import `src/core` and `src/relay`. Only its Electron files import `electron`; the others are plain TypeScript that Vitest loads without Electron. `src/ui` never imports `src/app`; it talks to the main process only through the preload bridge.
+- Only `src/hook`, `src/relay` and `src/app` touch the file system or network. `src/app` writes only under `~/.agentbuddy/`, connects only to `127.0.0.1:<port>`, and runs only `/usr/bin/lsappinfo` and `/usr/bin/open`, with `execFile` and an argument array. Only `src/ui` touches the DOM; the preloads do not.
 - Time is always passed in as a parameter to core functions.
 - Keep each file under about 200 lines; split when it grows.
 - Never add `/.kiro` or any of its subfolders to `.gitignore` (submission requirement).

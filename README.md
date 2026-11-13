@@ -4,24 +4,25 @@ A 2000s-messenger-style buddy list for your AI coding agents. Kiro, Claude Code 
 
 Everything stays on your machine: the relay listens on `127.0.0.1` only, and nothing is sent anywhere else.
 
-Status: the core pipeline works end to end with a plain, unstyled list. The messenger look, the "ding" and pop-ups, the inbox, the demo build and a setup command come in later specs.
+Status: the hooks, the relay and the macOS desktop app work (run from source). The demo build for the web and a setup command come in later specs.
 
 ## How it works
 
 ```
-agent hook ──► agentbuddy-hook <agent> ──POST──► relay (127.0.0.1:4343) ──SSE──► buddy list in the browser
-                (normalize, cut text,            (token check, daily log,
+agent hook ──► agentbuddy-hook <agent> ──POST──► relay (127.0.0.1:4343) ──SSE──► desktop app (window, pop-ups, menu bar)
+                (normalize, cut text,            (token check, daily log,  └─SSE──► buddy list in a browser
                  always exit 0 within 1 s)        state, Kiro progress)
 ```
 
 - **`agentbuddy-hook`** turns each raw hook payload into one small event and posts it with a token from `~/.agentbuddy/token`. It never writes to stdout or stderr and always exits 0, by 900 ms at the latest, even when the relay is down.
 - **`agentbuddy`** (the relay) keeps the state in memory, appends every event to `~/.agentbuddy/events-YYYY-MM-DD.jsonl`, restores the last 24 hours on start, and serves the list at `http://127.0.0.1:4343/`.
 - **Buddies and sessions.** A buddy is one agent in one project folder (`Kiro @ agentbuddy`). Under it, each conversation window is a session with its own state. The buddy shows its most urgent session: waiting for approval, then working, then `?` (no news for 10 minutes), then turn done, idle, offline. Expand a buddy to see its sessions; idle and offline ones are hidden until you ask.
-- **Kiro progress.** On a Kiro task start, task done or stop, the relay reads the spec's `tasks.md` and shows `task n/m` (top-level tasks only).
+- **Kiro progress.** On a Kiro task start, task done or stop, the relay reads the spec's `tasks.md` and shows `n/m` with a bar (top-level tasks only).
 
 ## Requirements
 
-- Node.js 20 or later, on macOS or Linux
+- Node.js 20 or later, on macOS or Linux, for the hooks and the relay
+- macOS for the desktop app
 
 ## Install and run
 
@@ -33,6 +34,21 @@ agentbuddy        # starts the relay; open http://127.0.0.1:4343/
 ```
 
 `npm run relay` builds and starts the relay without linking. To use another port, set `AGENTBUDDY_PORT` for both the relay and the hooks.
+
+## Desktop app
+
+```sh
+npm run app       # builds, then starts the app from source (Electron)
+```
+
+- **Own or attached relay.** The app starts its own relay on the port. If an `agentbuddy` relay already runs there, the app attaches to it and only reads its stream; quitting the app then leaves that relay running. If the attached relay goes away, the app starts its own on the next retry (every 3 s). Settings › Connections shows which one is in use.
+- **Window and menu bar.** A 320 px window in the top-right corner, always on top by default (the ▲ pin button or Settings). Closing it keeps the app in the menu bar; the bubble icon there shows a count of sessions waiting for your OK plus finished turns you have not looked at, and its menu shows the list or the inbox, or quits. There is no Dock icon. Cmd+Q also quits.
+- **Pings.** When a session finishes a turn or needs your OK, the app plays a synthesized ding and slides up a pop-up in the bottom-right corner. Pop-ups never take focus, close by themselves after 6 s and stack upward. `Go there →` (or a click on the card) brings forward the app the session runs in, × closes and marks it read, `Later` only closes. States the app finds when it connects never ping.
+- **Inbox.** Every ping of the day, newest first, with the ones you have not looked at marked. A click goes there; `Mark all read` marks everything read.
+- **Jump.** A click on a buddy, a session, a pop-up or an inbox entry brings that agent's app forward with `/usr/bin/open -b <bundle ID>`, after `/usr/bin/lsappinfo` confirms it is running (it never starts an app). A Kiro session also passes its folder, so the right Kiro window comes forward. The bundle ID comes from the environment of the agent's hook process.
+- **Hiding.** × on a session (or on a buddy with one visible session) hides that row until the session does something new.
+- **"me" row.** Your own status message at the top of the list. It stays in the settings file and is never sent anywhere.
+- **Settings.** Ding sound, message pop-ups, macOS notifications (off by default), always on top, and "Hide prompt and reply text", which keeps every agent's text off the screen, pop-ups and notifications.
 
 ## Connect your agents
 
@@ -78,8 +94,11 @@ All in `~/.agentbuddy/` (folder mode 700, files mode 600):
 | `events-YYYY-MM-DD.jsonl` | one line per accepted event; prompts and replies are cut to 120 characters before they leave the hook |
 | `hook-errors.log` | fixed error codes only (no payload, no text, no token) |
 | `bin/codex-notify.sh` | the installed Codex relay script |
+| `inbox-YYYY-MM-DD.jsonl` | the app's inbox: one line per ping (buddy name, session key, session name, state, time) and per "read" mark |
+| `app-settings.json` | the app's settings, closed groups, hidden sessions and your "me" status message |
+| `electron/` | Electron's own data for the app (caches, local storage) |
 
-Old daily logs are not deleted yet.
+Old daily logs and inbox files are not deleted yet. Run from source, the app is the Electron binary, so macOS also keeps a small preferences file for it at `~/Library/Preferences/com.github.Electron.plist`.
 
 ## Known limits
 
@@ -89,6 +108,16 @@ Old daily logs are not deleted yet.
 - Only Claude reports a session end. Other sessions go offline after 30 minutes and are removed after 24 hours.
 - Not yet observed: Claude `Notification`, any Codex `notify` call (Codex in the ChatGPT app may not call it at all, see [openai/codex#13019](https://github.com/openai/codex/issues/13019)), Kiro CLI `SessionEnd`.
 - After a restart, progress comes back only if the last Kiro task run is within the last 24 hours.
+- The app's first list after every connection is a baseline: a turn that finishes while the app is closed or reconnecting gives no ping and no count.
+- An attached relay built before the desktop app sends no launcher and shows ended sessions as `offline`; a click then says `can't tell which app this session is in`.
+- A Kiro folder jump opens a new Kiro window if that project's window was closed. Right after a new Kiro window opened, it once brought the wrong window forward.
+- Inside `tmux`, the bundle ID is that of the app that started the tmux server.
+- The ding and pop-ups do not follow macOS Focus modes; turn them off in Settings.
+- At midnight, earlier entries leave the inbox and stop counting.
+- Run from source, macOS does not allow Electron to post notifications, so turning macOS notifications on shows a notice instead. The pop-ups and the ding keep working.
+- The window's bottom corners are rounded like its top corners (10 px), following macOS for frameless windows.
+- Terminal tabs are never selected; a jump brings the terminal app forward.
+- The desktop app runs on macOS only and is not packaged or signed.
 
 ## Development
 
@@ -102,7 +131,7 @@ npm run dev       # UI dev server, proxying /stream to a running relay
 
 ## Third-party libraries
 
-Development only; AgentBuddy has no runtime dependencies.
+Development only; the hook command and the relay have no runtime dependencies.
 
 | Library | Use | License |
 |---|---|---|
@@ -112,6 +141,14 @@ Development only; AgentBuddy has no runtime dependencies.
 | [fast-check](https://fast-check.dev/) | property-based tests | MIT |
 | [esbuild](https://esbuild.github.io/) | bundles the hook command and the relay | MIT |
 | [@types/node](https://github.com/DefinitelyTyped/DefinitelyTyped) | Node.js type definitions | MIT |
+| [Electron](https://www.electronjs.org/) | runs the desktop app from source | MIT |
+
+Bundled with the UI (in `src/ui/public/fonts/`, with their license files):
+
+| Font | Use | License |
+|---|---|---|
+| [Nanum Gothic](https://fonts.google.com/specimen/Nanum+Gothic) (NHN Corporation) | all text, including Korean | SIL Open Font License 1.1, `OFL-NanumGothic.txt` |
+| [Silkscreen](https://fonts.google.com/specimen/Silkscreen) (The Silkscreen Project Authors) | titles | SIL Open Font License 1.1, `OFL-Silkscreen.txt` |
 
 ## License
 
