@@ -1,0 +1,43 @@
+/* The 2000s materials (retro-skin Requirement 2.6; design "Materials"; design.md "Materials"), used by class.
+   Colors come only from the skin tokens. Every shadow is hard: no blur (Requirement 2.5). */
+.raised {
+  border: 1px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+  background: linear-gradient(var(--bevel-from), var(--bevel-to));
+}
+/* Pressed or selected: the two edges swap. */
+.raised[aria-current="page"],
+.raised[data-pressed],
+.raised:active {
+  border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+  background: var(--pressed);
+}
+.sunken {
+  border: 1px solid;
+  border-color: var(--sunk-dark) var(--sunk-light) var(--sunk-light) var(--sunk-dark);
+  box-shadow: inset 1px 1px 0 var(--sunk-inner);
+}
+.gloss {
+  background: linear-gradient(var(--gloss-1) 0%, var(--gloss-2) 48%, var(--gloss-3) 52%, var(--gloss-4) 100%);
+  box-shadow: inset 0 1px 0 var(--gloss-top);
+  color: var(--title-text);
+  text-shadow: 1px 1px 0 var(--title-shadow);
+  font-weight: 700;
+}
+/* Focus rings (Requirement 13.3, S14): the focus color, or the surface's own text color where it would vanish. */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.gloss :focus-visible {
+  outline-color: var(--focus-on-gloss);
+}
+.banner :focus-visible {
+  outline-color: var(--focus-on-dark);
+}
+/* Buddy rows: inset, because the list panel clips outside rings; a focused row is selected, so the ring sits on --selection. */
+.buddy-main:focus-visible {
+  outline-color: var(--focus-on-dark);
+  outline-offset: -2px;
+}

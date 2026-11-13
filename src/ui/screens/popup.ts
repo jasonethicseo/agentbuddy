@@ -4,6 +4,7 @@
 import '../styles/themes.css';
 import '../styles/sprites.css';
 import '../styles/fonts.css';
+import '../styles/materials.css';
 import '../styles/popup.css';
 import type { PopupContent } from '../../core/snapshot';
 import type { ThemeId } from '../../core/theme';

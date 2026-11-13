@@ -3,6 +3,7 @@
 import './styles/themes.css';
 import './styles/sprites.css';
 import './styles/fonts.css';
+import './styles/materials.css';
 import './styles/main.css';
 import './styles/list.css';
 import './styles/inbox.css';

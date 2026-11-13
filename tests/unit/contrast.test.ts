@@ -1,4 +1,4 @@
-// Contrast in both themes (themes Requirements 9.1, 9.2, 11.1; design "Contrast"; design.md "Accessibility").
+// Contrast in both skins (retro-skin Requirement 13, design "Contrast"; themes Requirements 9.1, 9.2; design.md "Accessibility").
 // Text pairs need 4.5:1; icons, badges, marks, dots and focus rings are graphics and need 3:1.
 // A graphic below 3:1 is allowed only when text beside it says the same; those are listed in KNOWN_LOW.
 import { readFileSync, readdirSync } from 'node:fs';
@@ -18,96 +18,118 @@ export function contrast(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi! + 0.05) / (lo! + 0.05);
 }
-/** A token's color in a theme; a transparent background means the card under it. */
+/** A token's color in a skin; a transparent background means the white panel under it. */
 function color(theme: ThemeId, token: string): string {
-  return resolve(blocks[theme], token) === 'transparent' ? hex(blocks[theme], '--card-bg') : hex(blocks[theme], token);
+  return resolve(blocks[theme], token) === 'transparent' ? hex(blocks[theme], '--panel') : hex(blocks[theme], token);
 }
 const ratio = (theme: ThemeId, fg: string, bg: string) => contrast(color(theme, fg), color(theme, bg));
 
-/** [foreground, background, where, the one theme that draws it (else both)]. */
+/** [foreground, background, where, the one skin that draws it (else both)]. */
 type Pair = [string, string, string, ThemeId?];
 const STATES = ['--st-wait', '--st-work', '--st-done', '--st-idle', '--st-stale', '--st-off'];
-
+const STOPS = (prefix: string) => [1, 2, 3, 4].map((i) => `${prefix}-${i}`);
+const on = (fg: string, bgs: string[], where: string, only?: ThemeId): Pair[] => bgs.map((bg): Pair => (only ? [fg, bg, where, only] : [fg, bg, where]));
+/** Retro skin (retro-skin design "Contrast", Requirement 13): every gradient stop under the text is listed. */
 const TEXT: Pair[] = [
-  ['--text', '--bg', 'window text'],
-  ['--text', '--card-bg', 'rows, cards, names'],
-  ['--text', '--unread-tint', 'unread inbox name, checked theme tile'],
-  ['--text', '--urgent-bg', 'unread needs-OK inbox name'],
-  ['--text-2', '--card-bg', 'excerpts, ages, notes, @ folder, inbox time'],
-  ['--text-2', '--group-bg', 'group counts'],
-  ['--text-2', '--urgent-bg', 'excerpt on the top needs-OK session row'],
-  ['--text-2', '--unread-tint', 'excerpt on a hovered buddy row, unread done inbox row'],
-  ['--text-on-bg', '--bg', 'footer (11 px)'],
-  ['--text-on-bg', '--bg-pattern-color', 'footer over the background pattern (decision D8)'],
-  ['--group-text', '--group-bg', 'group header, idle tab'],
-  ['--group-text', '--card-bg', 'settings card titles, theme tile names'],
-  ['--group-off-text', '--group-off-bg', 'offline group header'],
-  ['--title-text', '--title-from', 'title bar, start of the gradient'],
-  ['--title-text', '--title-to', 'title bar, end of the gradient'],
+  ...on('--text', ['--bg', '--panel', '--field', '--me-to', '--urgent-bg', '--popup-ok-tint', '--popup-done-tint'], 'primary text'),
+  ...on('--text-2', ['--panel', '--field', '--me-to', '--urgent-bg', '--popup-ok-tint', '--popup-done-tint'], 'secondary text, status bar, fields'),
+  ['--text-on-bg', '--bg', 'notes on the window background'],
+  ...on('--group-text', ['--panel', '--bg', '--bevel-from', '--bevel-to', '--pressed'], 'group names, legends, Skin tile names'),
+  ...on('--toolbar-text', ['--bevel-from', '--bevel-to', '--pressed'], 'toolbar labels'),
+  ...on('--quiet-text', ['--bevel-from', '--bevel-to', '--pressed'], 'Later, Mark all read'),
+  ...on('--title-text', STOPS('--gloss'), 'title bar (brief 2: gloss)'),
+  ...on('--primary-text', ['--primary-from', '--primary-to'], 'Go there (S1)'),
+  ['--selection-text', '--selection', 'selected buddy row (brief 2)'],
   ['--alert-strip-text', '--alert-strip-bg', 'alert strip'],
+  ['--count-text', '--count-bg', 'Inbox count on the toolbar'],
+  ['--unread-color', '--unread-bg', 'unread N tag', 'blue-bot'],
+  ...on('--banner-head', ['--banner-1', '--banner-2'], 'banner headline (brief 2)'),
+  ...on('--banner-body', ['--banner-1', '--banner-2'], 'banner body (brief 2)'),
+  ...on('--popup-ok-text', STOPS('--popup-ok'), 'needs-OK pop-up header (brief 2)'),
+  ...on('--popup-done-text', STOPS('--popup-done'), 'turn-done pop-up header (brief 2)'),
+  ['--prog-text', '--panel', 'Kiro n/m'],
+  ['--me-name', '--me-to', '"me"'],
+  ['--me-status', '--me-field', 'my status message'],
+  ['--me-online', '--me-to', '(online)'],
+  ...STATES.map((st): Pair => [st, '--panel', 'buddy-row and session-row phrase']),
+  ['--st-wait', '--urgent-bg', 'top needs-OK session row, unread needs-OK inbox row'],
+  ['--st-wait', '--popup-ok-tint', 'needs-OK pop-up phrase'],
+  ['--st-done', '--popup-done-tint', 'turn-done pop-up phrase'],
+  ['--st-done', '--unread-tint', 'unread turn-done inbox row'],
+];
+const GRAPHICS: Pair[] = [
+  ...on('--tbtn-glyph', ['--tbtn-from', '--tbtn-to'], 'pin and minimize glyphs (S1)'),
+  ...on('--close-glyph', ['--close-from', '--close-to'], 'close-to-menu-bar glyph (S1)'),
+  ...on('--popup-done-close-glyph', ['--popup-done-close-from', '--popup-done-close-to'], 'turn-done pop-up × (S3)'),
+  ...on('--badge-line', [...STATES, '--popup-ok-close-bg'], 'white badge glyph and needs-OK pop-up × (D1)'),
+  ...on('--focus', ['--bg', '--panel', '--field', '--toolbar-bg', '--bevel-to', '--pressed', '--popup-ok-tint', '--popup-done-tint'], 'focus ring'),
+  ...on('--focus-on-gloss', STOPS('--gloss'), 'focus ring on the title bar (S14)'),
+  ...on('--popup-ok-text', STOPS('--popup-ok'), 'focus ring on the needs-OK header (S14)'),
+  ...on('--popup-done-text', STOPS('--popup-done'), 'focus ring on the turn-done header (S14)'),
+  ...on('--focus-on-dark', ['--banner-1', '--banner-2', '--selection'], 'focus ring on the banner and the selected row (S14)'),
+  ['--st-work', '--field', 'relay dot in the status bar'],
+  ['--st-wait', '--field', 'notice dot in the status bar'],
+  ...on('--icon-1', ['--bevel-from', '--bevel-to', '--pressed'], 'toolbar icons'),
+  ...on('--icon-frame', ['--bevel-from', '--bevel-to', '--pressed'], 'skin swatch frame'),
+  ...on('--px-berry-red', ['--panel', '--urgent-bg', '--unread-tint'], 'unread strawberry', 'strawberry-milk'),
+  ...on('--unread-bg', ['--panel', '--urgent-bg', '--unread-tint'], 'unread N tag', 'blue-bot'),
+  ['--unread-select-line', '--selection', 'unread marker frame in the selected row (S5)'],
+  ['--st-idle', '--panel', 'Codex mark in Settings'],
+  ['--st-off', '--panel', 'muted mark in Settings'],
+];
+/** `--banner-btn-bg` is white at 15 % over the banner stripes: the only translucent color in the token files. */
+const BANNER_BTN_ALPHA = 0.15;
+function over(stripe: string, alpha: number): string {
+  const ch = (i: number) => Math.round(parseInt(stripe.slice(i, i + 2), 16) * (1 - alpha) + 255 * alpha);
+  return `#${[1, 3, 5].map((i) => ch(i).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+/** Below 3:1 on purpose: text beside them says the same (Requirement 13.2). [fg, bg, where, skins]. */
+const KNOWN_LOW: Array<[string, string, string, readonly ThemeId[]]> = [
+  ['--prog-done', '--field', 'progress cells and stripes; n/m says the same (D5)', THEMES],
+  ['--prog-todo', '--field', 'to-do cells; n/m says the same (D5)', ['blue-bot']],
+  ['--icon-2', '--bevel-to', "toolbar icons' second figure; the label says the same", THEMES],
+  ['--icon-2', '--pressed', "toolbar icons' second figure; the label says the same", THEMES],
+  ['--tree-box', '--panel', 'group box border; the folder name and aria-expanded say the same', THEMES],
+];
+/** Pairs of the themes look whose tokens go in retro-skin task 5.8, together with this list. */
+const LEGACY_TEXT: Pair[] = [
+  ['--text', '--card-bg', 'rows, cards, names'],
+  ['--text-2', '--card-bg', 'excerpts, ages, notes'],
+  ['--text-2', '--group-bg', 'group counts'],
+  ['--group-text', '--group-bg', 'group header, idle tab'],
+  ['--group-off-text', '--group-off-bg', 'offline group header'],
   ['--tab-active-text', '--tab-active-bg', 'active tab'],
-  ['--on-fill', '--count-bg', 'Inbox count (10 px)'],
-  ['--unread-color', '--unread-bg', 'unread N tag (9 px)', 'blue-bot'],
   ['--quiet-text', '--quiet-bg', 'Later, Mark all read'],
   ['--primary-text', '--primary-bg', 'Go there'],
-  ['--popup-ok-text', '--popup-ok-from', 'needs-OK pop-up title, start'],
-  ['--popup-ok-text', '--popup-ok-to', 'needs-OK pop-up title, end'],
-  ['--popup-done-text', '--popup-done-from', 'turn-done pop-up title, start'],
-  ['--popup-done-text', '--popup-done-to', 'turn-done pop-up title, end'],
-  ['--prog-text', '--card-bg', 'Kiro n/m'],
-  ['--me-name', '--me-bg', '"me"'],
-  ['--me-status', '--me-bg', 'my status message'],
-  ['--me-hint', '--me-bg', 'set your status hint'],
-  ['--me-name', '--me-field', 'my status message while editing'],
-  ...STATES.map((s): Pair => [s, '--card-bg', 'buddy-row phrase, pop-up phrase']),
-  ...STATES.map((s): Pair => [s, '--unread-tint', 'phrase on a hovered buddy row']),
-  ['--st-wait', '--urgent-bg', 'unread needs-OK inbox line'],
-  ['--st-done', '--unread-tint', 'unread turn-done inbox line'],
 ];
-
-const GRAPHICS: Pair[] = [
-  ...STATES.map((s): Pair => [s, '--on-fill', 'badge fill under its white glyph (decision D1)']),
-  ['--tbtn-glyph', '--tbtn-bg', 'pin and minimize glyphs, turn-done pop-up ×'],
-  ['--on-fill', '--close-bg', 'close-to-menu-bar glyph, needs-OK pop-up ×'],
-  ['--popup-done-close-glyph', '--popup-done-close-bg', 'turn-done pop-up × (decision D8)'],
-  ['--group-text', '--group-bg', 'session row ×'],
-  ['--unread-color', '--card-bg', 'unread ♥ on a row', 'strawberry-milk'],
-  ['--focus', '--bg', 'focus ring on the window'],
-  ['--focus', '--card-bg', 'focus ring on a card'],
-  ['--st-work', '--bg', 'connected mark in the footer'],
-  ['--st-wait', '--bg', 'notice mark in the footer'],
-  ['--st-idle', '--card-bg', 'Codex mark in Settings'],
-  ['--st-off', '--card-bg', 'muted mark in Settings'],
-  ['--title-mark-color', '--title-from', 'title mark'],
-  ['--title-mark-color', '--title-to', 'title mark'],
-];
-
-/** Below 3:1 on purpose; `n/m` beside the progress says the same (decision D5). [fg, bg, where, themes]. */
-const KNOWN_LOW: Array<[string, string, string, readonly ThemeId[]]> = [
-  ['--prog-done', '--prog-track', 'done cells and stripes', THEMES],
-  ['--prog-todo', '--prog-track', 'to-do cells', ['blue-bot']],
-];
-
-describe('contrast in both themes', () => {
+describe('contrast in both skins', () => {
   for (const theme of THEMES) {
     const mine = (pairs: Pair[]) => pairs.filter((p) => p[3] === undefined || p[3] === theme);
-    it.each(mine(TEXT))(`${theme}: text %s on %s (%s) is at least 4.5:1`, (fg, bg) => {
+    it.each(mine([...TEXT, ...LEGACY_TEXT]))(`${theme}: text %s on %s (%s) is at least 4.5:1`, (fg, bg) => {
       expect(ratio(theme, fg, bg)).toBeGreaterThanOrEqual(4.5);
     });
     it.each(mine(GRAPHICS))(`${theme}: graphic %s on %s (%s) is at least 3:1`, (fg, bg) => {
       expect(ratio(theme, fg, bg)).toBeGreaterThanOrEqual(3);
     });
+    it(`${theme}: the Next tip glyph on its translucent button over both stripes is at least 3:1`, () => {
+      expect(resolve(blocks[theme], '--banner-btn-bg').replace(/\s/g, '')).toBe('rgba(255,255,255,.15)');
+      for (const stripe of ['--banner-1', '--banner-2']) {
+        expect(contrast(color(theme, '--focus-on-dark'), over(color(theme, stripe), BANNER_BTN_ALPHA))).toBeGreaterThanOrEqual(3);
+      }
+    });
   }
-
   it.each(KNOWN_LOW)('%s on %s (%s) stays a known exception', (fg, bg, _where, themes) => {
     for (const theme of themes) expect([theme, ratio(theme, fg, bg) < 3]).toEqual([theme, true]);
   });
-
-  it('the Strawberry Milk text-2 would fail on its pattern dots, so the footer needs --text-on-bg (decision D8)', () => {
-    expect(ratio('strawberry-milk', '--text-2', '--bg-pattern-color')).toBeLessThan(4.5);
+  it('every color pair the brief names (brief 2) is checked', () => {
+    const checked = new Set([...TEXT, ...GRAPHICS].map(([fg, bg]) => `${fg} ${bg}`));
+    for (const pair of [
+      '--title-text --gloss-1', '--title-text --gloss-4', '--tbtn-glyph --tbtn-from', '--close-glyph --close-from',
+      '--selection-text --selection', '--text-2 --panel', '--banner-head --banner-1', '--banner-body --banner-2',
+      '--popup-ok-text --popup-ok-3', '--popup-done-text --popup-done-3', '--primary-text --primary-from', '--toolbar-text --pressed',
+    ]) expect([pair, checked.has(pair)]).toEqual([pair, true]);
   });
 });
-
 describe('stylesheets', () => {
   const sheets = readdirSync(join(UI, 'styles')).filter((n) => n.endsWith('.css'));
   const themeSheets = readdirSync(join(UI, 'styles/themes')).map((n) => join('themes', n));

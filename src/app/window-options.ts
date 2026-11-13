@@ -29,7 +29,7 @@ export function mainWindowPosition(area: Rect): Point {
  * The window background of each theme, for an opaque main window: the one copy of `--bg` outside
  * themes.css, checked against it by a unit test (themes Requirement 3.6).
  */
-export const THEME_BACKGROUND: Readonly<Record<ThemeId, string>> = { 'blue-bot': '#EEF6FF', 'strawberry-milk': '#FFF7FB' };
+export const THEME_BACKGROUND: Readonly<Record<ThemeId, string>> = { 'blue-bot': '#E6F0FC', 'strawberry-milk': '#FDEFF5' };
 
 export function mainWindowOptions(o: {
   preload: string;
