@@ -6,6 +6,7 @@ import './styles/sprites.css';
 import './styles/fonts.css';
 import './styles/icons.css';
 import './styles/main.css';
+import './styles/list.css';
 import type { AppSnapshot } from '../core/snapshot';
 import { appBridge, browserSource } from './bridge';
 import { renderChrome, setupChrome } from './chrome';
@@ -50,7 +51,7 @@ function render(): void {
     renderChrome(s, tab, notice?.text);
     renderMe($('.me-row'), meView(s, tab), { save: (text) => bridge?.setStatus(text) });
     const c = clock();
-    renderList($('.screen-list'), buildGroups(s, showMore, c), bridge !== null, {
+    renderList($('.screen-list'), s.settings.theme, buildGroups(s, showMore, c), bridge !== null, {
       click: (kind, key) => bridge?.click(kind, key),
       hide: (session) => bridge?.hide(session),
       setGroupOpen: (key, open) => {

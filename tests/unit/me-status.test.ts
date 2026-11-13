@@ -113,13 +113,14 @@ describe('controller.onStatus', () => {
 describe('meView', () => {
   const s = snapshot([], { mode: 'own' }, { myStatus: '★ building AgentBuddy ♪' });
   it('shows the row on the Buddies tab of the app only (Requirement 18.1)', () => {
-    expect(meView(s, 'list')).toEqual({ text: '★ building AgentBuddy ♪', hint: false });
+    expect(meView(s, 'list')).toEqual({ text: '★ building AgentBuddy ♪', hint: false, theme: 'blue-bot' });
     expect(meView({ ...s, mode: 'attached' }, 'list')).not.toBeNull();
     expect(meView(s, 'inbox')).toBeNull();
     expect(meView(s, 'settings')).toBeNull();
     expect(meView({ ...s, mode: 'browser' }, 'list')).toBeNull();
   });
   it('asks for the hint when no message is set (Requirement 18.2)', () => {
-    expect(meView(snapshot([], { mode: 'own' }), 'list')).toEqual({ text: '', hint: true });
+    expect(meView(snapshot([], { mode: 'own' }), 'list')).toEqual({ text: '', hint: true, theme: 'blue-bot' });
+    expect(meView(snapshot([], { mode: 'own' }, { theme: 'strawberry-milk' }), 'list')?.theme).toBe('strawberry-milk');
   });
 });

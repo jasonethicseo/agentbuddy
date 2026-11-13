@@ -1,0 +1,108 @@
+/* The Buddies tab: the "me" row and the buddy list (MainBot.dc.html, MainCute.dc.html; themes Requirement 7.1–7.3).
+   Colors, radii and decoration characters come from themes/*.css. */
+/* "Me" row (Requirement 18): a card; every color, border and radius comes from the --me-* tokens. */
+.me-row {
+  display: flex; align-items: center; gap: 10px; margin: 0 8px; padding: 8px 10px; background: var(--me-bg);
+  border: var(--me-line-width) solid var(--me-line); border-radius: var(--me-radius); box-shadow: var(--me-shadow);
+}
+.me-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.me-name { font-family: var(--font-title); font-size: 15px; color: var(--me-name); }
+.me-status {
+  display: flex; align-items: baseline; gap: 0; max-width: 100%; padding: 0; text-align: left; white-space: nowrap; cursor: pointer;
+  color: var(--me-status); background: transparent; border: 0;
+}
+.me-status[data-hint] { color: var(--me-hint); }
+.me-status:hover .me-status-text { text-decoration: underline; }
+.me-status-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.me-pencil { flex-shrink: 0; white-space: pre; }
+.me-input {
+  box-sizing: border-box; width: 100%; margin: 0; padding: 2px 4px; font: inherit; color: var(--me-name);
+  background: var(--me-field); border: 1px solid var(--me-field-line); border-radius: var(--me-field-radius);
+}
+
+/* The buddy list: one card (MainBot / MainCute) */
+.screen-list {
+  margin: 0 8px; background: var(--card-bg); border: var(--card-line-width) solid var(--card-line);
+  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+}
+.screen-inbox { background: var(--row); }
+.empty { margin: 0; padding: 16px 10px; color: var(--text-2); }
+
+/* Groups */
+.group-head {
+  display: flex; align-items: center; gap: 6px; box-sizing: border-box; width: calc(100% - 12px); margin: 6px 6px 2px;
+  padding: 5px 10px; text-align: left; cursor: pointer; font-family: var(--font-title); font-size: 13px;
+  color: var(--group-text); background: var(--group-bg); border: 0; border-radius: var(--group-radius);
+}
+.group-head[data-kind='offline'] { color: var(--group-off-text); background: var(--group-off-bg); margin-bottom: 6px; }
+.group-count { font-family: var(--font-text); font-size: 11px; color: var(--text-2); }
+.group-head[data-kind='offline'] .group-count { color: var(--group-off-text); }
+
+/* Buddy rows */
+.buddy + .buddy { border-top: var(--divider); }
+.buddy-line { display: flex; align-items: center; }
+.buddy-main, .session-main {
+  display: flex; align-items: center; flex: 1 1 auto; min-width: 0;
+  background: transparent; border: 0; text-align: left; white-space: nowrap;
+}
+button.buddy-main, button.session-main { cursor: pointer; }
+button.buddy-main:hover { background: var(--unread-tint); }
+.buddy-main { gap: 7px; padding: 5px 10px; }
+.buddy-name { font-family: var(--font-title); font-size: 14px; }
+.buddy-count { color: var(--text-2); }
+.buddy-status { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
+/* The phrase first, bold, in its state color (design.md "Status phrases"). */
+.phrase { font-weight: 700; color: var(--text-2); }
+.lead-work::before { content: var(--glyph-work) " "; }
+[data-state='WAITING_APPROVAL'] > .buddy-line .phrase { color: var(--st-wait); }
+[data-state='WORKING'] > .buddy-line .phrase { color: var(--st-work); }
+[data-state='TURN_DONE'] > .buddy-line .phrase { color: var(--st-done); }
+[data-state='STALE'] > .buddy-line .phrase { color: var(--st-stale); }
+[data-state='IDLE'] > .buddy-line .phrase { color: var(--st-idle); }
+[data-state='OFFLINE'] > .buddy-line .phrase,
+[data-state='ENDED'] > .buddy-line .phrase { color: var(--st-off); }
+.progress-text { flex-shrink: 0; font-family: var(--font-title); font-size: 13px; color: var(--prog-text); }
+.unread-mark {
+  flex-shrink: 0; padding: var(--unread-pad); font-size: var(--unread-size); font-weight: 800; line-height: 1.4;
+  color: var(--unread-color); background: var(--unread-bg); border-radius: var(--unread-radius);
+}
+.unread-mark::before { content: var(--unread-mark); }
+.buddy-hide, .session-hide {
+  flex-shrink: 0; width: 20px; height: 20px; padding: 0; font-size: 12px; line-height: 1; cursor: pointer;
+  color: var(--group-text); background: var(--group-bg); border: 0; border-radius: var(--tbtn-radius);
+}
+.buddy-hide { margin-right: 10px; opacity: 0; }
+.buddy:hover .buddy-hide, .buddy:focus-within .buddy-hide, .buddy-hide:focus-visible { opacity: 1; }
+
+/* Kiro progress: cells (Blue Bot) or a striped bar (Strawberry Milk), indented to the name */
+.progress { margin: -1px 10px 6px 43px; }
+.progress-cells {
+  display: var(--prog-cells-display); grid-template-columns: repeat(var(--cells), minmax(0, 1fr)); gap: 2px; padding: 2px;
+  background: var(--prog-track); border: 2px solid var(--prog-frame); border-radius: var(--prog-radius);
+}
+.cell { height: 6px; background: var(--prog-todo); }
+.cell[data-cell='done'] { background: var(--prog-done); }
+.cell[data-cell='current'] { background: var(--prog-current); }
+.progress-bar {
+  display: var(--prog-bar-display); box-sizing: border-box; height: 10px; overflow: hidden;
+  background: var(--prog-track); border: 2px solid var(--prog-frame); border-radius: var(--prog-radius);
+}
+.progress[data-bar] .progress-bar { display: block; }
+.progress-fill { height: 100%; background: var(--prog-fill); }
+
+/* Session rows */
+.session { display: flex; align-items: center; gap: 6px; margin: 2px 6px 0; padding: 4px 8px 4px 22px; border-radius: var(--group-radius); }
+.session[data-top] { padding-left: 19px; border-left: 3px solid var(--st-off); }
+.session[data-top][data-state='WAITING_APPROVAL'] { background: var(--urgent-bg); border-left-color: var(--urgent-line); }
+.session[data-top][data-state='WORKING'] { border-left-color: var(--st-work); }
+.session[data-top][data-state='TURN_DONE'] { border-left-color: var(--st-done); }
+.session[data-top][data-state='STALE'] { border-left-color: var(--st-stale); }
+.session[data-top][data-state='IDLE'] { border-left-color: var(--st-idle); }
+.session-main { gap: 6px; padding: 0; }
+.tree { color: var(--tree); }
+.session-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.session[data-top] .session-name { font-weight: 700; }
+.session-phrase { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
+.session-age { flex-shrink: 0; color: var(--text-2); }
+.more { padding: 2px 10px 6px 52px; font-size: 11px; color: var(--text-2); }
+.more-toggle { padding: 0; font-size: 11px; color: var(--text-2); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }

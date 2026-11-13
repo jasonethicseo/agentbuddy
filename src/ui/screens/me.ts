@@ -1,7 +1,7 @@
 // The "me" row between the title bar and the alert strip (messenger-app Requirement 18).
 // A button shows the message; activating it opens a field: Enter saves, Esc or leaving cancels.
 import { cleanMyStatus } from '../../core/text';
-import { bubbleIcon } from '../icons';
+import { sprite } from '../sprites/render';
 import { button, el } from '../dom';
 import { MY_STATUS_HINT, limitStatusInput } from '../model/me';
 import type { MeView } from '../model/me';
@@ -25,9 +25,7 @@ function statusButton(root: HTMLElement, a: MeActions): HTMLButtonElement {
 }
 
 function draw(root: HTMLElement, a: MeActions): HTMLButtonElement {
-  const tile = el('span', 'me-tile');
-  tile.setAttribute('aria-hidden', 'true');
-  tile.append(bubbleIcon(22, true));
+  const tile = sprite(shown!.theme, 'me', null, 34); // aria-hidden (Requirement 18.8)
   const text = el('div', 'me-text');
   const b = statusButton(root, a);
   text.append(el('span', 'me-name', 'me'), b);
@@ -54,7 +52,7 @@ function startEdit(root: HTMLElement, a: MeActions): void {
     if (save) {
       const text = cleanMyStatus(input.value) ?? '';
       if (text !== shown!.text) {
-        shown = { text, hint: text === '' };
+        shown = { text, hint: text === '', theme: shown!.theme };
         a.save(text);
       }
     }

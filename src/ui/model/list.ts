@@ -32,7 +32,8 @@ export interface SessionVM {
   age: string;
   /** The session that sets the buddy state. */
   top: boolean;
-  tree: '├' | '└';
+  /** The tree mark of every session row (themes T8). */
+  tree: '┗';
   unread: boolean;
   /** Has a × (app only). */
   canHide: boolean;
@@ -133,7 +134,7 @@ function buddyVM(b: BuddyView, s: AppSnapshot, inOffline: boolean, showMore: Rea
       ...(x.state === 'WORKING' ? { lead: 'work' as const } : {}),
       age: age(x.lastAt, clock.nowMs),
       top: x.key === first.key,
-      tree: i === rows.length - 1 ? '└' : '├',
+      tree: '┗',
       unread: unacked.has(x.key),
       canHide: app,
     })),

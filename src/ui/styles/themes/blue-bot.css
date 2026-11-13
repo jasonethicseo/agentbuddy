@@ -134,6 +134,7 @@
   --px-me-cheek: transparent;
   --me-bg: var(--card-bg);
   --me-line: var(--card-line);
+  --me-line-width: var(--card-line-width);
   --me-name: var(--text);
   --me-status: var(--text-2);
   --me-hint: var(--text-2);

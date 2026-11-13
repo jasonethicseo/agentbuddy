@@ -28,6 +28,25 @@ export function hasBadge(who: SpriteWho, state: DisplayState | null, size: Sprit
   return who !== 'me' && who !== 'title' && state !== null && state !== 'OFFLINE' && size >= 26;
 }
 
+/** The state's name for screen readers, next to every sprite (messenger-app Requirement 6.13). */
+export const STATE_NAMES: Readonly<Record<DisplayState, string>> = {
+  WAITING_APPROVAL: 'waiting for approval',
+  WORKING: 'working',
+  TURN_DONE: 'turn done',
+  STALE: 'no news',
+  IDLE: 'idle',
+  OFFLINE: 'offline',
+  ENDED: 'logged off',
+};
+
+/** An agent's state sprite and, after it, the state name as screen-reader text. */
+export function stateSprite(theme: ThemeId, agent: AgentId, state: DisplayState, size: SpriteSize): [HTMLSpanElement, HTMLSpanElement] {
+  const name = document.createElement('span');
+  name.className = 'sr-only';
+  name.textContent = STATE_NAMES[state];
+  return [sprite(theme, agent, state, size), name];
+}
+
 /** `<span class="sprite">` with the SVG and, where Requirement 6.5 asks, the badge; hidden from screen readers. */
 export function sprite(theme: ThemeId, who: SpriteWho, state: DisplayState | null, size: SpriteSize): HTMLSpanElement {
   const wrap = document.createElement('span');

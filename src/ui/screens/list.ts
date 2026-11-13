@@ -1,8 +1,11 @@
 // The Buddies tab: folder groups, buddy rows, session rows and the hidden-sessions line
-// (messenger-app Requirement 6). Built from model/list.ts with createElement and textContent only.
-import { stateIcon } from '../icons';
+// (messenger-app Requirement 6; themes Requirements 4, 6, 7.2, 7.3). Built from model/list.ts with createElement
+// and textContent only; sprites and decoration characters follow the theme.
+import type { ThemeId } from '../../core/theme';
 import { button, el } from '../dom';
+import { stateSprite } from '../sprites/render';
 import type { BuddyVM, GroupVM, SessionVM } from '../model/list';
+import type { ProgressVM } from '../model/progress';
 import type { ClickTarget } from '../../core/snapshot';
 
 export interface ListActions {
@@ -44,14 +47,14 @@ function sessionPhrase(s: SessionVM): HTMLElement {
   return p;
 }
 
-function sessionRow(s: SessionVM, interactive: boolean, a: ListActions): HTMLElement {
+function sessionRow(theme: ThemeId, agent: BuddyVM['agent'], s: SessionVM, interactive: boolean, a: ListActions): HTMLElement {
   const row = el('div', 'session');
   row.dataset['state'] = s.state;
   if (s.top) row.dataset['top'] = '';
   const tree = el('span', 'tree', s.tree);
   tree.setAttribute('aria-hidden', 'true');
   const main = rowMain('session-main', interactive, () => a.click('session', s.key), `s:${s.key}`);
-  main.append(...stateIcon(s.state, 12), el('span', 'session-name', s.name), ' ', sessionPhrase(s), ' ', el('span', 'session-age', s.age));
+  main.append(...stateSprite(theme, agent, s.state, 16), el('span', 'session-name', s.name), ' ', sessionPhrase(s), ' ', el('span', 'session-age', s.age));
   if (s.unread) main.append(el('span', 'sr-only', 'unread'));
   row.append(tree, main);
   if (s.canHide) {
@@ -62,21 +65,48 @@ function sessionRow(s: SessionVM, interactive: boolean, a: ListActions): HTMLEle
   return row;
 }
 
-function buddyBlock(vm: BuddyVM, interactive: boolean, a: ListActions): HTMLElement {
+/** The theme's unread marker (`N` tag or `♥`), drawn by CSS, then `unread` for screen readers. */
+function unreadMark(): Node[] {
+  const m = el('span', 'unread-mark');
+  m.setAttribute('aria-hidden', 'true');
+  return [m, el('span', 'sr-only', 'unread')];
+}
+
+/** Blue Bot draws the cells and Strawberry Milk the bar (tokens); without cells both draw the bar. */
+function progressBlock(p: ProgressVM): HTMLElement {
+  const block = el('div', 'progress');
+  block.setAttribute('aria-hidden', 'true');
+  if (p.cells !== undefined) {
+    const cells = el('div', 'progress-cells');
+    cells.style.setProperty('--cells', String(p.cells.length)); // CSSOM, which the CSP allows
+    for (const c of p.cells) {
+      const cell = el('span', 'cell');
+      cell.dataset['cell'] = c;
+      cells.append(cell);
+    }
+    block.append(cells);
+  } else {
+    block.dataset['bar'] = '';
+  }
+  const bar = el('div', 'progress-bar');
+  const fill = el('div', 'progress-fill');
+  fill.style.width = `${Math.round((p.ratio ?? 0) * 1000) / 10}%`;
+  bar.append(fill);
+  block.append(bar);
+  return block;
+}
+
+function buddyBlock(theme: ThemeId, vm: BuddyVM, interactive: boolean, a: ListActions): HTMLElement {
   const block = el('div', 'buddy');
   block.dataset['state'] = vm.state;
   const line = el('div', 'buddy-line');
   const main = rowMain('buddy-main', interactive, () => a.click('buddy', vm.key), `b:${vm.key}`);
   if (vm.hover !== undefined) main.title = vm.hover;
-  main.append(...stateIcon(vm.state, 14), el('span', 'buddy-name', vm.name));
+  main.append(...stateSprite(theme, vm.agent, vm.state, 26), el('span', 'buddy-name', vm.name));
   if (vm.count !== undefined) main.append(' ', el('span', 'buddy-count', `[${vm.count}]`));
   main.append(' ', statusSpan(vm));
   if (vm.progress !== undefined) main.append(el('span', 'progress-text', vm.progress.text));
-  if (vm.unread) {
-    const dot = el('span', 'unread-dot');
-    dot.setAttribute('aria-hidden', 'true');
-    main.append(dot, el('span', 'sr-only', 'unread'));
-  }
+  if (vm.unread) main.append(...unreadMark());
   line.append(main);
   if (vm.hide !== undefined) {
     const key = vm.hide;
@@ -85,15 +115,8 @@ function buddyBlock(vm: BuddyVM, interactive: boolean, a: ListActions): HTMLElem
     line.append(x);
   }
   block.append(line);
-  if (vm.progress?.ratio !== undefined) {
-    const bar = el('div', 'progress');
-    bar.setAttribute('aria-hidden', 'true');
-    const fill = el('div', 'progress-fill');
-    fill.style.width = `${Math.round(vm.progress.ratio * 1000) / 10}%`; // CSSOM, which the CSP allows
-    bar.append(fill);
-    block.append(bar);
-  }
-  for (const s of vm.sessions) block.append(sessionRow(s, interactive, a));
+  if (vm.progress?.ratio !== undefined) block.append(progressBlock(vm.progress));
+  for (const s of vm.sessions) block.append(sessionRow(theme, vm.agent, s, interactive, a));
   if (vm.more !== undefined) {
     const more = el('div', 'more');
     more.append(el('span', 'more-text', `${vm.more.text} · `), button('more-toggle', vm.more.shown ? 'hide' : 'show', () => a.toggleMore(vm.key), `m:${vm.key}`));
@@ -114,11 +137,11 @@ function groupHead(g: GroupVM, a: ListActions): HTMLButtonElement {
   return head;
 }
 
-export function renderList(root: HTMLElement, groups: readonly GroupVM[], interactive: boolean, a: ListActions): void {
+export function renderList(root: HTMLElement, theme: ThemeId, groups: readonly GroupVM[], interactive: boolean, a: ListActions): void {
   const parts: Node[] = [];
   for (const g of groups) {
     parts.push(groupHead(g, a));
-    if (g.open) for (const vm of g.buddies) parts.push(buddyBlock(vm, interactive, a));
+    if (g.open) for (const vm of g.buddies) parts.push(buddyBlock(theme, vm, interactive, a));
   }
   root.replaceChildren(...(parts.length > 0 ? parts : [el('p', 'empty', 'No buddies yet. Agents show up here after their next hook event.')]));
 }

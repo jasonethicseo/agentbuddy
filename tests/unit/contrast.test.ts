@@ -104,11 +104,11 @@ describe('tokens', () => {
     for (const name of ALIASES.keys()) expect(color(name)).toMatch(/^#[0-9A-F]{6}$/);
   });
   it('the me row has its own tokens for every color, border and radius it uses (Requirement 18.7)', () => {
-    const css = readFileSync(join(UI, 'styles/main.css'), 'utf8');
+    const css = readFileSync(join(UI, 'styles/list.css'), 'utf8');
     const rules = [...css.matchAll(/^[^{}]*\.me-[^{]*\{[^}]*\}/gm)].map((m) => m[0]);
     expect(rules.length).toBeGreaterThan(5);
     for (const rule of rules) {
-      for (const v of rule.matchAll(/var\((--[a-z0-9-]+)\)/g)) expect([rule.split('{')[0]!.trim(), v[1]!.startsWith('--me-')]).toEqual([rule.split('{')[0]!.trim(), true]);
+      for (const v of rule.matchAll(/var\((--[a-z0-9-]+)\)/g)) expect([rule.split('{')[0]!.trim(), v[1]!.startsWith('--me-') || v[1]!.startsWith('--font-')]).toEqual([rule.split('{')[0]!.trim(), true]);
       expect(rule).not.toMatch(/border-radius:\s*\d/);
     }
   });
@@ -135,7 +135,8 @@ describe('stylesheets', () => {
   // Every custom property any stylesheet declares (themes.css, sprites.css's per-sprite ones, fonts.css).
   const themeSheets = readdirSync(join(UI, 'styles/themes')).map((n) => join('themes', n));
   const declared = [...sheets, ...themeSheets].flatMap((n) => [...readFileSync(join(UI, 'styles', n), 'utf8').matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]!));
-  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, ...STRINGS, ...declared]);
+  // `--cells` is set by screens/list.ts through the CSSOM (the number of progress cells).
+  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, ...STRINGS, ...declared, '--cells']);
   it.each(sheets)('%s uses only defined variables', (name) => {
     const used = [...readFileSync(join(UI, 'styles', name), 'utf8').matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]!);
     expect(used.filter((v) => !defined.has(v))).toEqual([]);
