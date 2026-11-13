@@ -5,6 +5,12 @@ import type { BuddyView, SessionView } from '../core/buddies';
 import { isBundleId } from '../core/launcher';
 import { JUMP_TIMEOUT_MS } from './config';
 
+/**
+ * The app a Codex session is brought forward in when it reports none (fix F3): Codex in the ChatGPT app runs
+ * `notify` without `__CFBundleIdentifier`; the running `/Applications/ChatGPT.app` had this bundle ID (2026-11-13).
+ * `runJump` still checks that it runs, so it is never started.
+ */
+export const CODEX_APP = 'com.openai.codex';
 /** A jump only brings an app forward; no app gets a folder argument (fix F1, 2026-11-13). */
 export type JumpPlan = { kind: 'notice'; text: string } | { kind: 'run'; bundleId: string };
 
@@ -15,8 +21,8 @@ export const NOTICES = {
   failed: (id: string) => `couldn't bring ${id} forward`,
 } as const;
 
-function find(views: readonly BuddyView[], session: string): SessionView | null {
-  for (const buddy of views) for (const s of buddy.sessions) if (s.key === session) return s;
+function find(views: readonly BuddyView[], session: string): { buddy: BuddyView; s: SessionView } | null {
+  for (const buddy of views) for (const s of buddy.sessions) if (s.key === session) return { buddy, s };
   return null;
 }
 
@@ -27,10 +33,12 @@ function find(views: readonly BuddyView[], session: string): SessionView | null 
  * whenever no Kiro window has that folder as its only folder, for example a window with a multi-root workspace.
  */
 export function planJump(views: readonly BuddyView[], session: string): JumpPlan {
-  const s = find(views, session);
-  if (s === null) return { kind: 'notice', text: NOTICES.gone };
-  if (!isBundleId(s.bundleId)) return { kind: 'notice', text: NOTICES.unknownApp };
-  return { kind: 'run', bundleId: s.bundleId };
+  const found = find(views, session);
+  if (found === null) return { kind: 'notice', text: NOTICES.gone };
+  const { buddy, s } = found;
+  if (isBundleId(s.bundleId)) return { kind: 'run', bundleId: s.bundleId };
+  if (buddy.agent === 'codex') return { kind: 'run', bundleId: CODEX_APP }; // a reported app always wins (fix F3)
+  return { kind: 'notice', text: NOTICES.unknownApp };
 }
 
 /** The two commands of a `run` plan: the running check, then `open -b`. Program paths are absolute. */

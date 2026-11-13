@@ -39,6 +39,15 @@ describe('planJump', () => {
     expect(planJump(views('TURN_DONE', { [C]: 'com.microsoft.VSCode' }), C)).toEqual({ kind: 'run', bundleId: 'com.microsoft.VSCode' });
     expect(planJump(views('TURN_DONE', { [C]: 'dev.kiro.desktop' }), C)).toEqual({ kind: 'run', bundleId: 'dev.kiro.desktop' });
   });
+  it('brings the Codex app forward for a Codex session that reports no app (fix F3, observed 2026-11-13)', () => {
+    const X = key('codex', '01a1…');
+    const list = [...views(), buddyView('codex', '/Users/dev/demo', [{ key: X, state: 'TURN_DONE' }])];
+    expect(planJump(list, X)).toEqual({ kind: 'run', bundleId: 'com.openai.codex' });
+    list[2]!.sessions[0]!.bundleId = '-a Calculator';
+    expect(planJump(list, X)).toEqual({ kind: 'run', bundleId: 'com.openai.codex' });
+    list[2]!.sessions[0]!.bundleId = 'com.apple.Terminal';
+    expect(planJump(list, X)).toEqual({ kind: 'run', bundleId: 'com.apple.Terminal' }); // a reported app wins
+  });
   it('shows a notice for a session that is gone, or that has no or a bad bundle ID', () => {
     expect(planJump(views(), key('codex', '01a1…'))).toEqual({ kind: 'notice', text: NOTICES.gone });
     expect(planJump(views('TURN_DONE', {}), C)).toEqual({ kind: 'notice', text: NOTICES.unknownApp });

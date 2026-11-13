@@ -179,7 +179,7 @@ Launcher values seen so far:
 | Shell in Terminal (not a hook process) | `com.apple.Terminal` | `Apple_Terminal` | the builder's own shell check, 2026-11-12 |
 | Kiro CLI hook | unverified | unverified | |
 | Codex CLI | unverified (no `notify` call observed yet) | unverified | |
-| Codex with sessions under `~/Documents/Codex/` (probably the ChatGPT app) | unset | unset | daily log, 3 events 2026-11-13 06:30–06:32 UTC |
+| Codex with sessions under `~/Documents/Codex/` (probably the ChatGPT app) | unset | unset | daily log, 3 events 2026-11-13 06:30–06:32 UTC. The app jumps such sessions to `com.openai.codex`, the bundle ID of the running `/Applications/ChatGPT.app` (read with `lsappinfo`, 2026-11-13); a fallback chosen by the builder, not a value Codex reports |
 | Shell inside a private `tmux` server started from the Kiro agent's shell (not a hook process) | `dev.kiro.desktop` (inherited from the shell that started the server) | `tmux` | tmux 3.5a, 2026-11-12 |
 | Inside `screen` | unverified | unverified | |
 

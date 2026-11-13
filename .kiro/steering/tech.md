@@ -53,7 +53,7 @@ inclusion: always
   - inbox: an entry is acknowledged exactly when a later `ack` record of its session exists; hidden sessions come back on a later event, and marks older than 24 hours go.
   - status lines: with hide-text on there is no excerpt; otherwise the excerpt is at most 40 code points.
   - pop-ups: placed inside the visible area, never overlapping, each newer one above the older ones.
-  - jump: never runs a bundle ID that fails the events.md form; never passes a folder (a folder opened a new Kiro window; retro-skin fix F1); `-b` is the only argument starting with `-`.
+  - jump: never runs a bundle ID that fails the events.md form; never passes a folder (a folder opened a new Kiro window; retro-skin fix F1); a Codex session that reports no app jumps to `com.openai.codex` (fix F3), any other gets a notice; `-b` is the only argument starting with `-`.
   - app files: settings and inbox records parse without throwing and keep only known keys of the right type.
   - buddy list model: every buddy is in exactly one group; the offline group holds exactly the buddies whose sessions are all `OFFLINE` or `ENDED`.
   - themes: reading a theme gives one of the two themes for any JSON value or string; saving and reading the settings back gives the same theme; every token name of one theme is defined by the other.

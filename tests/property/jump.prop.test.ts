@@ -1,12 +1,12 @@
-// P24: jump plans (messenger-app Requirements 12.3–12.6; fix F1): only valid bundle IDs, `-b` as the only option,
-// and never a folder, whatever the agent, state or session folder.
+// P24: jump plans (messenger-app Requirements 12.3–12.6; fixes F1, F3): only valid bundle IDs, `-b` as the only option,
+// never a folder, and the Codex app for a Codex session that reports no app.
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { RANK } from '../../src/core/buddies';
 import type { BuddyView } from '../../src/core/buddies';
 import { isBundleId } from '../../src/core/launcher';
 import type { DisplayState } from '../../src/core/state';
-import { jumpCommands, planJump } from '../../src/app/jump';
+import { CODEX_APP, jumpCommands, planJump } from '../../src/app/jump';
 import { buddyView, key } from '../fixtures/views';
 const AGENTS = ['kiro', 'claude', 'codex'] as const;
 const bundleArb = fc.option(
@@ -31,14 +31,16 @@ describe('P24 jump plans', () => {
         list[0]!.cwd = folder;
         if (bundleId !== undefined) list[0]!.sessions[0]!.bundleId = bundleId;
         const plan = planJump(list, KEY);
+        // A Codex session that reports no valid app falls back to the Codex app (fix F3); every other one gets a notice.
+        const expectedId = isBundleId(bundleId) ? bundleId : agent === 'codex' ? CODEX_APP : undefined;
         if (plan.kind === 'notice') {
-          expect(isBundleId(bundleId)).toBe(false);
+          expect(expectedId).toBeUndefined();
           return;
         }
-        expect(plan).toEqual({ kind: 'run', bundleId });
+        expect(plan).toEqual({ kind: 'run', bundleId: expectedId });
         expect(isBundleId(plan.bundleId)).toBe(true);
         const { check, open } = jumpCommands(plan);
-        expect(open).toEqual(['/usr/bin/open', ['-b', bundleId]]);
+        expect(open).toEqual(['/usr/bin/open', ['-b', expectedId]]);
         for (const [file, args] of [check, open]) {
           expect(file.startsWith('/usr/bin/')).toBe(true);
           expect(args.filter((a) => a.startsWith('-'))).toEqual(file === '/usr/bin/open' ? ['-b'] : []);
