@@ -113,6 +113,25 @@ export function isCodexTitleTurn(p: Payload): boolean {
   if (typeof last === 'string' && last.trimStart().startsWith(CODEX_TITLE_PREFIX)) return true;
   return isTitleReply(p['last-assistant-message']);
 }
+/** Start of the prompt of Codex's hidden suggestions turn (trap 7, seen 2026-11-13). */
+export const CODEX_SUGGESTIONS_PATTERN = /^#\s*Overview\s+Generate \d+ to \d+ hyperpersonalized suggestions/;
+/** True when `reply`, trimmed, is JSON for an object with an own `suggestions` property. */
+function isSuggestionsReply(reply: unknown): boolean {
+  if (typeof reply !== 'string') return false;
+  try {
+    const parsed: unknown = JSON.parse(reply.trim());
+    return isRecord(parsed) && Object.hasOwn(parsed, 'suggestions');
+  } catch {
+    return false;
+  }
+}
+/** Codex hidden suggestions turn (trap 7): either signal is enough; only the last input message counts (trap 2). */
+export function isCodexSuggestionsTurn(p: Payload): boolean {
+  const messages = p['input-messages'];
+  const last: unknown = Array.isArray(messages) ? messages.at(-1) : undefined;
+  if (typeof last === 'string' && CODEX_SUGGESTIONS_PATTERN.test(last.trimStart())) return true;
+  return isSuggestionsReply(p['last-assistant-message']);
+}
 
 /** First `input-messages` item: the thread's first user request (trap 2). Truncated; undefined if blank. */
 function codexFirstInput(p: Payload): string | undefined {
@@ -128,7 +147,7 @@ export const normalizeCodex: Normalizer = (p, at) => {
   const session = str(p, 'thread-id');
   const cwd = str(p, 'cwd');
   if (session === undefined || cwd === undefined) return null;
-  if (isCodexTitleTurn(p)) return null;
+  if (isCodexTitleTurn(p) || isCodexSuggestionsTurn(p)) return null;
   return makeEvent('codex', session, cwd, 'stop', at, {
     text: shortText(p, 'last-assistant-message'),
     firstInput: codexFirstInput(p),

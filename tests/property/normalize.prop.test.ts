@@ -139,3 +139,33 @@ describe('P2 Codex title turns', () => {
     );
   });
 });
+describe('P2b Codex suggestions turns (trap 7, seen 2026-11-13)', () => {
+  const suggestionsMessage = fc
+    .tuple(fc.constantFrom('', ' ', '\n'), fc.constantFrom('\n', ' ', '\n\n'), fc.string({ maxLength: 80 }))
+    .map(([lead, gap, rest]) => `${lead}# Overview${gap}Generate 0 to 3 hyperpersonalized suggestions${rest}`);
+  const suggestionsReply = fc
+    .tuple(fc.constantFrom('', ' ', '\n'), fc.array(fc.string({ maxLength: 20 }), { maxLength: 3 }))
+    .map(([pad, items]) => `${pad}${JSON.stringify({ suggestions: items })}${pad}`);
+  const otherMessages = fc.array(fc.string({ maxLength: 40 }), { maxLength: 3 });
+  const anyReply = fc.string({ maxLength: 80 }).filter((s) => !s.includes('suggestions'));
+  it('drops the event if either signal is present', () => {
+    fc.assert(
+      fc.property(fc.constantFrom('message', 'reply', 'both'), suggestionsMessage, suggestionsReply, otherMessages, anyReply, (which, msg, reply, before, plainReply) => {
+        const payload = {
+          type: 'agent-turn-complete',
+          'thread-id': '01a1…',
+          'turn-id': '01a1…',
+          cwd: '/',
+          'input-messages': which === 'reply' ? [...before, 'run ls'] : [...before, msg],
+          'last-assistant-message': which === 'message' ? plainReply : reply,
+        };
+        expect(normalize('codex', JSON.stringify(payload), AT)).toBeNull();
+      }),
+      { numRuns: 500 },
+    );
+  });
+  it('keeps a normal turn whose reply only mentions suggestions in text', () => {
+    const payload = { type: 'agent-turn-complete', 'thread-id': '01a1…', cwd: '/Users/dev/demo', 'input-messages': ['any ideas?'], 'last-assistant-message': 'Here are some suggestions.' };
+    expect(normalize('codex', JSON.stringify(payload), AT)).not.toBeNull();
+  });
+});

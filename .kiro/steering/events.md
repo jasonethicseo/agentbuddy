@@ -114,7 +114,7 @@ Probe summary at the end of the observation (2026-11-12, 02:29–04:50 UTC; prob
 Not yet observed after connecting:
 - Claude app and CLI: `Notification` (`permission_prompt`, `idle_prompt`).
 - Claude `SessionEnd` with a reason other than `other` (`clear`, `resume`, `logout`, `prompt_input_exit`).
-- Codex CLI and Codex in the ChatGPT app: no `notify` call yet.
+- Codex CLI: no `notify` call yet. Codex with sessions under `~/Documents/Codex/` (probably the ChatGPT app): first `notify` calls seen 2026-11-13 (3 `agent-turn-complete` events: two turns of one thread, and one suggestions turn, trap 7).
 - Kiro CLI `SessionEnd`: no call yet.
 
 ## Normalized event
@@ -154,6 +154,7 @@ interface BuddyEvent {
 | Claude `SessionEnd` (any `reason`) | `end` |
 | Codex `agent-turn-complete` | `stop`, text = `last-assistant-message`, firstInput = first `input-messages` item |
 | Codex internal title turn (trap 1) | dropped |
+| Codex internal suggestions turn (trap 7) | dropped |
 | Anything else or unparsable | dropped, never thrown |
 
 All Claude rows also set `projectDir` from the hook process's `CLAUDE_PROJECT_DIR` environment variable when it is set (Claude Code sets it for hooks: the project root where the session started).
@@ -177,7 +178,8 @@ Launcher values seen so far:
 | Claude Code CLI hook, in a Kiro IDE terminal | `dev.kiro.desktop` | `kiro` | daily log, 6 events 2026-11-13 00:09 UTC. The bundle ID is Kiro's, although the agent is Claude Code |
 | Shell in Terminal (not a hook process) | `com.apple.Terminal` | `Apple_Terminal` | the builder's own shell check, 2026-11-12 |
 | Kiro CLI hook | unverified | unverified | |
-| Codex CLI, Codex in the ChatGPT app | unverified (no `notify` call observed yet) | unverified | the daily logs up to 2026-11-13 hold no Codex event at all |
+| Codex CLI | unverified (no `notify` call observed yet) | unverified | |
+| Codex with sessions under `~/Documents/Codex/` (probably the ChatGPT app) | unset | unset | daily log, 3 events 2026-11-13 06:30–06:32 UTC |
 | Shell inside a private `tmux` server started from the Kiro agent's shell (not a hook process) | `dev.kiro.desktop` (inherited from the shell that started the server) | `tmux` | tmux 3.5a, 2026-11-12 |
 | Inside `screen` | unverified | unverified | |
 
@@ -188,6 +190,7 @@ Launcher values seen so far:
 4. **Kiro `PostTaskExec` only fires when a task runs through the spec task runner** (the task's run button). A task done by chatting fires only `Stop`. Progress must therefore also be recomputed from `tasks.md` on every Kiro `Stop` when a spec path is known for that buddy.
 5. **Kiro `Stop` has no message text.** Kiro status messages come from the prompt or the task name.
 6. **Kiro starts a new `session_id` for every task run.** Each press of a task's run button produced a new session (`sess_dcdb…`, `sess_0bcd…`), separate from the chat session (`sess_ce19…`). Progress and the spec path therefore belong to the buddy, not to a session (see Buddies and sessions).
+7. **Codex suggestions turns** (seen 2026-11-13, once, from a Codex whose sessions run in folders under `~/Documents/Codex/`, probably Codex in the ChatGPT app). Besides the title turn, Codex ran a hidden turn that suggests next steps. It fired `agent-turn-complete` with yet another `thread-id`, `cwd` `/`, an input that starts with `# Overview` and `Generate 0 to 3 hyperpersonalized suggestions for what this user can do`, and a `last-assistant-message` of JSON like `{"suggestions":[]}`. It showed up as a second Codex buddy in folder `/`. Drop the event if **either** signal matches (the last input message starts with `# Overview` … `Generate <n> to <n> hyperpersonalized suggestions`, or the reply is a JSON object with a `suggestions` property). Seen from the normalized daily log only; the raw payload was not kept.
 
 ## Buddies and sessions
 - Two levels. A **buddy** is one **agent + session folder** pair. Under it, each **session** (agent + `session`) is one conversation window. Several sessions of the same agent in the same folder at once are normal; each keeps its own state.

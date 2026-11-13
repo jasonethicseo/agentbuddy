@@ -185,6 +185,16 @@ export const FIXTURES: readonly Fixture[] = [
     raw: String.raw`{"type":"agent-turn-complete","thread-id":"01a1…","turn-id":"01a1…","cwd":"/Users/dev/demo","client":"codex-tui","input-messages":["Generate a concise, single-line task title of at most 36 characters and under five words where possible. Start with an imperative verb. ...\n\nUser prompt:\nrun ls"],"last-assistant-message":"{\"title\":\"Run ls\"}"}`,
     expected: null,
   },
+  {
+    id: 'codex-suggestions-turn',
+    note: 'Rebuilt from a normalized event of the 2026-11-13 daily log (the raw payload is not kept): another thread-id, cwd "/", an input starting with the template, and the reply {"suggestions":[]} (trap 7).',
+    row: 'Codex internal suggestions turn',
+    label: 'derived',
+    verbatim: false,
+    agent: 'codex',
+    raw: String.raw`{"type":"agent-turn-complete","thread-id":"01a1…","turn-id":"01a1…","cwd":"/","input-messages":["# Overview\nGenerate 0 to 3 hyperpersonalized suggestions for what this user can do ..."],"last-assistant-message":"{\"suggestions\":[]}"}`,
+    expected: null,
+  },
 ];
 
 /** "Anything else or unparsable" row: all derived, all dropped. */
