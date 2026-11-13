@@ -21,7 +21,7 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
   -webkit-app-region: drag; user-select: none;
 }
 .tb-sprite { display: flex; }
-.app-title { flex-grow: 1; font-family: var(--font-title); font-size: 17px; }
+.app-title { flex-grow: 1; font-family: var(--font-text); font-size: 17px; }
 .title-mark { margin-left: 4px; color: var(--title-mark-color); }
 .title-mark::before { content: var(--title-mark); }
 .tb-btn {
@@ -43,7 +43,7 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 /* Tabs: separate rounded buttons */
 .tabs { display: flex; gap: 6px; padding: 0 8px; }
 .tab {
-  padding: 5px 12px; font-family: var(--font-title); font-size: 13px; cursor: pointer;
+  padding: 5px 12px; font-family: var(--font-text); font-size: 13px; cursor: pointer;
   color: var(--group-text); background: var(--group-bg); border: 2px solid transparent; border-radius: var(--tab-radius);
 }
 .tab[aria-selected='true'] { color: var(--tab-active-text); background: var(--tab-active-bg); border-color: var(--tab-active-line); }

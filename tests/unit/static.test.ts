@@ -10,7 +10,8 @@ describe('resolveUiFile', () => {
     expect(resolveUiFile(ROOT, '/')).toEqual({ file: join(ROOT, 'index.html'), type: 'text/html; charset=utf-8' });
     expect(resolveUiFile(ROOT, '/assets/main.js')?.type).toBe('text/javascript; charset=utf-8');
     expect(resolveUiFile(ROOT, '/fonts/NanumGothic-Regular.ttf')?.type).toBe('font/ttf');
-    expect(resolveUiFile(ROOT, '/fonts/OFL-Jua.txt')?.type).toBe('text/plain; charset=utf-8');
+    expect(resolveUiFile(ROOT, '/fonts/Galmuri11.woff2')?.type).toBe('font/woff2');
+    expect(resolveUiFile(ROOT, '/fonts/OFL-Galmuri.txt')?.type).toBe('text/plain; charset=utf-8');
     expect(resolveUiFile(ROOT, '/popup.html')?.file).toBe(join(ROOT, 'popup.html'));
     expect(resolveUiFile(ROOT, '/blob.bin')?.type).toBe('application/octet-stream');
   });

@@ -149,8 +149,8 @@ Bundled with the UI (in `src/ui/public/fonts/`, with their license files):
 
 | Font | Use | License |
 |---|---|---|
-| [Nanum Gothic](https://fonts.google.com/specimen/Nanum+Gothic) (NHN Corporation) | all text, including Korean | SIL Open Font License 1.1, `OFL-NanumGothic.txt` |
-| [Jua](https://fonts.google.com/specimen/Jua) (The Jua Project Authors) | titles, names, tabs, buttons | SIL Open Font License 1.1, `OFL-Jua.txt` |
+| [Nanum Gothic](https://fonts.google.com/specimen/Nanum+Gothic) (NHN Corporation) | fallback for any character Galmuri lacks | SIL Open Font License 1.1, `OFL-NanumGothic.txt` |
+| [Galmuri](https://github.com/quiple/galmuri) 2.40.3 (Lee Minseo), from npm `galmuri`: Galmuri11 Regular and Bold, Galmuri9 | all UI text (12 px) and small text (10 px) | SIL Open Font License 1.1, `OFL-Galmuri.txt` |
 
 ## License
 

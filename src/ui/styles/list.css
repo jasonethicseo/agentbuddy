@@ -6,7 +6,7 @@
   border: var(--me-line-width) solid var(--me-line); border-radius: var(--me-radius); box-shadow: var(--me-shadow);
 }
 .me-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
-.me-name { font-family: var(--font-title); font-size: 15px; color: var(--me-name); }
+.me-name { font-family: var(--font-text); font-size: 15px; color: var(--me-name); }
 .me-status {
   display: flex; align-items: baseline; gap: 0; max-width: 100%; padding: 0; text-align: left; white-space: nowrap; cursor: pointer;
   color: var(--me-status); background: transparent; border: 0;
@@ -30,7 +30,7 @@
 /* Groups */
 .group-head {
   display: flex; align-items: center; gap: 6px; box-sizing: border-box; width: calc(100% - 12px); margin: 6px 6px 2px;
-  padding: 5px 10px; text-align: left; cursor: pointer; font-family: var(--font-title); font-size: 13px;
+  padding: 5px 10px; text-align: left; cursor: pointer; font-family: var(--font-text); font-size: 13px;
   color: var(--group-text); background: var(--group-bg); border: 0; border-radius: var(--group-radius);
 }
 .group-head[data-kind='offline'] { color: var(--group-off-text); background: var(--group-off-bg); margin-bottom: 6px; }
@@ -47,7 +47,7 @@
 button.buddy-main, button.session-main { cursor: pointer; }
 button.buddy-main:hover { background: var(--unread-tint); }
 .buddy-main { gap: 7px; padding: 5px 10px; }
-.buddy-name { font-family: var(--font-title); font-size: 14px; }
+.buddy-name { font-family: var(--font-text); font-size: 14px; }
 .buddy-count { color: var(--text-2); }
 .buddy-status { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
 /* The phrase first, bold, in its state color (design.md "Status phrases"). */
@@ -60,7 +60,7 @@ button.buddy-main:hover { background: var(--unread-tint); }
 [data-state='IDLE'] > .buddy-line .phrase { color: var(--st-idle); }
 [data-state='OFFLINE'] > .buddy-line .phrase,
 [data-state='ENDED'] > .buddy-line .phrase { color: var(--st-off); }
-.progress-text { flex-shrink: 0; font-family: var(--font-title); font-size: 13px; color: var(--prog-text); }
+.progress-text { flex-shrink: 0; font-family: var(--font-text); font-size: 13px; color: var(--prog-text); }
 .unread-mark {
   flex-shrink: 0; padding: var(--unread-pad); font-size: var(--unread-size); font-weight: 800; line-height: 1.4;
   color: var(--unread-color); background: var(--unread-bg); border-radius: var(--unread-radius);

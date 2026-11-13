@@ -1,14 +1,22 @@
 // The built UI ships its fonts and licenses and fetches nothing (messenger-app Requirement 16.5).
 // Builds into a temp folder so dist/ui, which the running relay serves, is left alone.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '../..');
-const FONTS = ['NanumGothic-Regular.ttf', 'NanumGothic-Bold.ttf', 'NanumGothic-ExtraBold.ttf', 'Jua-Regular.ttf'];
-const LICENSES = ['OFL-NanumGothic.txt', 'OFL-Jua.txt'];
+const FONTS = ['NanumGothic-Regular.ttf', 'NanumGothic-Bold.ttf', 'NanumGothic-ExtraBold.ttf', 'Galmuri11.woff2', 'Galmuri11-Bold.woff2', 'Galmuri9.woff2'];
+const LICENSES = ['OFL-NanumGothic.txt', 'OFL-Galmuri.txt'];
+/** SHA-256 of the files taken from npm `galmuri` 2.40.3 (retro-skin task 1.1). */
+const GALMURI_SHA256: Readonly<Record<string, string>> = {
+  'Galmuri11.woff2': 'f467d1b10e6b88dfa8399c9f93b38c7643e050abfe4fc15800ac0b000f5a57d6',
+  'Galmuri11-Bold.woff2': '8643094f395aa2dbad6bc4385cc043314801eaec2e759d549435ec8ac4f2d078',
+  'Galmuri9.woff2': '275d995906625eaaa5d2d9baa0a80f90a5c033c381c0dc2108a8729d371041a6',
+  'OFL-Galmuri.txt': '86a3ee9495f942f0243f18c103da9faca27adb88142613edb8bb852e56c892c1',
+};
 /** XML namespace names are identifiers, never fetched. */
 const ALLOWED_URLS = new Set(['http://www.w3.org/2000/svg']);
 let out: string;
@@ -54,12 +62,18 @@ describe('built UI', () => {
     expect(srcs.sort()).toEqual(FONTS.map((f) => `/fonts/${f}`).sort());
   });
 
-  it('ships exactly the bundled fonts and licenses, and no Silkscreen (themes Requirement 5.2)', () => {
+  it.each(Object.keys(GALMURI_SHA256))('fonts/%s has the SHA-256 recorded when it was taken from npm (retro-skin Requirement 3.2)', (name) => {
+    expect(createHash('sha256').update(readFileSync(join(out, 'fonts', name))).digest('hex')).toBe(GALMURI_SHA256[name]);
+  });
+  it('ships exactly the bundled fonts and licenses: no Jua, no Silkscreen (retro-skin Requirement 3.3)', () => {
     expect(readdirSync(join(out, 'fonts')).sort()).toEqual([...FONTS, ...LICENSES].sort());
   });
 
-  it('titles use Jua, then Nanum Gothic for the characters Jua lacks (themes task 2.2)', () => {
+  it('UI text uses Galmuri11, small text Galmuri9, each then Nanum Gothic, with smoothing off (retro-skin Requirements 3.4, 3.5)', () => {
     const css = readFileSync(join(ROOT, 'src/ui/styles/fonts.css'), 'utf8');
-    expect(css).toMatch(/--font-title:\s*'Jua',\s*'Nanum Gothic',\s*sans-serif;/);
+    expect(css).toMatch(/--font-text:\s*'Galmuri11',\s*'Nanum Gothic',\s*sans-serif;/);
+    expect(css).toMatch(/--font-small:\s*'Galmuri9',\s*'Nanum Gothic',\s*sans-serif;/);
+    expect(css).toMatch(/html\s*\{\s*-webkit-font-smoothing:\s*none;\s*\}/);
+    expect(css).not.toContain('font-title');
   });
 });

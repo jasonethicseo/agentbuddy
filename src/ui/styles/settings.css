@@ -5,7 +5,7 @@
   display: flex; flex-direction: column; background: var(--card-bg); border: var(--card-line-width) solid var(--card-line);
   border-radius: var(--card-radius); box-shadow: var(--card-shadow);
 }
-.set-title { margin: 0; padding: 10px 12px 4px; font-family: var(--font-title); font-size: 15px; font-weight: 400; color: var(--group-text); }
+.set-title { margin: 0; padding: 10px 12px 4px; font-family: var(--font-text); font-size: 15px; font-weight: 400; color: var(--group-text); }
 .check { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; }
 .check + .check { border-top: var(--divider); }
 .check > span { flex-grow: 1; }
@@ -28,7 +28,7 @@
 .theme-tile:has(.theme-input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* The radio stays focusable and in the accessibility tree; only its look is hidden. */
 .theme-input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; opacity: 0; }
-.theme-name { font-family: var(--font-title); font-size: 13px; }
+.theme-name { font-family: var(--font-text); font-size: 13px; }
 .theme-check { display: none; }
 .theme-tile[data-checked] .theme-check { display: inline; }
 /* The mini window takes its own theme's tokens through [data-theme-preview]. */
