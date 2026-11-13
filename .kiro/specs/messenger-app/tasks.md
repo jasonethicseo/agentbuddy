@@ -136,3 +136,15 @@ How to work through this list:
 
 - [ ]* 14. Packaged `.app` (optional, unsigned)
   - Only if time allows and the builder asks for it.
+
+## Handoff for the next session (2026-11-13)
+
+State: tasks 1–11 are done and committed; 485 tests pass. The relay runs detached from the latest build (pid 86955, output in `~/.agentbuddy/relay.log`; stop with `kill 86955`). No app or check process is running.
+
+Next, in this order:
+1. The "me" row of `Main.dc.html` (avatar, `me`, own status message with ✎) is missing. design.md marked it optional and it was left out without a clear report; the builder wants it. Add it to the requirements, design and tasks (task 13 becomes required): Buddies tab only, app only, inline edit (Enter saves, Esc cancels, at most 40 code points), stored only in `app-settings.json`, never sent to the relay or an agent. Open questions for the builder: the default text (`★ building AgentBuddy ♪`, an empty field showing `set your status ✎`, or other), and the window corners: (a) keep 10 px all round, or (b) a 30-second check with a transparent main window, and 10/10/4/4 if its height still resizes.
+2. Task 12: steering (tech.md Pieces, Commands, Sound; structure.md for `src/app`, the new core and UI files, and who touches files and network; product.md core flow step 2), README, final checks.
+
+Still unanswered by the builder: whether a new Kiro window opened on the two clicks on a Claude-in-Kiro-terminal session (00:09 and 00:21 UTC; the folder rule has since changed so these no longer get a folder); and whether to delete `~/Library/Application Support/Electron` (7.4 MB) and `~/Library/Preferences/com.github.Electron.plist`, left by the O4 runs.
+
+Working rules used so far: report to the builder in Korean; one commit per task, files staged by name; announce every check that shows windows or plays sound, say "지금 띄웁니다" right before it, run it once with a fixed time limit, write its results to a file while it runs (a detached script that stops the app by itself), and confirm no process is left before reporting.
