@@ -37,6 +37,8 @@ let snap: AppSnapshot | null = null;
 let tab: Tab = 'list';
 let notice: { text: string; timer: ReturnType<typeof setTimeout> } | undefined;
 const showMore = new Set<string>();
+/** The buddy row clicked last: the selected row while no buddy row has focus (retro-skin Requirement 7.6). Not stored. */
+let selected: string | null = null;
 /** Browser only: groups toggled locally, since nothing is saved there. */
 const localGroups = new Set<string>();
 
@@ -53,8 +55,19 @@ function render(): void {
     renderChrome(s, tab, notice?.text);
     renderMe($('.me-row'), meView(s, tab), { save: (text) => bridge?.setStatus(text) });
     const c = clock();
-    renderList($('.screen-list'), s.settings.theme, buildGroups(s, showMore, c), bridge !== null, {
-      click: (kind, key) => bridge?.click(kind, key),
+    const groups = buildGroups(s, showMore, c);
+    if (selected !== null && !groups.some((g) => g.buddies.some((b) => b.key === selected))) selected = null;
+    renderList($('.screen-list'), s.settings.theme, groups, bridge !== null, selected, {
+      click: (kind, key) => {
+        if (kind === 'buddy') {
+          selected = key;
+          for (const e of $('.screen-list').querySelectorAll<HTMLElement>('.buddy-main')) {
+            if (e.dataset['focus'] === `b:${key}`) e.dataset['selected'] = '';
+            else delete e.dataset['selected'];
+          }
+        }
+        bridge?.click(kind, key); // the click still acknowledges and jumps (messenger-app Requirements 10.3, 12.1)
+      },
       hide: (session) => bridge?.hide(session),
       setGroupOpen: (key, open) => {
         if (bridge) return bridge.setGroupOpen(key, open);

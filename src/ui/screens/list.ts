@@ -1,8 +1,9 @@
-// The Buddies tab: folder groups, buddy rows, session rows and the hidden-sessions line
-// (messenger-app Requirement 6; themes Requirements 4, 6, 7.2, 7.3). Built from model/list.ts with createElement
+// The Buddies screen: folder groups, buddy rows, session rows and the hidden-sessions line
+// (messenger-app Requirement 6; themes Requirements 4, 6, 7.2, 7.3; retro-skin Requirement 7). Built from model/list.ts with createElement
 // and textContent only; sprites and decoration characters follow the theme.
 import type { ThemeId } from '../../core/theme';
 import { button, el } from '../dom';
+import { icon } from '../sprites/icons';
 import { stateSprite } from '../sprites/render';
 import type { BuddyVM, GroupVM, SessionVM } from '../model/list';
 import type { ProgressVM } from '../model/progress';
@@ -65,8 +66,18 @@ function sessionRow(theme: ThemeId, agent: BuddyVM['agent'], s: SessionVM, inter
   return row;
 }
 
-/** The theme's unread marker (`N` tag or `♥`), drawn by CSS, then `unread` for screen readers. */
-function unreadMark(): Node[] {
+/**
+ * The skin's unread marker (retro-skin Requirements 4.6, 4.7): Blue Bot's `N` tag, drawn by CSS, then `unread` for
+ * screen readers; Strawberry Milk's pixel strawberry, an image named `new`. Shared with the inbox.
+ */
+export function unreadMark(theme: ThemeId): Node[] {
+  if (theme === 'strawberry-milk') {
+    const m = el('span', 'unread-mark berry');
+    m.setAttribute('role', 'img');
+    m.setAttribute('aria-label', 'new');
+    m.append(icon('berry', 12));
+    return [m];
+  }
   const m = el('span', 'unread-mark');
   m.setAttribute('aria-hidden', 'true');
   return [m, el('span', 'sr-only', 'unread')];
@@ -96,17 +107,18 @@ function progressBlock(p: ProgressVM): HTMLElement {
   return block;
 }
 
-function buddyBlock(theme: ThemeId, vm: BuddyVM, interactive: boolean, a: ListActions): HTMLElement {
+function buddyBlock(theme: ThemeId, vm: BuddyVM, interactive: boolean, selected: string | null, a: ListActions): HTMLElement {
   const block = el('div', 'buddy');
   block.dataset['state'] = vm.state;
   const line = el('div', 'buddy-line');
   const main = rowMain('buddy-main', interactive, () => a.click('buddy', vm.key), `b:${vm.key}`);
+  if (vm.key === selected) main.dataset['selected'] = ''; // the row clicked last (retro-skin Requirement 7.6)
   if (vm.hover !== undefined) main.title = vm.hover;
   main.append(...stateSprite(theme, vm.agent, vm.state, 24), el('span', 'buddy-name', vm.name));
   if (vm.count !== undefined) main.append(' ', el('span', 'buddy-count', `[${vm.count}]`));
   main.append(' ', statusSpan(vm));
   if (vm.progress !== undefined) main.append(el('span', 'progress-text', vm.progress.text));
-  if (vm.unread) main.append(...unreadMark());
+  if (vm.unread) main.append(...unreadMark(theme));
   line.append(main);
   if (vm.hide !== undefined) {
     const key = vm.hide;
@@ -130,18 +142,28 @@ function groupHead(g: GroupVM, a: ListActions): HTMLButtonElement {
   head.dataset['kind'] = g.kind;
   head.setAttribute('aria-expanded', String(g.open));
   if (g.path !== undefined) head.title = g.path;
-  const caret = el('span', 'caret', g.open ? '▼' : '▶');
+  // `[−]` / `[+]` as pixel boxes (Galmuri11 Bold has no −); `(online/total)`, with `online` for screen readers.
+  const caret = el('span', 'caret');
   caret.setAttribute('aria-hidden', 'true');
-  const count = g.kind === 'folder' ? `(${g.online}/${g.total} online)` : `(${g.total})`;
-  head.append(caret, ' ', el('span', 'group-name', g.label), ' ', el('span', 'group-count', count));
+  caret.append(icon(g.open ? 'box-open' : 'box-closed', 9));
+  const count = el('span', 'group-count', g.kind === 'folder' ? `(${g.online}/${g.total})` : `(${g.total})`);
+  if (g.kind === 'folder') count.append(el('span', 'sr-only', ' online'));
+  head.append(caret, el('span', 'group-name', g.label), count);
   return head;
 }
 
-export function renderList(root: HTMLElement, theme: ThemeId, groups: readonly GroupVM[], interactive: boolean, a: ListActions): void {
+export function renderList(
+  root: HTMLElement,
+  theme: ThemeId,
+  groups: readonly GroupVM[],
+  interactive: boolean,
+  selected: string | null,
+  a: ListActions,
+): void {
   const parts: Node[] = [];
   for (const g of groups) {
     parts.push(groupHead(g, a));
-    if (g.open) for (const vm of g.buddies) parts.push(buddyBlock(theme, vm, interactive, a));
+    if (g.open) for (const vm of g.buddies) parts.push(buddyBlock(theme, vm, interactive, selected, a));
   }
   root.replaceChildren(...(parts.length > 0 ? parts : [el('p', 'empty', 'No buddies yet. Agents show up here after their next hook event.')]));
 }

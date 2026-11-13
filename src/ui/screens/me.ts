@@ -3,6 +3,7 @@
 import { cleanMyStatus } from '../../core/text';
 import { sprite } from '../sprites/render';
 import { button, el } from '../dom';
+import { icon } from '../sprites/icons';
 import { MY_STATUS_HINT, limitStatusInput } from '../model/me';
 import type { MeView } from '../model/me';
 
@@ -16,19 +17,24 @@ let shown: MeView | null = null;
 
 function statusButton(root: HTMLElement, a: MeActions): HTMLButtonElement {
   const view = shown!;
-  const b = button('me-status', '', () => startEdit(root, a), 'me-status');
+  const b = button('me-status sunken', '', () => startEdit(root, a), 'me-status');
   if (view.hint) b.dataset['hint'] = '';
-  const pencil = el('span', 'me-pencil', ' ✎'); // `white-space: pre` keeps the space inside the flex button
+  // The edit mark is a pixel pencil: Galmuri has no U+270E (retro-skin Requirement 4.5).
+  const pencil = el('span', 'me-pencil');
   pencil.setAttribute('aria-hidden', 'true');
+  pencil.append(icon('pencil', 7));
   b.append(el('span', 'sr-only', 'Edit my status message: '), el('span', 'me-status-text', view.hint ? MY_STATUS_HINT : view.text), pencil);
   return b;
 }
 
 function draw(root: HTMLElement, a: MeActions): HTMLButtonElement {
-  const tile = sprite(shown!.theme, 'me', null, 36); // aria-hidden (Requirement 18.8)
+  const tile = el('span', 'me-frame sunken'); // the 36 px sprite in a sunken frame (retro-skin Requirement 7.2)
+  tile.append(sprite(shown!.theme, 'me', null, 36)); // aria-hidden (Requirement 18.8)
   const text = el('div', 'me-text');
   const b = statusButton(root, a);
-  text.append(el('span', 'me-name', 'me'), b);
+  const name = el('span', 'me-name', 'me');
+  name.append(' ', el('span', 'me-online', '(online)'));
+  text.append(name, b);
   root.replaceChildren(tile, text);
   return b;
 }

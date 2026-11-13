@@ -1,58 +1,55 @@
-/* The Buddies tab: the "me" row and the buddy list (MainBot.dc.html, MainCute.dc.html; themes Requirement 7.1–7.3).
-   Colors, radii and decoration characters come from themes/*.css. */
-/* "Me" row (Requirement 18): a card; every color, border and radius comes from the --me-* tokens. */
+/* The Buddies screen: the "me" row and the buddy list (MainBot2000.dc.html, MainCute2000.dc.html; retro-skin Requirement 7).
+   Colors and decoration characters come from themes/*.css, the raised and sunken edges from materials.css. */
+/* "Me" row (messenger-app Requirement 18): every color comes from the --me-* tokens (MA 18.7). */
 .me-row {
-  display: flex; align-items: center; gap: 10px; margin: 0 8px; padding: 8px 10px; background: var(--me-bg);
-  border: var(--me-line-width) solid var(--me-line); border-radius: var(--me-radius); box-shadow: var(--me-shadow);
+  display: flex; align-items: center; gap: 8px; padding: 5px;
+  background: linear-gradient(var(--me-from), var(--me-to)); border: 1px solid var(--me-line);
 }
-.me-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
-.me-name { font-family: var(--font-text); font-size: 15px; color: var(--me-name); }
+.me-frame { display: flex; padding: 2px; background: var(--me-frame-bg); }
+.me-text { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; min-width: 0; }
+.me-name { font-weight: 700; color: var(--me-name); }
+.me-online { font-weight: 400; color: var(--me-online); }
 .me-status {
-  display: flex; align-items: baseline; gap: 0; max-width: 100%; padding: 0; text-align: left; white-space: nowrap; cursor: pointer;
-  color: var(--me-status); background: transparent; border: 0;
+  display: flex; align-items: center; gap: 0; max-width: 100%; padding: 2px 4px; text-align: left; white-space: nowrap; cursor: pointer;
+  color: var(--me-status); background: var(--me-field);
 }
 .me-status[data-hint] { color: var(--me-hint); }
 .me-status:hover .me-status-text { text-decoration: underline; }
 .me-status-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.me-pencil { flex-shrink: 0; white-space: pre; }
+.me-pencil { display: flex; flex-shrink: 0; margin-left: 4px; }
 .me-input {
   box-sizing: border-box; width: 100%; margin: 0; padding: 2px 4px; font: inherit; color: var(--me-name);
-  background: var(--me-field); border: 1px solid var(--me-field-line); border-radius: var(--me-field-radius);
+  background: var(--me-field); border: 1px solid var(--me-field-line);
 }
-
-/* The buddy list: one card (MainBot / MainCute) */
-.screen-list {
-  margin: 0 8px; background: var(--card-bg); border: var(--card-line-width) solid var(--card-line);
-  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
-}
+/* The buddy list: one sunken white panel */
+.screen-list.screen { padding: 3px 0; background: var(--panel); }
 .empty { margin: 0; padding: 16px 10px; color: var(--text-2); }
-
-/* Groups */
+/* Groups: [−] / [+] box, bold folder name, (online/total); no fill */
 .group-head {
-  display: flex; align-items: center; gap: 6px; box-sizing: border-box; width: calc(100% - 12px); margin: 6px 6px 2px;
-  padding: 5px 10px; text-align: left; cursor: pointer; font-family: var(--font-text); font-size: 13px;
-  color: var(--group-text); background: var(--group-bg); border: 0; border-radius: var(--group-radius);
+  display: flex; align-items: center; gap: 5px; box-sizing: border-box; width: 100%; padding: 2px 4px; margin: 0;
+  text-align: left; cursor: pointer; color: var(--group-text); background: transparent; border: 0;
 }
-.group-head[data-kind='offline'] { color: var(--group-off-text); background: var(--group-off-bg); margin-bottom: 6px; }
-.group-count { font-family: var(--font-text); font-size: 11px; color: var(--text-2); }
-.group-head[data-kind='offline'] .group-count { color: var(--group-off-text); }
-
-/* Buddy rows */
-.buddy + .buddy { border-top: var(--divider); }
+.group-head + .buddy, .buddy + .group-head { margin-top: 0; }
+.buddy + .group-head { margin-top: 3px; }
+.caret { display: flex; }
+.group-name { font-weight: 700; }
+.group-head[data-kind='offline'] .group-name { color: var(--st-off); }
+.group-count { color: var(--text-2); }
+/* Buddy rows: 24 px sprite with badge, bold name, (phrase · excerpt), unread marker */
 .buddy-line { display: flex; align-items: center; }
 .buddy-main, .session-main {
   display: flex; align-items: center; flex: 1 1 auto; min-width: 0;
   background: transparent; border: 0; text-align: left; white-space: nowrap;
 }
 button.buddy-main, button.session-main { cursor: pointer; }
-button.buddy-main:hover { background: var(--unread-tint); }
-.buddy-main { gap: 7px; padding: 5px 10px; }
-.buddy-name { font-family: var(--font-text); font-size: 14px; }
+.buddy-main { gap: 5px; padding: 2px 4px 2px 16px; }
+.buddy-name { font-weight: 700; }
 .buddy-count { color: var(--text-2); }
 .buddy-status { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
 /* The phrase first, bold, in its state color (design.md "Status phrases"). */
 .phrase { font-weight: 700; color: var(--text-2); }
-.lead-work::before { content: var(--glyph-work) " "; }
+/* ▸ only in regular weight: Galmuri11 Bold lacks it (retro-skin Requirement 4.5). */
+.lead-work::before { content: var(--glyph-work) " "; font-weight: 400; }
 [data-state='WAITING_APPROVAL'] > .buddy-line .phrase { color: var(--st-wait); }
 [data-state='WORKING'] > .buddy-line .phrase { color: var(--st-work); }
 [data-state='TURN_DONE'] > .buddy-line .phrase { color: var(--st-done); }
@@ -60,48 +57,53 @@ button.buddy-main:hover { background: var(--unread-tint); }
 [data-state='IDLE'] > .buddy-line .phrase { color: var(--st-idle); }
 [data-state='OFFLINE'] > .buddy-line .phrase,
 [data-state='ENDED'] > .buddy-line .phrase { color: var(--st-off); }
-.progress-text { flex-shrink: 0; font-family: var(--font-text); font-size: 13px; color: var(--prog-text); }
-.unread-mark {
-  flex-shrink: 0; padding: var(--unread-pad); font-size: var(--unread-size); font-weight: 800; line-height: 1.4;
-  color: var(--unread-color); background: var(--unread-bg); border-radius: var(--unread-radius);
-}
+.progress-text { flex-shrink: 0; font-weight: 700; color: var(--prog-text); }
+.unread-mark { display: flex; flex-shrink: 0; }
+.unread-mark:not(.berry) { padding: 0 2px; font-family: var(--font-small); font-size: 10px; line-height: 11px; color: var(--unread-color); background: var(--unread-bg); }
 .unread-mark::before { content: var(--unread-mark); }
+/* The selected row (retro-skin Requirement 7.6): the focused buddy row, else the one clicked last while no buddy
+   row has focus. All its text white, state colors dropped, its unread marker framed (S5). */
+.buddy-main:focus-visible,
+.screen-list:not(:has(.buddy-main:focus-visible)) .buddy-main[data-selected] {
+  color: var(--selection-text); background: var(--selection);
+}
+.buddy-main:focus-visible :is(.buddy-count, .buddy-status, .phrase, .excerpt, .progress-text),
+.screen-list:not(:has(.buddy-main:focus-visible)) .buddy-main[data-selected] :is(.buddy-count, .buddy-status, .phrase, .excerpt, .progress-text) {
+  color: inherit;
+}
+.buddy-main:focus-visible .unread-mark,
+.screen-list:not(:has(.buddy-main:focus-visible)) .buddy-main[data-selected] .unread-mark {
+  outline: 1px solid var(--unread-select-line);
+}
 .buddy-hide, .session-hide {
-  flex-shrink: 0; width: 20px; height: 20px; padding: 0; font-size: 12px; line-height: 1; cursor: pointer;
-  color: var(--group-text); background: var(--group-bg); border: 0; border-radius: var(--tbtn-radius);
+  flex-shrink: 0; width: 16px; height: 16px; padding: 0; font-size: 11px; line-height: 1; cursor: pointer; color: var(--group-text);
 }
-.buddy-hide { margin-right: 10px; opacity: 0; }
+.buddy-hide { margin-right: 4px; opacity: 0; }
 .buddy:hover .buddy-hide, .buddy:focus-within .buddy-hide, .buddy-hide:focus-visible { opacity: 1; }
-
-/* Kiro progress: cells (Blue Bot) or a striped bar (Strawberry Milk), indented to the name */
-.progress { margin: -1px 10px 6px 43px; }
+/* Kiro progress in a sunken track: cells (Blue Bot) or a striped bar (Strawberry Milk), indented to the name */
+.progress { margin: 1px 8px 3px 50px; }
 .progress-cells {
-  display: var(--prog-cells-display); grid-template-columns: repeat(var(--cells), minmax(0, 1fr)); gap: 2px; padding: 2px;
-  background: var(--prog-track); border: 2px solid var(--prog-frame); border-radius: var(--prog-radius);
+  display: var(--prog-cells-display); grid-template-columns: repeat(var(--cells), minmax(0, 1fr)); gap: 1px; padding: 2px; background: var(--field);
 }
-.cell { height: 6px; background: var(--prog-todo); }
+.cell { height: 7px; background: var(--prog-todo); }
 .cell[data-cell='done'] { background: var(--prog-done); }
 .cell[data-cell='current'] { background: var(--prog-current); }
-.progress-bar {
-  display: var(--prog-bar-display); box-sizing: border-box; height: 10px; overflow: hidden;
-  background: var(--prog-track); border: 2px solid var(--prog-frame); border-radius: var(--prog-radius);
-}
+.progress-bar { display: var(--prog-bar-display); box-sizing: border-box; height: 9px; padding: 1px; overflow: hidden; background: var(--field); }
 .progress[data-bar] .progress-bar { display: block; }
-.progress-fill { height: 100%; background: var(--prog-fill); }
-
-/* Session rows */
-.session { display: flex; align-items: center; gap: 6px; margin: 2px 6px 0; padding: 4px 8px 4px 22px; border-radius: var(--group-radius); }
-.session[data-top] { padding-left: 19px; border-left: 3px solid var(--st-off); }
+.progress-fill { height: 100%; background: repeating-linear-gradient(135deg, var(--prog-stripe-1) 0 4px, var(--prog-stripe-2) 4px 8px); }
+/* Session rows: indented, └, 12 px sprite */
+.session { display: flex; align-items: center; gap: 5px; margin-left: 34px; padding: 2px 4px; }
+.session[data-top] { padding-left: 1px; border-left: 3px solid var(--st-off); }
 .session[data-top][data-state='WAITING_APPROVAL'] { background: var(--urgent-bg); border-left-color: var(--urgent-line); }
 .session[data-top][data-state='WORKING'] { border-left-color: var(--st-work); }
 .session[data-top][data-state='TURN_DONE'] { border-left-color: var(--st-done); }
 .session[data-top][data-state='STALE'] { border-left-color: var(--st-stale); }
 .session[data-top][data-state='IDLE'] { border-left-color: var(--st-idle); }
-.session-main { gap: 6px; padding: 0; }
+.session-main { gap: 5px; padding: 0; }
 .tree { color: var(--tree); }
 .session-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .session[data-top] .session-name { font-weight: 700; }
 .session-phrase { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
-.session-age { flex-shrink: 0; color: var(--text-2); }
-.more { padding: 2px 10px 6px 52px; font-size: 11px; color: var(--text-2); }
-.more-toggle { padding: 0; font-size: 11px; color: var(--text-2); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
+.session-age { flex-shrink: 0; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
+.more { padding: 2px 4px 3px 52px; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
+.more-toggle { padding: 0; font: inherit; color: var(--text-2); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }

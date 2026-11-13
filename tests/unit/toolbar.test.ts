@@ -46,7 +46,7 @@ describe('wiring (source checks)', () => {
     expect(buttons).toEqual([['list', 'Buddies'], ['inbox', 'Inbox'], ['settings', 'Settings'], ['skin', 'Skin']]);
     expect(buttons.map((b) => b[0])).toEqual([...TOOLS]);
     expect(html).not.toMatch(/role="tab"|role="tablist"|role="tabpanel"/);
-    expect(html).toContain('<main class="screen screen-list" aria-label="Buddies">');
+    expect(html).toContain('<main class="screen screen-list sunken" aria-label="Buddies">');
   });
   it('keys only move focus: the keydown handler goes through rovingTarget and opens no screen', () => {
     const handler = chrome.slice(chrome.indexOf("addEventListener('keydown'"), chrome.indexOf('});', chrome.indexOf("addEventListener('keydown'")));
