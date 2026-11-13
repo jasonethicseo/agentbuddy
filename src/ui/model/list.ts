@@ -5,8 +5,10 @@ import type { BuddyView, SessionView } from '../../core/buddies';
 import type { AgentId } from '../../core/event';
 import type { AppSnapshot } from '../../core/snapshot';
 import type { DisplayState } from '../../core/state';
-import { AGENT_NAMES, PHRASES, folderName, statusParts } from '../../core/text';
+import { AGENT_NAMES, folderName, statusParts } from '../../core/text';
 import type { StatusParts } from '../../core/text';
+import { progressView } from './progress';
+import type { ProgressVM } from './progress';
 
 /** Id of the last group. Not an absolute path, so it never collides with a folder. */
 export const OFFLINE_GROUP = '*offline';
@@ -45,7 +47,7 @@ export interface BuddyVM {
   /** `[n]` when two or more sessions are visible. */
   count?: number;
   unread: boolean;
-  progress?: { text: string; ratio?: number };
+  progress?: ProgressVM;
   hover?: string;
   /** The session key behind the buddy row's × when exactly one session is visible (app only). */
   hide?: string;
@@ -140,8 +142,7 @@ function buddyVM(b: BuddyView, s: AppSnapshot, inOffline: boolean, showMore: Rea
   if (app && visible.length === 1) vm.hide = visible[0]!.key;
   if (left.length > 0) vm.more = { text: moreText(left, hidden), shown };
   if (b.agent === 'kiro') {
-    const p = b.progress ?? null;
-    vm.progress = p === null ? { text: '?/?' } : { text: `${p.done}/${p.total}`, ratio: p.total > 0 ? p.done / p.total : 0 };
+    vm.progress = progressView(b.progress, b.state);
   }
   if (b.agent === 'codex') vm.hover = CODEX_NOTE;
   return vm;
@@ -196,6 +197,3 @@ export function buildGroups(s: AppSnapshot, showMore: ReadonlySet<string>, clock
   }
   return groups;
 }
-
-/** Plain-text phrase for a state, for places without colored parts. */
-export const phraseOf = (state: DisplayState) => PHRASES[state];

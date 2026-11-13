@@ -86,6 +86,7 @@
   --badge-ended: "×";
   --relay-mark: "";
   --relay-dot-size: 8px;
+  --relay-dot-radius: 2px;
   --popup-ok-from: #FFD3AE;
   --popup-ok-to: #FFE6CC;
   --popup-ok-text: #8A3A06;

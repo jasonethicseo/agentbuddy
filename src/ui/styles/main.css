@@ -1,34 +1,58 @@
-/* Main window, from docs/mockups/Main.dc.html, Inbox.dc.html and Settings.dc.html. Colors: tokens.css. */
-html, body { height: 100%; margin: 0; }
-body { background: var(--body); }
-body.browser { background: var(--line-soft); }
+/* Main window, from docs/mockups/MainBot.dc.html and MainCute.dc.html (themes spec); Inbox and Settings keep the
+   layout of Inbox.dc.html and Settings.dc.html. Colors, radii and decoration characters: themes/*.css. */
+html, body { height: 100%; margin: 0; background: transparent; }
 button { font: inherit; color: inherit; margin: 0; }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--frame); outline-offset: -2px; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
+/* The window: the page draws the frame and the theme's round corners on a transparent window (O5). */
 .window {
-  box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; overflow: hidden;
   font-family: var(--font-text); font-size: 12px; color: var(--text);
-  background: var(--body); border: 3px solid var(--frame); border-radius: 10px;
+  background-color: var(--bg); background-image: var(--bg-pattern); background-size: var(--bg-pattern-size);
+  border: var(--frame-width) solid var(--frame); border-radius: var(--radius-window);
 }
 body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
 
 /* Title bar */
 .titlebar {
-  display: flex; align-items: center; gap: 8px; padding: 6px 8px; color: var(--on-fill);
-  background: linear-gradient(180deg, var(--title-top) 0%, var(--frame) 100%);
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px; color: var(--title-text);
+  background: linear-gradient(90deg, var(--title-from) 0%, var(--title-to) 100%); border-bottom: 2px solid var(--title-line);
   -webkit-app-region: drag; user-select: none;
 }
-.app-title {
-  flex-grow: 1; font-family: var(--font-title); font-size: 13px;
-  text-shadow: 1px 0 var(--deep), -1px 0 var(--deep), 0 1px var(--deep), 0 -1px var(--deep);
-}
+.tb-sprite { display: flex; }
+.app-title { flex-grow: 1; font-family: var(--font-title); font-size: 17px; }
+.title-mark { margin-left: 4px; color: var(--title-mark-color); }
+.title-mark::before { content: var(--title-mark); }
 .tb-btn {
-  -webkit-app-region: no-drag; width: 22px; height: 20px; padding: 0; font-size: 11px; line-height: 1;
-  color: var(--on-fill); background: var(--button); border: 1px solid var(--button-line); border-radius: 3px; cursor: pointer;
+  -webkit-app-region: no-drag; width: 22px; height: 22px; padding: 0; font-size: 11px; line-height: 1; cursor: pointer;
+  color: var(--tbtn-glyph); background: var(--tbtn-bg); border: 2px solid var(--tbtn-line); border-radius: var(--tbtn-radius);
 }
+.tb-pin { font-size: 10px; }
 .tb-pin[aria-pressed='false'] { opacity: 0.6; }
-.tb-close { background: var(--alert); border-color: var(--close-line); }
+.tb-close { font-weight: 700; color: var(--on-fill); background: var(--close-bg); border-color: var(--close-line); }
+
+/* Alert strip */
+.alert-strip {
+  display: flex; align-items: center; gap: 6px; margin: 0 8px; padding: 6px 12px; font-weight: 700;
+  color: var(--alert-strip-text); background: var(--alert-strip-bg);
+  border: 2px dashed var(--alert-strip-line); border-radius: var(--alert-strip-radius);
+}
+.alert-mark::before { content: var(--alert-mark); }
+
+/* Tabs: separate rounded buttons */
+.tabs { display: flex; gap: 6px; padding: 0 8px; }
+.tab {
+  padding: 5px 12px; font-family: var(--font-title); font-size: 13px; cursor: pointer;
+  color: var(--group-text); background: var(--group-bg); border: 2px solid transparent; border-radius: var(--tab-radius);
+}
+.tab[aria-selected='true'] { color: var(--tab-active-text); background: var(--tab-active-bg); border-color: var(--tab-active-line); }
+.count-badge {
+  display: inline-block; min-width: 16px; padding: 0 4px; box-sizing: border-box; text-align: center;
+  font-family: var(--font-text); font-size: 10px; font-weight: 800; color: var(--on-fill); background: var(--count-bg); border-radius: var(--count-radius);
+}
+
+.screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 
 /* "Me" row (Requirement 18): every color, border and radius comes from the --me-* tokens. */
 .me-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--me-bg); border-bottom: 1px solid var(--me-line); }
@@ -53,25 +77,6 @@ body.browser .window { width: 320px; height: 620px; margin: 24px auto; }
   background: var(--me-field); border: 1px solid var(--me-field-line); border-radius: var(--me-field-radius);
 }
 
-/* Alert strip */
-.alert-strip {
-  display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-weight: 700;
-  color: var(--alert-text); background: var(--alert-strip); border-bottom: 1px solid var(--alert-strip-line);
-}
-
-/* Tabs */
-.tabs { display: flex; gap: 4px; padding: 6px 8px 0; background: var(--band); border-bottom: 1px solid var(--band-line); }
-.tab {
-  padding: 6px 12px; color: var(--band-text); background: transparent; cursor: pointer;
-  border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; margin-bottom: -1px;
-}
-.tab[aria-selected='true'] { color: var(--text); font-weight: 800; background: var(--body); border-color: var(--band-line); }
-.badge {
-  display: inline-block; min-width: 16px; padding: 0 4px; box-sizing: border-box; text-align: center;
-  font-size: 10px; font-weight: 700; color: var(--on-fill); background: var(--alert-strong); border-radius: 8px;
-}
-
-.screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .screen-list, .screen-inbox { background: var(--row); }
 .empty { margin: 0; padding: 16px 10px; color: var(--text-2); }
 
@@ -138,17 +143,20 @@ button.buddy-main:hover, button.session-main:hover { background: var(--body); }
 .more { padding: 0 10px 6px 50px; font-size: 11px; color: var(--text-2); }
 .more-toggle { padding: 0; font-size: 11px; color: var(--text-2); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
 
-/* Footer */
-.statusbar {
-  display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 11px;
-  color: var(--band-text); background: var(--band); border-top: 1px solid var(--band-line);
-}
+/* Footer: on the window background, so its text uses --text-on-bg (decision D8) */
+.statusbar { display: flex; align-items: center; gap: 6px; padding: 0 14px; font-size: 11px; color: var(--text-on-bg); }
 .status-text { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .status-right { flex-shrink: 0; }
-.dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 4px; background: var(--ring); }
-.dot[data-dot='ok'] { background: var(--ok); }
-.dot[data-dot='alert'] { background: var(--alert); }
-.dot[data-dot='idle'] { background: var(--idle); }
+/* The connection mark: a square dot (Blue Bot) or a ♥ (Strawberry Milk), in its state color. */
+.relay-mark {
+  display: inline-block; flex-shrink: 0; width: var(--relay-dot-size); height: var(--relay-dot-size);
+  border-radius: var(--relay-dot-radius); background: currentColor; color: var(--st-off); line-height: 1;
+}
+.relay-mark::before { content: var(--relay-mark); }
+.relay-mark[data-dot='ok'] { color: var(--st-work); }
+.relay-mark[data-dot='alert'] { color: var(--st-wait); }
+.relay-mark[data-dot='idle'] { color: var(--st-idle); }
+.relay-mark[data-dot='muted'] { color: var(--st-off); }
 
 /* Inbox */
 .inbox-head { display: flex; align-items: center; padding: 8px 10px; background: var(--body); border-bottom: 1px solid var(--line); }

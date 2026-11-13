@@ -43,7 +43,7 @@ export function renderSettings(
   conn.append(el('h2', 'set-title', 'Connections'));
   for (const l of lines) {
     const line = el('span', 'conn');
-    const dot = el('span', 'dot');
+    const dot = el('span', 'relay-mark');
     dot.dataset['dot'] = l.dot;
     dot.setAttribute('aria-hidden', 'true');
     line.append(dot, l.text);

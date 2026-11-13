@@ -1,11 +1,12 @@
 // The window around the screens: title bar, alert strip, tabs and footer
-// (messenger-app Requirements 5.9–5.11, 6.10). Fills the static parts of index.html.
+// (messenger-app Requirements 5.9–5.11, 6.10; themes Requirements 4, 7.1). Fills the static parts of index.html.
 import type { AppSnapshot } from '../core/snapshot';
-import { bubbleIcon, stateIcon } from './icons';
+import type { ThemeId } from '../core/theme';
 import { el } from './dom';
 import { alertText, footer } from './model/chrome';
 import type { Tab } from './model/chrome';
 import { unreadCount } from './model/inbox';
+import { sprite } from './sprites/render';
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 
@@ -17,7 +18,6 @@ export interface ChromeActions {
 
 /** Wires the static buttons once. */
 export function setupChrome(a: ChromeActions, app: boolean): void {
-  $('.tb-bubble').replaceWith(bubbleIcon(16));
   document.body.classList.toggle('browser', !app);
   $('.tb-pin').addEventListener('click', () => a.pin($('.tb-pin').getAttribute('aria-pressed') !== 'true'));
   $('.tb-min').addEventListener('click', () => a.windowAction('minimize'));
@@ -27,8 +27,21 @@ export function setupChrome(a: ChromeActions, app: boolean): void {
   }
 }
 
+/** A decoration character drawn by CSS from a theme token (themes Requirement 4). */
+function mark(cls: string): HTMLSpanElement {
+  const m = el('span', cls);
+  m.setAttribute('aria-hidden', 'true');
+  return m;
+}
+
+let titleTheme: ThemeId | null = null;
+
 export function renderChrome(s: AppSnapshot, tab: Tab, notice: string | undefined): void {
   const app = s.mode !== 'browser';
+  if (titleTheme !== s.settings.theme) {
+    titleTheme = s.settings.theme;
+    $('.tb-sprite').replaceChildren(sprite(titleTheme, 'title', null, 20));
+  }
   // Title bar: the pin button belongs to the Buddies tab; every button is app-only (Requirement 5.9).
   const pin = $('.tb-pin');
   pin.hidden = !app || tab !== 'list';
@@ -39,7 +52,7 @@ export function renderChrome(s: AppSnapshot, tab: Tab, notice: string | undefine
   const strip = $('.alert-strip');
   const alert = app && tab === 'list' ? alertText(s.count) : null;
   strip.hidden = alert === null;
-  if (alert !== null) strip.replaceChildren(...stateIcon('WAITING_APPROVAL', 14).slice(0, 1), el('span', undefined, alert));
+  if (alert !== null) strip.replaceChildren(mark('alert-mark'), el('span', undefined, alert));
 
   $('.tabs').hidden = !app;
   for (const t of document.querySelectorAll<HTMLButtonElement>('.tab')) {
@@ -49,7 +62,7 @@ export function renderChrome(s: AppSnapshot, tab: Tab, notice: string | undefine
     if (t.dataset['tab'] === 'inbox') {
       const n = unreadCount(s.inbox);
       const label: Node[] = [document.createTextNode('Inbox')];
-      if (n > 0) label.push(document.createTextNode(' '), el('span', 'badge', String(n)), el('span', 'sr-only', ' unread'));
+      if (n > 0) label.push(document.createTextNode(' '), el('span', 'count-badge', String(n)), el('span', 'sr-only', ' unread'));
       t.replaceChildren(...label);
     }
   }
@@ -67,9 +80,8 @@ export function renderChrome(s: AppSnapshot, tab: Tab, notice: string | undefine
   if (f === null) return;
   const parts: Node[] = [];
   if (f.dot !== undefined) {
-    const dot = el('span', 'dot');
+    const dot = mark('relay-mark');
     dot.dataset['dot'] = f.dot;
-    dot.setAttribute('aria-hidden', 'true');
     parts.push(dot);
   }
   parts.push(el('span', 'status-text', f.left));
