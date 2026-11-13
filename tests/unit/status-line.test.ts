@@ -1,5 +1,5 @@
 // Status lines: phrases per state, the excerpt, hide-text and the Kiro spec-task phrase
-// (messenger-app Requirements 7.1–7.4).
+// (messenger-app Requirements 7.1–7.4; themes T14: the working phrases carry no glyph, `lead` asks for it).
 import { describe, expect, it } from 'vitest';
 import type { DisplayState } from '../../src/core/state';
 import { PHRASES, SPEC_TASK_PHRASE, statusLine, statusParts } from '../../src/core/text';
@@ -7,7 +7,7 @@ import { PHRASES, SPEC_TASK_PHRASE, statusLine, statusParts } from '../../src/co
 describe('status phrases', () => {
   it.each([
     ['WAITING_APPROVAL', 'need your OK T_T'],
-    ['WORKING', '♪ working…'],
+    ['WORKING', 'working…'],
     ['STALE', '? no news for a while'],
     ['TURN_DONE', '★ done~ your turn!'],
     ['IDLE', 'brb~ zZ'],
@@ -15,15 +15,20 @@ describe('status phrases', () => {
     ['ENDED', 'logged off'],
   ] as [DisplayState, string][])('%s reads %s', (state, phrase) => {
     expect(PHRASES[state]).toBe(phrase);
-    expect(statusParts(state, false, undefined, false)).toEqual({ phrase });
+    expect(statusParts(state, false, undefined, false)).toEqual(state === 'WORKING' ? { phrase, lead: 'work' } : { phrase });
   });
 
-  it('uses ♪ studying hard only for a working Kiro session in a spec task', () => {
-    expect(statusParts('WORKING', true, '16. Kiro progress', false)).toEqual({ phrase: SPEC_TASK_PHRASE, excerpt: '16. Kiro progress' });
+  it('uses studying hard only for a working Kiro session in a spec task', () => {
+    expect(SPEC_TASK_PHRASE).toBe('studying hard');
+    expect(statusParts('WORKING', true, '16. Kiro progress', false)).toEqual({ phrase: SPEC_TASK_PHRASE, lead: 'work', excerpt: '16. Kiro progress' });
     expect(statusParts('TURN_DONE', true, '16. Kiro progress', false).phrase).toBe('★ done~ your turn!');
     expect(statusParts('STALE', true, undefined, false).phrase).toBe('? no news for a while');
   });
 
+  it('holds no theme glyph: ▸ and ♪ come from the screen (themes T14)', () => {
+    for (const p of [...Object.values(PHRASES), SPEC_TASK_PHRASE]) expect(p).not.toMatch(/[▸♪]/u);
+    expect(statusLine(statusParts('WORKING', false, 'add tests', false))).toBe('working… · add tests');
+  });
   it('contains no emoji', () => {
     for (const p of [...Object.values(PHRASES), SPEC_TASK_PHRASE]) expect(p).not.toMatch(/\p{Extended_Pictographic}(?<![★♪])/u);
   });

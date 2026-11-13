@@ -50,10 +50,13 @@ export function shortId(session: string): string {
   return Array.from(session).slice(0, 8).join('');
 }
 
-/** Messenger phrase per displayed state (messenger-app Requirement 7.2, design.md). */
+/**
+ * Messenger phrase per displayed state (messenger-app Requirement 7.2, design.md). The WORKING
+ * phrases carry no glyph: the screen draws the theme's `▸` or `♪` before them (themes T3, T14).
+ */
 export const PHRASES: Readonly<Record<DisplayState, string>> = {
   WAITING_APPROVAL: 'need your OK T_T',
-  WORKING: '♪ working…',
+  WORKING: 'working…',
   STALE: '? no news for a while',
   TURN_DONE: '★ done~ your turn!',
   IDLE: 'brb~ zZ',
@@ -62,23 +65,28 @@ export const PHRASES: Readonly<Record<DisplayState, string>> = {
 };
 
 /** WORKING phrase for a Kiro session in a spec task. */
-export const SPEC_TASK_PHRASE = '♪ studying hard';
+export const SPEC_TASK_PHRASE = 'studying hard';
 
 /** A status line in two parts, so the screen can color the phrase. */
 export interface StatusParts {
   phrase: string;
   /** The status text cut to 40 code points; absent when there is none or hide-text is on. */
   excerpt?: string;
+  /** Set exactly for WORKING: the screen puts the theme's working glyph before the phrase. */
+  lead?: 'work';
 }
 
 export function statusParts(state: DisplayState, inSpecTask: boolean, statusText: string | undefined, hideText: boolean): StatusParts {
   const phrase = state === 'WORKING' && inSpecTask ? SPEC_TASK_PHRASE : PHRASES[state];
-  if (hideText || statusText === undefined) return { phrase };
+  const parts: StatusParts = { phrase };
+  if (state === 'WORKING') parts.lead = 'work';
+  if (hideText || statusText === undefined) return parts;
   const excerpt = truncate(statusText, STATUS_TEXT_LIMIT);
-  return excerpt === '' ? { phrase } : { phrase, excerpt };
+  if (excerpt !== '') parts.excerpt = excerpt;
+  return parts;
 }
 
-/** `phrase` or `phrase · excerpt`, for plain-text places such as macOS notifications. */
+/** `phrase` or `phrase · excerpt`, as plain text. It carries no theme glyph (`lead`). */
 export function statusLine(parts: StatusParts): string {
   return parts.excerpt === undefined ? parts.phrase : `${parts.phrase} · ${parts.excerpt}`;
 }

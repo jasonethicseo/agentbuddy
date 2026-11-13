@@ -100,6 +100,7 @@ button.buddy-main:hover, button.session-main:hover { background: var(--body); }
 .buddy-count { color: var(--text-2); }
 .buddy-status { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
 .phrase { font-weight: 700; color: var(--text-2); }
+.lead-work::before { content: var(--glyph-work) " "; }
 [data-state='WAITING_APPROVAL'] > .buddy-line .phrase { color: var(--alert-text); }
 [data-state='WORKING'] > .buddy-line .phrase { color: var(--ok-text); }
 [data-state='TURN_DONE'] > .buddy-line .phrase { color: var(--done-text); }

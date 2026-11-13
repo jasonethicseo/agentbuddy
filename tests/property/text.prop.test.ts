@@ -73,7 +73,8 @@ describe('P21 status lines', () => {
       fc.property(state, fc.boolean(), text, fc.boolean(), (s, inTask, t, hide) => {
         const parts = statusParts(s, inTask, t, hide);
         expect(parts.phrase).toBe(s === 'WORKING' && inTask ? SPEC_TASK_PHRASE : PHRASES[s]);
-        if (hide || t === undefined) expect(parts).toEqual({ phrase: parts.phrase });
+        expect(parts.lead).toBe(s === 'WORKING' ? 'work' : undefined); // themes T14
+        if (hide || t === undefined) expect(parts.excerpt).toBeUndefined();
         if (parts.excerpt !== undefined) {
           expect(parts.excerpt).not.toBe('');
           expect(codePointLength(parts.excerpt)).toBeLessThanOrEqual(40);

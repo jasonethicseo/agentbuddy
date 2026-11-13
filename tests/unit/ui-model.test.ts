@@ -43,11 +43,11 @@ describe('buddy list model', () => {
     ]);
     const [kiro, cl, codex] = groups[0]!.buddies;
     expect([kiro!.name, cl!.name, codex!.name]).toEqual(['Kiro', 'Claude Code', 'Codex']);
-    expect(kiro).toMatchObject({ parts: { phrase: '♪ studying hard', excerpt: '16. Kiro progress' }, progress: { text: '16/19', ratio: 16 / 19 } });
+    expect(kiro).toMatchObject({ parts: { phrase: 'studying hard', lead: 'work', excerpt: '16. Kiro progress' }, progress: { text: '16/19', ratio: 16 / 19 } });
     expect(cl).toMatchObject({ count: 2, unread: true, parts: { phrase: 'need your OK T_T', excerpt: 'delete hello.txt?' }, more: { text: '1 logged off', shown: false } });
-    expect(cl!.sessions.map((s) => [s.tree, s.name, s.phrase, s.age, s.top, s.unread])).toEqual([
-      ['├', 'fix login', 'need your OK T_T', '2m', true, true],
-      ['└', 'add tests', '♪ working…', 'now', false, false],
+    expect(cl!.sessions.map((s) => [s.tree, s.name, s.phrase, s.lead, s.age, s.top, s.unread])).toEqual([
+      ['├', 'fix login', 'need your OK T_T', undefined, '2m', true, true],
+      ['└', 'add tests', 'working…', 'work', 'now', false, false],
     ]);
     expect(codex).toMatchObject({ hover: 'Codex reports finished turns only', unread: true, parts: { phrase: '★ done~ your turn!' } });
     expect(groups[2]!.buddies.map((b) => b.name)).toEqual(['Codex @ gone', 'Kiro @ old']);

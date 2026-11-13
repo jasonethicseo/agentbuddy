@@ -14,6 +14,8 @@ const TOKENS = new Map([...tokensText.matchAll(/(--[a-z0-9-]+):\s*(#[0-9A-Fa-f]{
 const ALIASES = new Map([...tokensText.matchAll(/(--[a-z0-9-]+):\s*var\((--[a-z0-9-]+)\);/g)].map((m) => [m[1]!, m[2]!]));
 /** Size tokens such as `--me-tile-radius: 8px`. */
 const SIZES = new Set([...tokensText.matchAll(/(--[a-z0-9-]+):\s*\d+px;/g)].map((m) => m[1]!));
+/** Decoration characters such as `--glyph-work: "♪"` (themes Requirement 4). */
+const STRINGS = new Set([...tokensText.matchAll(/(--[a-z0-9-]+):\s*"[^"]*";/g)].map((m) => m[1]!));
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -97,7 +99,7 @@ const KNOWN_LOW: Pair[] = [
 describe('tokens', () => {
   it('are 6-digit hex colors, aliases of defined tokens, or pixel sizes, one per name', () => {
     const names = [...tokensText.matchAll(/(--[a-z0-9-]+):/g)].map((m) => m[1]);
-    expect(names.length).toBe(TOKENS.size + ALIASES.size + SIZES.size);
+    expect(names.length).toBe(TOKENS.size + ALIASES.size + SIZES.size + STRINGS.size);
     expect(new Set(names).size).toBe(names.length);
     expect(TOKENS.size).toBeGreaterThan(30);
     for (const name of ALIASES.keys()) expect(color(name)).toMatch(/^#[0-9A-F]{6}$/);
@@ -134,7 +136,7 @@ describe('tokens', () => {
 
 describe('stylesheets', () => {
   const sheets = readdirSync(join(UI, 'styles')).filter((n) => n.endsWith('.css'));
-  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, '--font-text', '--font-title']);
+  const defined = new Set([...TOKENS.keys(), ...ALIASES.keys(), ...SIZES, ...STRINGS, '--font-text', '--font-title']);
   it.each(sheets)('%s uses only defined variables', (name) => {
     const used = [...readFileSync(join(UI, 'styles', name), 'utf8').matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]!);
     expect(used.filter((v) => !defined.has(v))).toEqual([]);

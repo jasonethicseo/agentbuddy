@@ -24,16 +24,17 @@ How to work through this list:
   - _Requirements: 5, 12.3, 12.5_
   - Result (2026-11-13): downloaded with the builder's OK from `https://raw.githubusercontent.com/google/fonts/main/ofl/jua/` (2.1 MB); `METADATA.pb` (not kept) says `license: "OFL"`; `OFL-Jua.txt` reads `Copyright 2018 The Jua Project Authors` and `SIL OPEN FONT LICENSE Version 1.1`. SHA-256: `Jua-Regular.ttf` `769677ae…8279f898`, `OFL-Jua.txt` `44a7c6e4…f2773e3c`. Jua lacks `♪ ▶ ┗ ▼ ▲ ×` (Nanum Gothic draws them through the font stack) and `▸ ✓ ✎` (in neither font; the system draws them). Recorded in design "Fonts". Silkscreen and its license removed; `ui-build.test.ts` checks the exact font folder and the title stack.
 
-- [ ] 3. Core: theme and phrase strings
-  - [ ] 3.1 `src/core/theme.ts` (`THEMES`, `ThemeId`, `DEFAULT_THEME`, `THEME_NAMES`, `isTheme`, `parseTheme`); `PublicSettings.theme`
+- [x] 3. Core: theme and phrase strings
+  - [x] 3.1 `src/core/theme.ts` (`THEMES`, `ThemeId`, `DEFAULT_THEME`, `THEME_NAMES`, `isTheme`, `parseTheme`); `PublicSettings.theme`
     - _Requirements: 1.2, 1.3_
-  - [ ] 3.2 `text.ts`: `working…` and `studying hard` (T14), `StatusParts.lead`; update `status-line.test.ts`, `text.prop.test.ts` (P21) and `ui-model.test.ts` to the new strings and `lead`
+  - [x] 3.2 `text.ts`: `working…` and `studying hard` (T14), `StatusParts.lead`; update `status-line.test.ts`, `text.prop.test.ts` (P21) and `ui-model.test.ts` to the new strings and `lead`
     - _Requirements: 4.2, 4.5_
-  - [ ] 3.3 Tests: `parseTheme` unit cases; `tests/property/theme.prop.test.ts` (any JSON value and any string give one of `THEMES`; identity on `THEMES`); no `pingRecord` or `serializeSettings` output holds a value of `PHRASES` or `SPEC_TASK_PHRASE`
+  - [x] 3.3 Tests: `parseTheme` unit cases; `tests/property/theme.prop.test.ts` (any JSON value and any string give one of `THEMES`; identity on `THEMES`); no `pingRecord` or `serializeSettings` output holds a value of `PHRASES` or `SPEC_TASK_PHRASE`
     - _Requirements: 4.6, 11.1, 11.2_
+  - Result (2026-11-13): 516 tests pass. `PublicSettings.theme` moved to 4.1, where the settings file starts to carry it, so this task leaves the app files untouched. So that the list keeps showing `♪ working…` until task 6, `lead` already reaches the buddy and session view models and `screens/list.ts` draws it as an empty `.lead-work` span whose `::before` reads `--glyph-work` (`"♪"` in `tokens.css` for now; `themes.css` takes it over in task 5). New tests: `theme-core.test.ts` (IDs, names, `isTheme`, `parseTheme`, no phrase in inbox records or the settings file), `theme.prop.test.ts` (any JSON value or string gives a theme; identity on the two). Updated: `status-line.test.ts`, `text.prop.test.ts` (P21 with `lead`), `ui-model.test.ts`, and `contrast.test.ts`, which now accepts string tokens.
 
 - [ ] 4. App: the setting, IPC and theme delivery
-  - [ ] 4.1 `settings.ts`: `theme` (default, `parseTheme`, serialized); old files load unchanged; the settings round-trip property includes `theme`
+  - [ ] 4.1 `PublicSettings.theme` (from 3.1); `settings.ts`: `theme` (default, `parseTheme`, serialized); old files load unchanged; the settings round-trip property includes `theme`
     - _Requirements: 1.1–1.4, 1.6_
   - [ ] 4.2 `ipc.ts`: `ui:theme` with its check, `popup:theme`; `preload-main.ts` `setTheme`, `preload-popup.ts` `onTheme`; validator unit tests
     - _Requirements: 1.5; MA 15.2_

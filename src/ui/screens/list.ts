@@ -18,12 +18,30 @@ function rowMain(cls: string, interactive: boolean, onClick: () => void, focusId
   return button(cls, '', onClick, focusId);
 }
 
+/** The theme's working glyph, drawn by CSS from a token, never a text node (themes Requirement 4). */
+function leadWork(): HTMLElement {
+  const g = el('span', 'lead-work');
+  g.setAttribute('aria-hidden', 'true');
+  return g;
+}
+
 function statusSpan(vm: BuddyVM): HTMLElement {
   const s = el('span', 'buddy-status');
-  s.append('(', el('span', 'phrase', vm.parts.phrase));
+  const phrase = el('span', 'phrase');
+  if (vm.parts.lead === 'work') phrase.append(leadWork());
+  phrase.append(vm.parts.phrase);
+  s.append('(', phrase);
   if (vm.parts.excerpt !== undefined) s.append(el('span', 'excerpt', ` · ${vm.parts.excerpt}`));
   s.append(')');
   return s;
+}
+
+function sessionPhrase(s: SessionVM): HTMLElement {
+  const p = el('span', 'session-phrase');
+  p.append('(');
+  if (s.lead === 'work') p.append(leadWork());
+  p.append(s.phrase, ')');
+  return p;
 }
 
 function sessionRow(s: SessionVM, interactive: boolean, a: ListActions): HTMLElement {
@@ -33,7 +51,7 @@ function sessionRow(s: SessionVM, interactive: boolean, a: ListActions): HTMLEle
   const tree = el('span', 'tree', s.tree);
   tree.setAttribute('aria-hidden', 'true');
   const main = rowMain('session-main', interactive, () => a.click('session', s.key), `s:${s.key}`);
-  main.append(...stateIcon(s.state, 12), el('span', 'session-name', s.name), ' ', el('span', 'session-phrase', `(${s.phrase})`), ' ', el('span', 'session-age', s.age));
+  main.append(...stateIcon(s.state, 12), el('span', 'session-name', s.name), ' ', sessionPhrase(s), ' ', el('span', 'session-age', s.age));
   if (s.unread) main.append(el('span', 'sr-only', 'unread'));
   row.append(tree, main);
   if (s.canHide) {

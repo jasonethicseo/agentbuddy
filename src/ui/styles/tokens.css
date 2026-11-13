@@ -39,6 +39,8 @@
   --idle: #B8860B;
   --stale: #6E7A8C;
   --ring: #8C99AA;
+  /* Decoration: the working glyph before `working…` (themes T3); themes.css replaces it per theme. */
+  --glyph-work: "♪";
 
   /* The "me" row (messenger-app Requirement 18.7). Each value names an existing palette
      color or size today; a theme changes them here and nothing else. */

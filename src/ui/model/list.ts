@@ -25,6 +25,8 @@ export interface SessionVM {
   state: DisplayState;
   name: string;
   phrase: string;
+  /** The screen draws the theme's working glyph before the phrase (themes T3). */
+  lead?: 'work';
   age: string;
   /** The session that sets the buddy state. */
   top: boolean;
@@ -126,6 +128,7 @@ function buddyVM(b: BuddyView, s: AppSnapshot, inOffline: boolean, showMore: Rea
       state: x.state,
       name: sessionName(x, hideText, clock),
       phrase: statusParts(x.state, x.task === true, undefined, true).phrase,
+      ...(x.state === 'WORKING' ? { lead: 'work' as const } : {}),
       age: age(x.lastAt, clock.nowMs),
       top: x.key === first.key,
       tree: i === rows.length - 1 ? '└' : '├',
