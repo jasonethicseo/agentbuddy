@@ -50,3 +50,12 @@ describe('me row and rows (Requirements 7.2, 7.5, 7.7)', () => {
     expect(css).toContain('.cell { height: 7px; background: var(--prog-todo); }');
   });
 });
+describe('inbox (Requirement 12.1)', () => {
+  it('rows sit in a sunken panel, Mark all read is raised, the unread marker is the skin one', () => {
+    const inbox = read('src/ui/screens/inbox.ts');
+    expect(inbox).toContain("el('div', 'inbox-list sunken')");
+    expect(inbox).toContain("button('mark-all raised', 'Mark all read', () => a.ackAll(), 'mark-all')");
+    expect(inbox).toContain('if (r.unread) side.append(...unreadMark(theme));');
+    expect(inbox).toContain('const row = button(\'inbox-row\', \'\', () => a.click(r.session), `i:${i}:${r.session}`);');
+  });
+});
