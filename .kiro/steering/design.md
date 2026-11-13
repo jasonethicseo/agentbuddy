@@ -119,6 +119,10 @@ No `♥` or `♡` remains in Strawberry Milk. Decoration characters are never em
 - **State badge** at the bottom-right of buddy-row, inbox-row and popup sprites, for every state except `OFFLINE` (D2); none on session rows, the title bar, `me`, the banner or tiles (D11). 11 px on rows, 13 px on popups. Blue Bot square, Strawberry Milk circle; 1 px white border and a 1 px outline in `frame`. Fill = the skin's state text color, glyph white (D1). The badge is an HTML element over the sprite (D3); its glyph `! ▸/♪ ? z ×` comes from a token, and `✓` is a pixel icon.
 - **Pixel strawberry** (8 × 8 grid, drawn at 12 px; 10 px inside banner text): green `#2E9E4F` `(2,0,1,1) (5,0,1,1) (1,1,6,1)`; red `#E5466B` `(0,2,8,1) (0,3,8,1) (0,4,8,1) (1,5,6,1) (2,6,4,1) (3,7,2,1)`; seeds `#FFE6A8` `(1,3,1,1) (5,3,1,1) (3,4,1,1) (2,5,1,1) (6,4,1,1)`. As the unread marker it is `role="img"` with `aria-label="new"`; elsewhere `aria-hidden`.
 - **Toolbar icons**: 8 × 8 grid drawn at 16 px (buddies, envelope, gear, skin swatch); rects from `MainBot2000` / `MainCute2000`.
+- **Drawn icons** (no mockup draws them; retro-skin design, approved 2026-11-13), 1 px per cell, in the text color unless named:
+  - check (7 × 7; the `TURN_DONE` badge glyph and `on top ✓` in the status bar): `(6,0,1,1) (5,1,1,1) (4,2,1,1) (0,2,1,1) (1,3,1,1) (3,3,1,1) (2,4,1,1)`
+  - pencil (7 × 7; the `✎` after the status message): `(5,0,2,1) (4,1,3,1) (3,2,3,1) (2,3,3,1) (1,4,3,1) (0,5,2,1) (0,6,1,1)`
+  - `[−]` box (9 × 9): border in `tree` box border `(0,0,9,1) (0,8,9,1) (0,1,1,7) (8,1,1,7)`, fill `#FFFFFF` `(1,1,7,7)`, sign in `group-text` `(2,4,5,1)`; `[+]` adds `(4,2,1,5)`.
 
 | Agent | Blue Bot | Strawberry Milk |
 |---|---|---|
@@ -163,7 +167,7 @@ The 2000s messenger grammar: one line per buddy, the status message in parenthes
 ## TIP banner
 - 44 px strip between the screen and the status bar, Buddies only, app only (not on the relay's browser page): banner stripes and border, a 28 px mascot, a bold headline in `banner headline`, one line of body text in Galmuri9 10 px `banner body`, and a 20 × 20 `▶` button (`aria-label="Next tip"`) with a light raised border.
 - The banner body is a `<button>`: clicking it runs the tip's action; a tip without an action goes to the next tip. `▶` always goes to the next tip.
-- No auto-rotation. The starting tip is picked from the date: among the tips that apply when the main window first shows, number `d mod n`, where `d` is the local date's day number and `n` the number of tips that apply. Nothing is stored. After that the tip changes only on a click, to the next tip that applies, in list order.
+- No auto-rotation: time passing never changes the tip. The starting tip is picked from the date: among the tips that apply when the main window first shows, number `d mod n`, where `d` is the local date's day number and `n` the number of tips that apply. Nothing is stored. After that the tip changes on a click, to the next tip that applies, in list order; and when the shown tip stops applying because of the user's own action (skin switched, sound turned off, inbox read), the banner shows the next tip that applies.
 - Tips are a constant list in `src/core`; nothing is fetched. A tip that does not apply is skipped.
 
 | Headline | Body | Action | Shown when |
@@ -172,7 +176,7 @@ The 2000s messenger grammar: one line per buddy, the status message in parenthes
 | `★ NEW! Strawberry Milk skin ★` | `try it now~ click here` | open the Skin group | skin is Blue Bot |
 | `TIP ▶ click a buddy` | `to jump straight to its window~` | next tip | always |
 | `Too many dings?` | `turn the sound off here` | open Settings at the Ding! sound row | Ding! sound is on |
-| `n unread messages waiting!` | `click to open your inbox` | open Inbox | n > 0 (n = the Inbox count) |
+| `n unread messages waiting!` (`1 unread message waiting!` for 1) | `click to open your inbox` | open Inbox | n > 0 (n = the Inbox count) |
 | `Busy? hide old sessions` | `press × on a session row` | next tip | always |
 
 - Settings → Banner → `Hide the TIP banner` (off by default), stored as `hideBanner` in `app-settings.json`; missing or not a boolean means `false`.
@@ -206,6 +210,7 @@ The 2000s messenger grammar: one line per buddy, the status message in parenthes
 ## Accessibility
 - The toolbar is `role="toolbar"` (`aria-label="Screens"`) with a roving tabindex; the open screen's button has `aria-current="page"`.
 - Real `<button>` and `<label>` + `<input>` everywhere; the Skin tiles are native radios in a `radiogroup`; icon-only buttons have `aria-label`; sprites, badges and pixel icons are `aria-hidden` with the state name available as text to screen readers (the unread strawberry is `role="img"`, `aria-label="new"`).
+- Focus ring: 2 px `focus` outline, offset 2. On the title bar and pop-up headers it takes that surface's text color; on the TIP banner and the selected row it is `#FFFFFF` (the `focus` color is 1.02–2.39 there). Buddy rows draw it inset (offset −2 px), because the list panel clips outside rings.
 - Text contrast at least 4.5:1 in both skins, including 10 px Galmuri9 text; icons, badges, markers and focus rings at least 3:1. On a gradient, every stop under the text counts. A graphic below 3:1 is allowed only when text beside it says the same, and each such pair is listed here and in the test.
 - The contrast test checks every text and graphic pair in both skins, including every new pair of the brief's token table.
 
