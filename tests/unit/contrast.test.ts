@@ -91,21 +91,10 @@ const KNOWN_LOW: Array<[string, string, string, readonly ThemeId[]]> = [
   ['--icon-2', '--pressed', "toolbar icons' second figure; the label says the same", THEMES],
   ['--tree-box', '--panel', 'group box border; the folder name and aria-expanded say the same', THEMES],
 ];
-/** Pairs of the themes look whose tokens go in retro-skin task 5.8, together with this list. */
-const LEGACY_TEXT: Pair[] = [
-  ['--text', '--card-bg', 'rows, cards, names'],
-  ['--text-2', '--card-bg', 'excerpts, ages, notes'],
-  ['--text-2', '--group-bg', 'group counts'],
-  ['--group-text', '--group-bg', 'group header, idle tab'],
-  ['--group-off-text', '--group-off-bg', 'offline group header'],
-  ['--tab-active-text', '--tab-active-bg', 'active tab'],
-  ['--quiet-text', '--quiet-bg', 'Later, Mark all read'],
-  ['--primary-text', '--primary-bg', 'Go there'],
-];
 describe('contrast in both skins', () => {
   for (const theme of THEMES) {
     const mine = (pairs: Pair[]) => pairs.filter((p) => p[3] === undefined || p[3] === theme);
-    it.each(mine([...TEXT, ...LEGACY_TEXT]))(`${theme}: text %s on %s (%s) is at least 4.5:1`, (fg, bg) => {
+    it.each(mine(TEXT))(`${theme}: text %s on %s (%s) is at least 4.5:1`, (fg, bg) => {
       expect(ratio(theme, fg, bg)).toBeGreaterThanOrEqual(4.5);
     });
     it.each(mine(GRAPHICS))(`${theme}: graphic %s on %s (%s) is at least 3:1`, (fg, bg) => {

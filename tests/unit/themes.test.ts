@@ -107,3 +107,41 @@ describe('new UI code inserts no HTML (messenger-app Requirement 6.9, themes Req
     for (const f of files) expect([f.slice(ROOT.length), readFileSync(f, 'utf8').match(/innerHTML|outerHTML|insertAdjacentHTML|document\.write|DOMParser|createContextualFragment/g)]).toEqual([f.slice(ROOT.length), null]);
   });
 });
+describe('retro-skin rules (Requirements 1.1, 2.5)', () => {
+  const sheets = [...uiFiles().filter((f) => f.endsWith('.css')), ...TOKEN_FILES];
+  /** The blur of one shadow: its third length (box-shadow and text-shadow alike), or 0 when it has two. */
+  const blurOf = (shadow: string): string => {
+    const lengths = shadow.replace(/var\([^)]*\)/g, ' ').replace(/rgba?\([^)]*\)/g, ' ').match(/-?\d*\.?\d+(px)?/g) ?? [];
+    return lengths[2] ?? '0';
+  };
+  it('no stylesheet holds a blurred box-shadow or text-shadow', () => {
+    for (const f of sheets) {
+      const css = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const m of css.matchAll(/(box-shadow|text-shadow)\s*:\s*([^;}]+)/g)) {
+        for (const shadow of m[2]!.split(/,(?![^(]*\))/)) {
+          if (shadow.trim() === 'none') continue;
+          expect([f.slice(ROOT.length), shadow.trim(), Number.parseFloat(blurOf(shadow))]).toEqual([f.slice(ROOT.length), shadow.trim(), 0]);
+        }
+      }
+    }
+  });
+  it('the shadow rule itself catches a blur', () => {
+    expect(Number.parseFloat(blurOf('0 2px 4px var(--x)'))).toBe(4);
+    expect(Number.parseFloat(blurOf('inset 1px 1px 0 var(--sunk-inner)'))).toBe(0);
+  });
+  it('no user-facing text says Theme: the screen says Skin (setting key and code names stay theme)', () => {
+    const sentences: string[] = [];
+    for (const f of uiFiles().filter((x) => x.endsWith('.ts'))) {
+      const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/ \/\/ .*$/gm, '');
+      for (const m of code.matchAll(/'([^'\n]*)'|`([^`\n]*)`/g)) sentences.push(`${f.slice(ROOT.length)}: ${m[1] ?? m[2]}`);
+    }
+    for (const page of ['index.html', 'popup.html']) {
+      const html = readFileSync(join(ROOT, page), 'utf8');
+      for (const m of html.matchAll(/>([^<]+)</g)) sentences.push(`${page}: ${m[1]}`);
+      for (const m of html.matchAll(/(?:aria-label|title)="([^"]*)"/g)) sentences.push(`${page}: ${m[1]}`);
+    }
+    // A user-facing string is capitalized "Theme", or a phrase with a space that mentions a theme.
+    const bad = sentences.filter((t) => /\bThemes?\b/.test(t.split(': ').slice(1).join(': ')) || /\s\S*\bthemes?\b|\bthemes?\b\S*\s/i.test(t.split(': ').slice(1).join(': ')));
+    expect(bad).toEqual([]);
+  });
+});
