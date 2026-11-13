@@ -6,22 +6,25 @@
     <title>AgentBuddy</title>
   </head>
   <body>
-    <h1>AgentBuddy</h1>
-    <p id="notice" hidden>relay disconnected</p>
-    <table id="buddies">
-      <thead>
-        <tr>
-          <th>Buddy</th>
-          <th>State</th>
-          <th>Status</th>
-          <th>Progress</th>
-          <th>Last event</th>
-          <th>Sessions</th>
-          <th>Folder</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="window">
+      <header class="titlebar">
+        <span class="tb-bubble"></span>
+        <span class="app-title">AgentBuddy</span>
+        <button type="button" class="tb-btn tb-pin" aria-label="Pin on top" aria-pressed="true">▲</button>
+        <button type="button" class="tb-btn tb-min" aria-label="Minimize">_</button>
+        <button type="button" class="tb-btn tb-close" aria-label="Close to menu bar">×</button>
+      </header>
+      <div class="alert-strip" role="status" hidden></div>
+      <nav class="tabs" role="tablist" aria-label="Screens">
+        <button type="button" class="tab" role="tab" data-tab="list" aria-selected="true">Buddies</button>
+        <button type="button" class="tab" role="tab" data-tab="inbox" aria-selected="false">Inbox</button>
+        <button type="button" class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
+      </nav>
+      <main class="screen screen-list" role="tabpanel" aria-label="Buddies"></main>
+      <section class="screen screen-inbox" role="tabpanel" aria-label="Inbox" hidden></section>
+      <section class="screen screen-settings" role="tabpanel" aria-label="Settings" hidden></section>
+      <footer class="statusbar"></footer>
+    </div>
     <script type="module" src="/src/ui/main.ts"></script>
   </body>
 </html>

@@ -1,0 +1,56 @@
+/* The pop-up card, from docs/mockups/Popup.dc.html. The window is transparent and exactly the card's size;
+   the card rises inside it, so the window itself never moves (messenger-app Requirement 9.1). */
+html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
+button { font: inherit; margin: 0; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--frame); outline-offset: -2px; }
+[hidden] { display: none !important; }
+
+.card {
+  box-sizing: border-box; width: 300px; height: 136px; overflow: hidden; cursor: pointer;
+  font-family: var(--font-text); font-size: 12px; color: var(--text);
+  background: var(--row); border: 2px solid var(--frame); border-radius: 8px 8px 3px 3px;
+  animation: rise 220ms ease-out;
+}
+@keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card { animation: none; } }
+
+.card-title {
+  display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 8px; color: var(--on-fill);
+  background: linear-gradient(180deg, var(--title-top) 0%, var(--frame) 100%);
+  text-shadow: 1px 0 var(--deep), -1px 0 var(--deep), 0 1px var(--deep), 0 -1px var(--deep);
+}
+.card-head { flex-grow: 1; font-family: var(--font-title); font-size: 11px; white-space: nowrap; overflow: hidden; }
+.card-time { font-size: 10px; }
+.card-close {
+  width: 18px; height: 18px; padding: 0; font-size: 10px; line-height: 1; text-shadow: none;
+  color: var(--on-fill); background: var(--button); border: 1px solid var(--button-line); border-radius: 3px;
+}
+
+.card-body { display: flex; gap: 10px; padding: 10px 10px 8px; }
+.card-icon { flex-shrink: 0; display: flex; }
+.card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex-grow: 1; }
+.card-who, .card-detail { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-agent { font-weight: 800; }
+.card-at { color: var(--text-2); }
+.phrase { font-weight: 700; color: var(--done-text); }
+.card-detail { color: var(--text-2); }
+
+.card-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 0 10px 10px; }
+.card-later, .card-go { height: 26px; border-radius: 4px; font-size: 12px; }
+.card-later { padding: 0 10px; color: var(--band-text); background: var(--body); border: 1px solid var(--band-line); }
+.card-go { padding: 0 12px; font-weight: 700; color: var(--on-fill); background: var(--frame); border: 1px solid var(--deep); }
+
+/* Needs your OK */
+.card[data-state='WAITING_APPROVAL'] { border-color: var(--alert); box-shadow: 0 2px 0 var(--alert-shadow); }
+.card[data-state='WAITING_APPROVAL'] .card-title {
+  background: linear-gradient(180deg, var(--alert-top) 0%, var(--alert) 100%);
+  text-shadow: 1px 0 var(--alert-text), -1px 0 var(--alert-text), 0 1px var(--alert-text), 0 -1px var(--alert-text);
+}
+.card[data-state='WAITING_APPROVAL'] .card-close { background: var(--alert-strong); border-color: var(--close-line); }
+.card[data-state='WAITING_APPROVAL'] .phrase { color: var(--alert-text); }
+.card[data-state='WAITING_APPROVAL'] .card-later { color: var(--alert-later); background: var(--alert-tint); border-color: var(--alert-strip-line); }
+.card[data-state='WAITING_APPROVAL'] .card-go { background: var(--alert-strong); border-color: var(--alert-text); }
+
+/* A notice: the blue card with one line and only × */
+.card[data-state='notice'] { cursor: default; }
+.card[data-state='notice'] .phrase { font-weight: 400; color: var(--text); white-space: normal; }

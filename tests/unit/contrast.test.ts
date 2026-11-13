@@ -46,6 +46,9 @@ const TEXT: Pair[] = [
   ['--alert-text', '--row', 'needs-OK phrase'],
   ['--alert-text', '--alert-tint', 'needs-OK phrase on a tinted row'],
   ['--ok-text', '--row', 'working phrase'],
+  ['--alert-text', '--body', 'needs-OK phrase on a hovered row'],
+  ['--ok-text', '--body', 'working phrase on a hovered row'],
+  ['--done-text', '--body', 'done phrase on a hovered row'],
   ['--done-text', '--row', 'done phrase'],
   ['--done-text', '--done-tint', 'done phrase on a tinted row'],
   ['--frame', '--row', 'Mark all read (11 px)'],
@@ -102,6 +105,19 @@ describe('tokens', () => {
 
   it('the main window background matches --body', () => {
     expect(mainWindowOptions({ preload: '/p', x: 0, y: 0, alwaysOnTop: true }).backgroundColor).toBe(color('--body'));
+  });
+});
+
+describe('stylesheets', () => {
+  const sheets = readdirSync(join(UI, 'styles')).filter((n) => n.endsWith('.css'));
+  const defined = new Set([...TOKENS.keys(), '--font-text', '--font-title']);
+  it.each(sheets)('%s uses only defined variables', (name) => {
+    const used = [...readFileSync(join(UI, 'styles', name), 'utf8').matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]!);
+    expect(used.filter((v) => !defined.has(v))).toEqual([]);
+  });
+  it('UI code never inserts HTML: agent text goes in with textContent only (Requirement 6.9)', () => {
+    const code = ['main.ts', 'chrome.ts', 'dom.ts', 'icons.ts', 'bridge.ts', 'sound.ts', ...readdirSync(join(UI, 'screens')).map((n) => 'screens/' + n), ...readdirSync(join(UI, 'model')).map((n) => 'model/' + n)];
+    for (const f of code) expect([f, readFileSync(join(UI, f), 'utf8').match(/innerHTML|outerHTML|insertAdjacentHTML|document\.write|DOMParser|createContextualFragment/g)]).toEqual([f, null]);
   });
 });
 

@@ -5,16 +5,19 @@
     <title>AgentBuddy message</title>
   </head>
   <body>
-    <div class="card" data-state="">
+    <div class="card" data-state="TURN_DONE" hidden>
       <header class="card-title">
         <span class="card-head"></span>
         <span class="card-time"></span>
         <button type="button" class="card-close" aria-label="Close message">×</button>
       </header>
       <div class="card-body">
-        <span class="card-who"></span>
-        <span class="phrase"></span>
-        <span class="card-detail"></span>
+        <span class="card-icon"></span>
+        <div class="card-text">
+          <span class="card-who"><b class="card-agent"></b> <span class="card-at"></span></span>
+          <span class="phrase"></span>
+          <span class="card-detail"></span>
+        </div>
       </div>
       <div class="card-actions">
         <button type="button" class="card-later">Later</button>

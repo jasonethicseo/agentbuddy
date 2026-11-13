@@ -100,15 +100,15 @@ How to work through this list:
 - [ ] 10. UI screens
   - [x] 10.1 `model/list.ts`, `model/chrome.ts`, `model/inbox.ts`; unit tests (online counts, offline group, same-name folders, `[n]`, session rows only for two or more visible sessions, the buddy-row × only with exactly one visible session, the hidden-sessions line, alert strip, per-tab footer, connections, browser mode); P26
     - _Requirements: 5.10, 5.11, 6.1–6.10, 11.3, 14.1_
-  - [ ] 10.2 `index.html`, `chrome.ts` and `styles/main.css` (title bar, alert strip, tabs, footer)
+  - [x] 10.2 `index.html`, `chrome.ts` and `styles/main.css` (title bar, alert strip, tabs, footer)
     - _Requirements: 5.9–5.11, 6.11, 6.13_
-  - [ ] 10.3 `screens/list.ts`, `screens/inbox.ts`, `screens/settings.ts`
+  - [x] 10.3 `screens/list.ts`, `screens/inbox.ts`, `screens/settings.ts`
     - _Requirements: 6, 11.3, 11.6, 13.1, 14.1_
-  - [ ] 10.4 `popup.html`, `screens/popup.ts`, `styles/popup.css`
+  - [x] 10.4 `popup.html`, `screens/popup.ts`, `styles/popup.css`
     - _Requirements: 9.1, 9.5, 9.7, 9.9_
   - [ ] 10.5 `sound.ts`; the builder hears the ding (not confirmed in O4) and tunes the two notes by ear, announced first
     - _Requirements: 8.6, 8.7_
-  - [ ] 10.6 `bridge.ts` and `main.ts` (app and browser sources); remove the old table code and its test
+  - [x] 10.6 `bridge.ts` and `main.ts` (app and browser sources); remove the old table code and its test
     - _Requirements: 6.12_
   - [ ] 10.7 Visual check with the builder, announced first: the three tabs next to `Main.dc.html`, `Inbox.dc.html` and `Settings.dc.html`, and a ping pop-up next to `Popup.dc.html`; the builder opens the relay's page in a browser and sees the same list without the app-only parts. Also from O4: height resize, title bar drag, the corners, and whether a transparent main window still resizes (if it does, the corners become 10/10/4/4)
     - _Requirements: 6.11, 6.12_

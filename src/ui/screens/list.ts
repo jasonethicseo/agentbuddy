@@ -1,133 +1,106 @@
-// Minimal text-only buddy list: one row per buddy, expandable to one row per
-// session. Agent text is inserted with textContent only.
+// The Buddies tab: folder groups, buddy rows, session rows and the hidden-sessions line
+// (messenger-app Requirement 6). Built from model/list.ts with createElement and textContent only.
+import { stateIcon } from '../icons';
+import { button, el } from '../dom';
+import type { BuddyVM, GroupVM, SessionVM } from '../model/list';
+import type { ClickTarget } from '../../core/snapshot';
 
-import type { BuddyView, SessionView } from '../../core/buddies';
-import type { DisplayState } from '../../core/state';
-
-const COLUMNS = 7; // Buddy, State, Status, Progress, Last event, Sessions, Folder
-const HIDDEN_BY_DEFAULT: readonly DisplayState[] = ['IDLE', 'OFFLINE', 'ENDED'];
-
-/** Per-buddy choices, kept across renders. */
-export interface BuddyUiState {
-  open: boolean;
-  showHidden: boolean;
+export interface ListActions {
+  click(kind: ClickTarget['kind'], key: string): void;
+  hide(session: string): void;
+  setGroupOpen(key: string, open: boolean): void;
+  toggleMore(buddy: string): void;
 }
 
-/** Progress cell: Kiro shows task n/m, Codex explains what it reports, Claude Code is empty. */
-export function progressText(view: BuddyView): string {
-  if (view.agent === 'kiro') {
-    return view.progress ? `task ${view.progress.done}/${view.progress.total}` : 'progress unknown';
+/** A clickable row in the app; a plain block in the browser, where nothing is clickable. */
+function rowMain(cls: string, interactive: boolean, onClick: () => void, focusId: string): HTMLElement {
+  if (!interactive) return el('div', cls);
+  return button(cls, '', onClick, focusId);
+}
+
+function statusSpan(vm: BuddyVM): HTMLElement {
+  const s = el('span', 'buddy-status');
+  s.append('(', el('span', 'phrase', vm.parts.phrase));
+  if (vm.parts.excerpt !== undefined) s.append(el('span', 'excerpt', ` · ${vm.parts.excerpt}`));
+  s.append(')');
+  return s;
+}
+
+function sessionRow(s: SessionVM, interactive: boolean, a: ListActions): HTMLElement {
+  const row = el('div', 'session');
+  row.dataset['state'] = s.state;
+  if (s.top) row.dataset['top'] = '';
+  const tree = el('span', 'tree', s.tree);
+  tree.setAttribute('aria-hidden', 'true');
+  const main = rowMain('session-main', interactive, () => a.click('session', s.key), `s:${s.key}`);
+  main.append(...stateIcon(s.state, 12), el('span', 'session-name', s.name), ' ', el('span', 'session-phrase', `(${s.phrase})`), ' ', el('span', 'session-age', s.age));
+  if (s.unread) main.append(el('span', 'sr-only', 'unread'));
+  row.append(tree, main);
+  if (s.canHide) {
+    const x = button('session-hide', '×', () => a.hide(s.key), `x:${s.key}`);
+    x.setAttribute('aria-label', 'Hide this session');
+    row.append(x);
   }
-  if (view.agent === 'codex') return 'Codex reports finished turns only';
-  return '';
+  return row;
 }
 
-export function stateText(state: DisplayState): string {
-  return state === 'STALE' ? '?' : state;
-}
-
-export function timeText(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-GB');
-}
-
-export function hiddenSessions(view: BuddyView): SessionView[] {
-  return view.sessions.filter((s) => HIDDEN_BY_DEFAULT.includes(s.state));
-}
-
-/** Sessions shown when the buddy is open. */
-export function visibleSessions(view: BuddyView, showHidden: boolean): SessionView[] {
-  return showHidden ? view.sessions : view.sessions.filter((s) => !HIDDEN_BY_DEFAULT.includes(s.state));
-}
-
-/** `3 sessions (2 hidden)`; the hidden count is left out while hidden sessions are shown. */
-export function sessionsText(view: BuddyView, showHidden: boolean): string {
-  const n = view.sessions.length;
-  const hidden = showHidden ? 0 : hiddenSessions(view).length;
-  return `${n} ${n === 1 ? 'session' : 'sessions'}${hidden > 0 ? ` (${hidden} hidden)` : ''}`;
-}
-
-/** Buddy row cells in column order (the toggle button is added in front of the name). */
-export function rowCells(view: BuddyView, showHidden = false): string[] {
-  return [
-    view.name,
-    stateText(view.state),
-    view.statusText ?? '',
-    progressText(view),
-    timeText(view.lastAt),
-    sessionsText(view, showHidden),
-    view.cwd,
-  ].map((cell) => String(cell ?? ''));
-}
-
-/** Session row cells in column order. */
-export function sessionCells(s: SessionView): string[] {
-  const name = s.title ?? `started ${timeText(s.startedAt)}`;
-  return [`↳ ${name}`, stateText(s.state), s.statusText ?? '', '', timeText(s.lastAt), s.session, ''].map((cell) =>
-    String(cell ?? ''),
-  );
-}
-
-function row(cells: string[]): HTMLTableRowElement {
-  const tr = document.createElement('tr');
-  for (const text of cells) {
-    const td = document.createElement('td');
-    td.textContent = text;
-    tr.append(td);
+function buddyBlock(vm: BuddyVM, interactive: boolean, a: ListActions): HTMLElement {
+  const block = el('div', 'buddy');
+  block.dataset['state'] = vm.state;
+  const line = el('div', 'buddy-line');
+  const main = rowMain('buddy-main', interactive, () => a.click('buddy', vm.key), `b:${vm.key}`);
+  if (vm.hover !== undefined) main.title = vm.hover;
+  main.append(...stateIcon(vm.state, 14), el('span', 'buddy-name', vm.name));
+  if (vm.count !== undefined) main.append(' ', el('span', 'buddy-count', `[${vm.count}]`));
+  main.append(' ', statusSpan(vm));
+  if (vm.progress !== undefined) main.append(el('span', 'progress-text', vm.progress.text));
+  if (vm.unread) {
+    const dot = el('span', 'unread-dot');
+    dot.setAttribute('aria-hidden', 'true');
+    main.append(dot, el('span', 'sr-only', 'unread'));
   }
-  return tr;
-}
-
-function button(label: string, onClick: () => void, expanded?: boolean): HTMLButtonElement {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.textContent = label;
-  if (expanded !== undefined) b.setAttribute('aria-expanded', String(expanded));
-  b.addEventListener('click', onClick);
-  return b;
-}
-
-function wideRow(content: Node): HTMLTableRowElement {
-  const tr = document.createElement('tr');
-  const td = document.createElement('td');
-  td.colSpan = COLUMNS;
-  td.append(content);
-  tr.append(td);
-  return tr;
-}
-
-/** A list bound to one tbody. Expanded and show-hidden choices survive new lists. */
-export function createBuddyList(tbody: HTMLTableSectionElement) {
-  const ui = new Map<string, BuddyUiState>();
-  let views: readonly BuddyView[] = [];
-
-  const stateOf = (key: string): BuddyUiState => {
-    let s = ui.get(key);
-    if (!s) ui.set(key, (s = { open: false, showHidden: false }));
-    return s;
-  };
-
-  function rowsFor(view: BuddyView): HTMLTableRowElement[] {
-    const s = stateOf(view.key);
-    const head = row(rowCells(view, s.showHidden));
-    const toggle = button(s.open ? '−' : '+', () => ((s.open = !s.open), render(views)), s.open);
-    head.cells[0]!.prepend(toggle, ' ');
-    if (!s.open) return [head];
-
-    const rows = [head, ...visibleSessions(view, s.showHidden).map((session) => row(sessionCells(session)))];
-    const hidden = hiddenSessions(view).length;
-    if (hidden > 0) {
-      const label = s.showHidden ? 'hide idle/offline sessions' : `show ${hidden} idle/offline ${hidden === 1 ? 'session' : 'sessions'}`;
-      rows.push(wideRow(button(label, () => ((s.showHidden = !s.showHidden), render(views)))));
-    }
-    return rows;
+  line.append(main);
+  if (vm.hide !== undefined) {
+    const key = vm.hide;
+    const x = button('buddy-hide', '×', () => a.hide(key), `x:${key}`);
+    x.setAttribute('aria-label', 'Hide this session');
+    line.append(x);
   }
-
-  function render(next: readonly BuddyView[]): void {
-    views = next.filter((v) => typeof v === 'object' && v !== null && Array.isArray(v.sessions));
-    const rows = views.flatMap(rowsFor);
-    tbody.replaceChildren(...(rows.length > 0 ? rows : [wideRow(document.createTextNode('No buddies yet'))]));
+  block.append(line);
+  if (vm.progress?.ratio !== undefined) {
+    const bar = el('div', 'progress');
+    bar.setAttribute('aria-hidden', 'true');
+    const fill = el('div', 'progress-fill');
+    fill.style.width = `${Math.round(vm.progress.ratio * 1000) / 10}%`; // CSSOM, which the CSP allows
+    bar.append(fill);
+    block.append(bar);
   }
+  for (const s of vm.sessions) block.append(sessionRow(s, interactive, a));
+  if (vm.more !== undefined) {
+    const more = el('div', 'more');
+    more.append(el('span', 'more-text', `${vm.more.text} · `), button('more-toggle', vm.more.shown ? 'hide' : 'show', () => a.toggleMore(vm.key), `m:${vm.key}`));
+    block.append(more);
+  }
+  return block;
+}
 
-  return { render };
+function groupHead(g: GroupVM, a: ListActions): HTMLButtonElement {
+  const head = button('group-head', '', () => a.setGroupOpen(g.toggle.key, g.toggle.open), `g:${g.id}`);
+  head.dataset['kind'] = g.kind;
+  head.setAttribute('aria-expanded', String(g.open));
+  if (g.path !== undefined) head.title = g.path;
+  const caret = el('span', 'caret', g.open ? '▼' : '▶');
+  caret.setAttribute('aria-hidden', 'true');
+  const count = g.kind === 'folder' ? `(${g.online}/${g.total} online)` : `(${g.total})`;
+  head.append(caret, ' ', el('span', 'group-name', g.label), ' ', el('span', 'group-count', count));
+  return head;
+}
+
+export function renderList(root: HTMLElement, groups: readonly GroupVM[], interactive: boolean, a: ListActions): void {
+  const parts: Node[] = [];
+  for (const g of groups) {
+    parts.push(groupHead(g, a));
+    if (g.open) for (const vm of g.buddies) parts.push(buddyBlock(vm, interactive, a));
+  }
+  root.replaceChildren(...(parts.length > 0 ? parts : [el('p', 'empty', 'No buddies yet. Agents show up here after their next hook event.')]));
 }
