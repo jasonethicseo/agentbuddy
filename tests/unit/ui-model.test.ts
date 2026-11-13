@@ -51,6 +51,15 @@ describe('buddy list model', () => {
     ]);
     expect(codex).toMatchObject({ hover: 'Codex reports finished turns only', unread: true, parts: { phrase: '★ done~ your turn!' } });
     expect(groups[2]!.buddies.map((b) => b.name)).toEqual(['Codex @ gone', 'Kiro @ old']);
+    // Two-line buddy rows (layout change, 2026-11-13): the age of the session behind the row, and the excerpt as the tooltip.
+    expect(cl!.age).toBe('2m');
+    expect(typeof kiro!.age).toBe('string');
+    expect(cl!.tooltip).toBe('delete hello.txt?');
+  });
+  it('hides the buddy-row tooltip with the excerpt while hide-text is on (layout change, 2026-11-13)', () => {
+    const [cl] = buildGroups(snapshot([claude([['WAITING_APPROVAL', A]])], {}, { hideText: true }), new Set(), clock)[0]!.buddies;
+    expect(cl!.parts.excerpt).toBeUndefined();
+    expect(cl).not.toHaveProperty('tooltip');
   });
 
   it('a buddy with one visible session has no session rows but a × for that session', () => {

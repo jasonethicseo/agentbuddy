@@ -29,17 +29,6 @@ function leadWork(): HTMLElement {
   return g;
 }
 
-function statusSpan(vm: BuddyVM): HTMLElement {
-  const s = el('span', 'buddy-status');
-  const phrase = el('span', 'phrase');
-  if (vm.parts.lead === 'work') phrase.append(leadWork());
-  phrase.append(vm.parts.phrase);
-  s.append('(', phrase);
-  if (vm.parts.excerpt !== undefined) s.append(el('span', 'excerpt', ` · ${vm.parts.excerpt}`));
-  s.append(')');
-  return s;
-}
-
 function sessionPhrase(s: SessionVM): HTMLElement {
   const p = el('span', 'session-phrase');
   p.append('(');
@@ -84,9 +73,11 @@ export function unreadMark(theme: ThemeId): Node[] {
 }
 
 /** Blue Bot draws the cells and Strawberry Milk the bar (tokens); without cells both draw the bar. */
+/** Line 3 of a Kiro buddy row: the track (hidden from screen readers), then `n/m` as text. */
 function progressBlock(p: ProgressVM): HTMLElement {
   const block = el('div', 'progress');
-  block.setAttribute('aria-hidden', 'true');
+  const track = el('div', 'progress-track');
+  track.setAttribute('aria-hidden', 'true');
   if (p.cells !== undefined) {
     const cells = el('div', 'progress-cells');
     cells.style.setProperty('--cells', String(p.cells.length)); // CSSOM, which the CSP allows
@@ -95,7 +86,7 @@ function progressBlock(p: ProgressVM): HTMLElement {
       cell.dataset['cell'] = c;
       cells.append(cell);
     }
-    block.append(cells);
+    track.append(cells);
   } else {
     block.dataset['bar'] = '';
   }
@@ -103,7 +94,8 @@ function progressBlock(p: ProgressVM): HTMLElement {
   const fill = el('div', 'progress-fill');
   fill.style.width = `${Math.round((p.ratio ?? 0) * 1000) / 10}%`;
   bar.append(fill);
-  block.append(bar);
+  track.append(bar);
+  block.append(track, el('span', 'progress-text', p.text));
   return block;
 }
 
@@ -113,12 +105,24 @@ function buddyBlock(theme: ThemeId, vm: BuddyVM, interactive: boolean, selected:
   const line = el('div', 'buddy-line');
   const main = rowMain('buddy-main', interactive, () => a.click('buddy', vm.key), `b:${vm.key}`);
   if (vm.key === selected) main.dataset['selected'] = ''; // the row clicked last (retro-skin Requirement 7.6)
-  if (vm.hover !== undefined) main.title = vm.hover;
-  main.append(...stateSprite(theme, vm.agent, vm.state, 24), el('span', 'buddy-name', vm.name));
-  if (vm.count !== undefined) main.append(' ', el('span', 'buddy-count', `[${vm.count}]`));
-  main.append(' ', statusSpan(vm));
-  if (vm.progress !== undefined) main.append(el('span', 'progress-text', vm.progress.text));
-  if (vm.unread) main.append(...unreadMark(theme));
+  // Hover: the excerpt (none while hide-text is on), and for Codex its note (layout change, 2026-11-13).
+  const tip = [vm.tooltip, vm.hover].filter((t) => t !== undefined).join('\n');
+  if (tip !== '') main.title = tip;
+  main.dataset['lines'] = vm.parts.excerpt !== undefined ? '2' : '1';
+  // Line 1: name and [n] at full width, the phrase cut first, then age and the unread marker at the right end.
+  const top = el('span', 'buddy-top');
+  top.append(el('span', 'buddy-name', vm.name));
+  if (vm.count !== undefined) top.append(el('span', 'buddy-count', `[${vm.count}]`));
+  const phrase = el('span', 'buddy-phrase');
+  if (vm.parts.lead === 'work') phrase.append(leadWork());
+  phrase.append(vm.parts.phrase);
+  const end = el('span', 'buddy-end');
+  end.append(el('span', 'buddy-age', vm.age));
+  if (vm.unread) end.append(...unreadMark(theme));
+  top.append(phrase, end);
+  main.append(...stateSprite(theme, vm.agent, vm.state, 24), top);
+  // Line 2: the excerpt, at full width under the name; no line without one.
+  if (vm.parts.excerpt !== undefined) main.append(el('span', 'buddy-excerpt', vm.parts.excerpt));
   line.append(main);
   if (vm.hide !== undefined) {
     const key = vm.hide;

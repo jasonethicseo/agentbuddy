@@ -155,13 +155,17 @@ The core phrases carry no skin glyph (D10); the screen draws the working glyph b
 Kiro context references in names and excerpts are shown short: `#[[spec:<kind>:<path>]]` as `spec: <spec folder>`, `#[[file:<path>]]` as `file: <file name>`, any other `#[[…]]` as `[ref]` (a reference cut by a length limit keeps only its kind); stored data keeps the raw text.
 
 ## Buddy list
-The 2000s messenger grammar: one line per buddy, the status message in parentheses after the name, cut with an ellipsis.
+The 2000s messenger grammar: a buddy's name and state first, its status message under it. Buddy rows take two lines (three with Kiro progress); session rows stay one line.
 
 - **Me row** (Buddies only): a `me-panel` box with a 1 px `box-line` border; the 36 px `me` sprite in a sunken `field` frame; `me (online)` bold, with `(online)` regular in the working color; the user's own status message as a sunken field button that edits in place, followed by the `✎` pixel icon. Empty by default, showing `set your status ✎` in `text-2`. Enter saves, Esc cancels, max 40 code points. Stored only in `app-settings.json`; never sent to the relay or any agent.
 - **List panel**: one sunken `panel` box holding every group.
 - **Group header** (project folder): full-width button, no fill: `[−]` (open) or `[+]` (closed) 9 px pixel box, the folder name bold in `group-text`, then `(online/total)` in `text-2`. A buddy counts as online unless all its sessions are OFFLINE or ENDED. The offline group: `[+] offline (n)`, name in the OFFLINE color.
-- **Buddy row**, one line: 24 px sprite with badge, agent name bold, `[n]` session count when more than one, then `(phrase · excerpt)` with ellipsis, then the unread marker at the right.
-- **Kiro progress**: `n/m` at the right end of the line, and a sunken track on a second line indented to the name. Blue Bot: one 7 px cell per task (`n` done `#36B9F0`, then one current `#2F6FD6` while `WORKING` and `n < m`, then to-do `#E3EEFC`) on `field`; above 30 tasks one continuous bar in the same colors (D5). Strawberry Milk: a 9 px striped bar `#FFB8D2` / `#D9C2FF` filled to `n/m` on `field`. When progress is unknown, neither `n/m` nor the track is shown.
+- **Buddy row** (both skins; layout change from real use, 2026-11-13):
+  - Line 1: the 24 px sprite with its badge, centered vertically on lines 1–2; the agent name bold; `[n]` when more than one session is visible; the state phrase bold in its state color; at the right end the relative time of the session that sets the buddy state (Galmuri9 10 px), then the unread marker. The name and `[n]` never shrink (`flex-shrink: 0`); when space runs out only the phrase is cut with an ellipsis.
+  - Line 2: the excerpt in `text-2`, Galmuri11 12 px, from where the name starts to the end of the row, cut with an ellipsis. No excerpt (none, or hide-text on): no line 2.
+  - Line 3, Kiro only and only while progress is known: the progress track and `n/m` after it.
+  - Hover: the buddy row's tooltip is the excerpt (at most 40 code points); none while "Hide prompt and reply text" is on. A Codex row's tooltip adds `Codex reports finished turns only` on its own line (the only text while hide-text is on).
+- **Kiro progress**: line 3 of the buddy row: a sunken track indented to the name, then `n/m`. Blue Bot: one 7 px cell per task (`n` done `#36B9F0`, then one current `#2F6FD6` while `WORKING` and `n < m`, then to-do `#E3EEFC`) on `field`; above 30 tasks one continuous bar in the same colors (D5). Strawberry Milk: a 9 px striped bar `#FFB8D2` / `#D9C2FF` filled to `n/m` on `field`. When progress is unknown, neither `n/m` nor the track is shown.
 - **Session rows** (when expanded): indented, `└` in `tree`, 12 px sprite, `session name (phrase)` with ellipsis, relative time in Galmuri9, × button (`Hide this session`). The top session row uses `urgent-row` when it is `WAITING_APPROVAL`, otherwise only a 3 px left line in its state color (D12).
 - Hidden or offline sessions: one muted line `2 logged off · show`.
 

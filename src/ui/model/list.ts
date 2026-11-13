@@ -49,6 +49,10 @@ export interface BuddyVM {
   count?: number;
   unread: boolean;
   progress?: ProgressVM;
+  /** Time since the last event of the session behind the row (line 1, right end). */
+  age: string;
+  /** The excerpt as the row's tooltip; absent with no excerpt or while hide-text is on (layout change, 2026-11-13). */
+  tooltip?: string;
   hover?: string;
   /** The session key behind the buddy row's × when exactly one session is visible (app only). */
   hide?: string;
@@ -126,6 +130,7 @@ function buddyVM(b: BuddyView, s: AppSnapshot, inOffline: boolean, showMore: Rea
     state: b.state,
     parts: statusParts(b.state, first.task === true, first.statusText, hideText),
     unread: b.sessions.some((x) => unacked.has(x.key)),
+    age: age(first.lastAt, clock.nowMs),
     sessions: rows.map((x, i) => ({
       key: x.key,
       state: x.state,
@@ -147,6 +152,7 @@ function buddyVM(b: BuddyView, s: AppSnapshot, inOffline: boolean, showMore: Rea
     if (progress !== undefined) vm.progress = progress;
   }
   if (b.agent === 'codex') vm.hover = CODEX_NOTE;
+  if (vm.parts.excerpt !== undefined && !hideText) vm.tooltip = vm.parts.excerpt;
   return vm;
 }
 

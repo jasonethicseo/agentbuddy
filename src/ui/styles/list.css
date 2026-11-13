@@ -35,28 +35,44 @@
 .group-name { font-weight: 700; }
 .group-head[data-kind='offline'] .group-name { color: var(--st-off); }
 .group-count { color: var(--text-2); }
-/* Buddy rows: 24 px sprite with badge, bold name, (phrase · excerpt), unread marker */
+/* Buddy rows, two lines (layout change from real use, 2026-11-13; design.md "Buddy row"): line 1 sprite, name, [n],
+   phrase, then age and the unread marker; line 2 the excerpt at full width. Session rows stay one line. */
 .buddy-line { display: flex; align-items: center; }
 .buddy-main, .session-main {
   display: flex; align-items: center; flex: 1 1 auto; min-width: 0;
   background: transparent; border: 0; text-align: left; white-space: nowrap;
 }
 button.buddy-main, button.session-main { cursor: pointer; }
-.buddy-main { gap: 5px; padding: 2px 4px 2px 16px; }
-.buddy-name { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 700; } /* long offline names shrink (fix F2) */
-.buddy-count { color: var(--text-2); }
-.buddy-status { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
-/* The phrase first, bold, in its state color (design.md "Status phrases"). */
-.phrase { font-weight: 700; color: var(--text-2); }
+.buddy-main.buddy-main { display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 5px; row-gap: 1px; align-items: center; padding: 2px 4px 2px 16px; }
+.buddy-main > .sprite { grid-row: 1; grid-column: 1; }
+.buddy-main[data-lines="2"] > .sprite { grid-row: 1 / span 2; }
+.buddy-top { grid-column: 2; display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+.buddy-name {
+  flex-shrink: 0; font-weight: 700;
+}
+.buddy-count {
+  flex-shrink: 0; color: var(--text-2);
+}
+/* The only part of line 1 that gives way. */
+.buddy-phrase {
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-2);
+}
+.buddy-end {
+  flex-shrink: 0; display: flex; align-items: center; gap: 4px; margin-left: auto;
+}
+.buddy-age { font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
+.buddy-excerpt {
+  grid-column: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2);
+}
 /* ▸ only in regular weight: Galmuri11 Bold lacks it (retro-skin Requirement 4.5). */
 .lead-work::before { content: var(--glyph-work) " "; font-weight: 400; }
-[data-state='WAITING_APPROVAL'] > .buddy-line .phrase { color: var(--st-wait); }
-[data-state='WORKING'] > .buddy-line .phrase { color: var(--st-work); }
-[data-state='TURN_DONE'] > .buddy-line .phrase { color: var(--st-done); }
-[data-state='STALE'] > .buddy-line .phrase { color: var(--st-stale); }
-[data-state='IDLE'] > .buddy-line .phrase { color: var(--st-idle); }
-[data-state='OFFLINE'] > .buddy-line .phrase,
-[data-state='ENDED'] > .buddy-line .phrase { color: var(--st-off); }
+[data-state='WAITING_APPROVAL'] > .buddy-line .buddy-phrase { color: var(--st-wait); }
+[data-state='WORKING'] > .buddy-line .buddy-phrase { color: var(--st-work); }
+[data-state='TURN_DONE'] > .buddy-line .buddy-phrase { color: var(--st-done); }
+[data-state='STALE'] > .buddy-line .buddy-phrase { color: var(--st-stale); }
+[data-state='IDLE'] > .buddy-line .buddy-phrase { color: var(--st-idle); }
+[data-state='OFFLINE'] > .buddy-line .buddy-phrase,
+[data-state='ENDED'] > .buddy-line .buddy-phrase { color: var(--st-off); }
 .progress-text { flex-shrink: 0; font-weight: 700; color: var(--prog-text); }
 .unread-mark { display: flex; flex-shrink: 0; }
 .unread-mark:not(.berry) { padding: 0 2px; font-family: var(--font-small); font-size: 10px; line-height: 11px; color: var(--unread-color); background: var(--unread-bg); }
@@ -67,8 +83,8 @@ button.buddy-main, button.session-main { cursor: pointer; }
 .screen-list:not(:has(.buddy-main:focus-visible)) .buddy-main[data-selected] {
   color: var(--selection-text); background: var(--selection);
 }
-.buddy-main:focus-visible :is(.buddy-count, .buddy-status, .phrase, .excerpt, .progress-text),
-.screen-list:not(:has(.buddy-main:focus-visible)) .buddy-main[data-selected] :is(.buddy-count, .buddy-status, .phrase, .excerpt, .progress-text) {
+.buddy-main:focus-visible :is(.buddy-count, .buddy-phrase, .buddy-excerpt, .buddy-age),
+.screen-list:not(:has(.buddy-main:focus-visible)) .buddy-main[data-selected] :is(.buddy-count, .buddy-phrase, .buddy-excerpt, .buddy-age) {
   color: inherit;
 }
 .buddy-main:focus-visible .unread-mark,
@@ -80,8 +96,9 @@ button.buddy-main, button.session-main { cursor: pointer; }
 }
 .buddy-hide { margin-right: 4px; opacity: 0; }
 .buddy:hover .buddy-hide, .buddy:focus-within .buddy-hide, .buddy-hide:focus-visible { opacity: 1; }
-/* Kiro progress in a sunken track: cells (Blue Bot) or a striped bar (Strawberry Milk), indented to the name */
-.progress { margin: 1px 8px 3px 50px; }
+/* Kiro progress, line 3: a sunken track indented to the name, then n/m; cells (Blue Bot) or a striped bar (Strawberry Milk) */
+.progress { display: flex; align-items: center; gap: 5px; margin: 0 8px 3px 45px; }
+.progress-track { flex: 1 1 auto; min-width: 0; }
 .progress-cells {
   display: var(--prog-cells-display); grid-template-columns: repeat(var(--cells), minmax(0, 1fr)); gap: 1px; padding: 2px; background: var(--field);
 }
