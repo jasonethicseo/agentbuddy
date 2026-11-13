@@ -2,8 +2,9 @@
    (messenger-app Requirement 16.5, retro-skin Requirement 3). All are SIL OFL 1.1; the license texts sit next to the files.
    Galmuri 2.40.3 (npm `galmuri`): Galmuri11 for all UI text at 12 px, Galmuri9 for small text at 10 px.
    Nanum Gothic is the fallback: the browser falls back per character along each stack.
-   cmap read 2026-11-13 (src/ui/fallback.ts): all three Galmuri files lack ✓ and ✎ (drawn as pixel icons instead);
-   Galmuri11 Bold also lacks ▸ and − (▸ is always set in regular weight; the group boxes are pixel icons). */
+   cmap read 2026-11-13 (src/ui/fallback.ts): every character the UI sets as text is in Galmuri11 Regular and Galmuri9;
+   Galmuri11 Bold lacks only ▸ of them, which is always set in regular weight. All three lack ✓ and ✎, and Bold lacks −:
+   those are drawn as pixel icons (check, pencil, group boxes) and never set as text. */
 @font-face {
   font-family: 'Galmuri11';
   src: url('/fonts/Galmuri11.woff2') format('woff2');

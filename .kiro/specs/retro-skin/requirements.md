@@ -261,7 +261,7 @@ Everything else of MA and TH stays: what pings, what acknowledges, what a click 
 
 | Behavior | Status | Handling until observed |
 |---|---|---|
-| Which UI characters Galmuri lacks besides `✓ ✎` (all files) and `▸ −` (Bold) | brief 4, from the cmap; the rest not checked yet | checked from the bundled files after the download (Req 3.8) |
+| Which UI characters Galmuri lacks besides `✓ ✎` (all files) and `▸ −` (Bold) | **observed** 2026-11-13 (retro-skin tasks 1.2, 6.1, cmap of the bundled 2.40.3 files): none. Of what the UI sets as text, Regular and Galmuri9 lack nothing and Bold lacks only `▸` (set in regular weight); `✓ ✎ −` are pixel icons | `src/ui/fallback.ts`, kept equal by `tests/unit/fonts.test.ts` |
 | How Galmuri11 renders at 12 px and Galmuri9 at 10 px with smoothing off in Electron 45 | not seen | the first screen check |
 | The transparent main window's shadow and its 420 px minimum height | carried over from TH (not seen) | as today |
 

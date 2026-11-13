@@ -79,12 +79,21 @@ How to work through this list:
     - _Requirements: 1.1, 2.2, 2.3, 2.5, 14.1_
     - Result (2026-11-13): 803 tests pass (the 16 legacy contrast cases went with their tokens; three rule tests added). 66 tokens removed, found by pruning every token no stylesheet or token refers to until none was left: the list of design "Tokens" plus `--bg-pattern-color`, `--title-from/to`, `--tbtn-bg`, `--card-bg` and the other `--card-*`, `--quiet-line`, `--prog-track`, and the never-used `--me-field-light` / `--me-field-inner`. Both token files are 171 lines.
 
-- [ ] 6. Checkpoint: fonts, all tests, mutation check
-  - [ ] 6.1 `tests/unit/fonts.test.ts`: the UI's character set as in design "Fonts" (now final); `GALMURI_MISSING` equals the computed missing set per file; `✓` and `✎` are not in the UI's character set; `▸` appears only in places set to weight 400. Update `src/ui/fallback.ts` and the comment in `fonts.css` with the final record, and record it in the requirements' Unverified table (it becomes observed).
+- [x] 6. Checkpoint: fonts, all tests, mutation check
+  - [x] 6.1 `tests/unit/fonts.test.ts`: the UI's character set as in design "Fonts" (now final); `GALMURI_MISSING` equals the computed missing set per file; `✓` and `✎` are not in the UI's character set; `▸` appears only in places set to weight 400. Update `src/ui/fallback.ts` and the comment in `fonts.css` with the final record, and record it in the requirements' Unverified table (it becomes observed).
     - _Requirements: 3.8, 4.5, 14.1_
-  - [ ] 6.2 All tests pass, `npm run typecheck` and `npm run build` succeed, every changed file stays under about 200 lines.
-  - [ ] 6.3 Mutation check, once, each alone and reverted with `git checkout -- <file>`: (a) remove `--px-hair` from Blue Bot's token file; (b) set Blue Bot `--primary-from` back to `#5AA6F0`; (c) make `startTip` ignore `day`; (d) make `rovingTarget` return `null` for `End`. Record which tests failed for each.
+  - [x] 6.2 All tests pass, `npm run typecheck` and `npm run build` succeed, every changed file stays under about 200 lines.
+  - [x] 6.3 Mutation check, once, each alone and reverted with `git checkout -- <file>`: (a) remove `--px-hair` from Blue Bot's token file; (b) set Blue Bot `--primary-from` back to `#5AA6F0`; (c) make `startTip` ignore `day`; (d) make `rovingTarget` return `null` for `End`. Record which tests failed for each.
     - _Requirements: 14.3_
+  - Result (2026-11-13): 808 tests pass; `npm run typecheck` and `npm run build` succeed (the build rewrote `dist/ui`, which the builder's relay serves to the browser page). Final cmap record (6.1): of the characters the UI sets as text (non-ASCII `· … └ ▶ × 띠 링 ♪ ★ ▲ ▸ ●`), Galmuri11 Regular and Galmuri9 lack none and Galmuri11 Bold lacks only `▸`, which is set in regular weight; `GALMURI_MISSING` is now `{ regular: '', bold: '▸', small: '' }`. `strawberry-milk.ts` was 259 lines with the hair rectangles and now holds four per line (93 lines, same rectangles and order). No other changed source file is over about 200 lines.
+  - Mutation check (6.3), each alone, then `git checkout -- <file>`; the files equal HEAD afterwards and the suite is green again:
+    | Mutation | Failing tests |
+    |---|---|
+    | (a) `--px-hair` removed from Blue Bot | `theme.prop` token sets; `sprites` every role has a token; `sprites` Strawberry Milk hair (Blue Bot roles transparent); `themes` same token names (4) |
+    | (b) Blue Bot `--primary-from` back to `#5AA6F0` | `contrast` blue-bot `--primary-text` on `--primary-from` (1) |
+    | (c) `startTip` ignores `day` | `tips` picks applicable[day mod n]; `tips` days before 1970 (2) |
+    | (d) `rovingTarget` returns `null` for `End` | `toolbar` → and ← move by one and wrap; Home and End go to the ends (1) |
+    The first runs of (b)–(d) were started in parallel by mistake, so their mutations overlapped and the load made two timing tests of `codex-notify.test.ts` (0.9 s hook limit) fail as well; the table above is from the reruns, one at a time.
 
 - [ ] 7. Screen check with the builder
   - Announced right before it runs with what will appear and for how long. Run once in the foreground of the tool call with a fixed time limit: the app from this build with a temp `HOME` and port 4399 (its own relay), fake events with `/Users/dev/...` paths and no real prompts (a Kiro buddy with a temp `tasks.md`, a Claude buddy waiting for approval, a Codex turn done), so that all three screens, both skins, a selected row, the banner and both pop-up kinds show.
