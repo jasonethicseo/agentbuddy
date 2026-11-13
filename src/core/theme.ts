@@ -4,7 +4,7 @@ export const THEMES = ['blue-bot', 'strawberry-milk'] as const;
 export type ThemeId = (typeof THEMES)[number];
 export const DEFAULT_THEME: ThemeId = 'blue-bot';
 
-/** Names shown on the Theme card; they never mention gender (design.md "Themes"). */
+/** Names shown in the Skin group; they never mention gender (design.md "Skins"). */
 export const THEME_NAMES: Readonly<Record<ThemeId, string>> = {
   'blue-bot': 'Blue Bot',
   'strawberry-milk': 'Strawberry Milk',

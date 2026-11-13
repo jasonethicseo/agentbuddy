@@ -1,42 +1,27 @@
-/* The Settings tab: the Theme card (ThemePicker.dc.html), then the cards of Settings.dc.html in the theme's
-   look (themes Requirements 2.1, 2.2, 7.7). Colors, radii and decoration characters come from themes/*.css. */
-.settings { display: flex; flex-direction: column; gap: 10px; padding: 0 8px 4px; }
-.set-card {
-  display: flex; flex-direction: column; background: var(--card-bg); border: var(--card-line-width) solid var(--card-line);
-  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+/* The Settings screen: group boxes in the order of SkinPicker2000.dc.html, then the rows of Settings.dc.html
+   (retro-skin Requirements 10.4, 12.2, 12.3). Colors come from themes/*.css, edges from materials.css. */
+.settings { display: flex; flex-direction: column; gap: 8px; padding: 3px 3px 6px; }
+.set-group {
+  display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 6px 8px 8px; min-width: 0;
+  border: 1px solid var(--box-line); border-radius: 3px; box-shadow: inset 1px 1px 0 var(--bevel-light);
 }
-.set-title { margin: 0; padding: 10px 12px 4px; font-family: var(--font-text); font-size: 15px; font-weight: 400; color: var(--group-text); }
-.check { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; }
-.check + .check { border-top: var(--divider); }
-.check > span { flex-grow: 1; }
-.check > input { width: 16px; height: 16px; margin: 0; accent-color: var(--primary-bg); }
-.set-note { margin: 0; padding: 0 12px 10px; font-size: 11px; color: var(--text-2); }
-.set-conn { gap: 6px; padding: 10px 12px; }
-.set-conn .set-title { padding: 0; }
+.set-group > legend { padding: 0 4px; font-weight: 700; color: var(--group-text); }
+.check { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.check > input { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }
+.set-note { margin: 0; font-family: var(--font-small); font-size: 10px; color: var(--text-on-bg); }
 .conn { display: flex; align-items: center; gap: 6px; }
-
-/* Theme card: two tiles in a radio group */
-.theme-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 6px 12px 10px; }
-.theme-tile {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px; cursor: pointer;
-  color: var(--group-text); background: var(--card-bg); border: 2px solid var(--quiet-line); border-radius: var(--card-radius);
+/* Skin group: two raised tiles in a radio group; the checked one is pressed. */
+.skin-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.skin-tile { display: flex; flex-direction: column; gap: 5px; padding: 6px; cursor: pointer; color: var(--group-text); }
+.skin-tile:has(.skin-input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.skin-choice { display: flex; align-items: center; gap: 5px; }
+.skin-input { margin: 0; accent-color: var(--accent); }
+.skin-input:focus-visible { outline: none; }
+/* The mini window takes its own skin's tokens through [data-theme-preview]. */
+.skin-mini {
+  display: flex; flex-direction: column; box-sizing: border-box; width: 100%; height: 58px; overflow: hidden;
+  background: var(--bg); border: 1px solid var(--frame); border-radius: 4px 4px 0 0;
 }
-.theme-tile[data-checked] {
-  color: var(--text); background: var(--unread-tint); border-color: var(--primary-bg);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);
-}
-.theme-tile:has(.theme-input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
-/* The radio stays focusable and in the accessibility tree; only its look is hidden. */
-.theme-input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; opacity: 0; }
-.theme-name { font-family: var(--font-text); font-size: 13px; }
-.theme-check { display: none; }
-.theme-tile[data-checked] .theme-check { display: inline; }
-/* The mini window takes its own theme's tokens through [data-theme-preview]. */
-.theme-mini {
-  display: flex; flex-direction: column; box-sizing: border-box; width: 100%; height: 64px; overflow: hidden;
-  background-color: var(--bg); background-image: var(--bg-pattern); background-size: var(--preview-pattern-size);
-  border: 2px solid var(--frame); border-radius: var(--preview-radius);
-}
-.theme-mini-title { height: 12px; background: linear-gradient(90deg, var(--title-from), var(--title-to)); }
-.theme-mini-row { display: flex; align-items: center; gap: 4px; padding: 6px; }
-.theme-mini-bar { flex-grow: 1; height: 6px; background: var(--preview-bar); border-radius: var(--preview-bar-radius); }
+.skin-mini-title { height: 11px; background: linear-gradient(var(--gloss-1) 0%, var(--gloss-2) 48%, var(--gloss-3) 52%, var(--gloss-4) 100%); }
+.skin-mini-row { display: flex; align-items: center; gap: 4px; margin: 4px; padding: 6px 5px; background: var(--panel); }
+.skin-mini-bar { flex-grow: 1; height: 5px; background: repeating-linear-gradient(135deg, var(--prog-stripe-1) 0 3px, var(--prog-stripe-2) 3px 6px); }
