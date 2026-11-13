@@ -496,3 +496,13 @@ The optional "my status row" (`me` and an editable status message) was first lef
 | — | A buddy-row click acknowledges every session of that buddy (Req 10.3). |
 | — | No temporary Claude probe hook; terminal values come from the builder's own shell check. |
 | — | O4 is the first task after design. |
+
+## Bug fixes after release (builder, 2026-11-13)
+
+Found in real use; fixed with a test first, without a new spec.
+
+| # | Found | Change | Criteria |
+|---|---|---|---|
+| BF1 | Kiro session names and excerpts showed Kiro's context references raw, local paths included (seen in Kiro prompts: `#[[spec:feature:<absolute path>/.kiro/specs/<name>]]` at the start of the prompt) | Display only (`displayRefs` in `src/core/text.ts`, used by the excerpt, the session name on screen, in pop-ups and in macOS notifications): `#[[spec:<kind>:<path>]]` → `spec: <spec folder>`, `#[[file:<path>]]` → `file: <file name>`, any other `#[[…]]` → `[ref]`; a reference cut by a length limit (a 40-code-point session title, a 120-code-point event text) keeps only its kind (`spec: …`, `file: …`). Events, the inbox file and session titles keep the raw text. A property test: no `/Users/` path from a reference is left on screen, whole or cut anywhere. `#[[file:…]]` itself was not seen in the logs yet. | Req 7.2, 9.7 (display) |
+| BF2 | Unknown Kiro progress showed `?/?` | Unknown progress shows neither `n/m` nor the bar. | Req 6.4 (`?/?` when unknown → nothing) |
+

@@ -5,7 +5,7 @@ import type { BuddyView, SessionView } from '../../core/buddies';
 import type { AgentId } from '../../core/event';
 import type { AppSnapshot } from '../../core/snapshot';
 import type { DisplayState } from '../../core/state';
-import { AGENT_NAMES, folderName, statusParts } from '../../core/text';
+import { AGENT_NAMES, displayRefs, folderName, statusParts } from '../../core/text';
 import type { StatusParts } from '../../core/text';
 import { progressView } from './progress';
 import type { ProgressVM } from './progress';
@@ -89,7 +89,7 @@ export function age(lastAt: string, nowMs: number): string {
 
 /** The session title, or `started HH:MM:SS` when it has none or text is hidden. */
 export function sessionName(s: { title?: string; startedAt: string }, hideText: boolean, clock: Clock): string {
-  if (!hideText && s.title !== undefined) return s.title;
+  if (!hideText && s.title !== undefined) return displayRefs(s.title); // Kiro references in short form (bug fix, 2026-11-13)
   const ms = Date.parse(s.startedAt);
   return Number.isFinite(ms) ? `started ${clock.time(ms, true)}` : 'started';
 }
@@ -143,7 +143,8 @@ function buddyVM(b: BuddyView, s: AppSnapshot, inOffline: boolean, showMore: Rea
   if (app && visible.length === 1) vm.hide = visible[0]!.key;
   if (left.length > 0) vm.more = { text: moreText(left, hidden), shown };
   if (b.agent === 'kiro') {
-    vm.progress = progressView(b.progress, b.state);
+    const progress = progressView(b.progress, b.state); // unknown: nothing shown
+    if (progress !== undefined) vm.progress = progress;
   }
   if (b.agent === 'codex') vm.hover = CODEX_NOTE;
   return vm;

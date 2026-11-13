@@ -76,12 +76,38 @@ export interface StatusParts {
   lead?: 'work';
 }
 
+/** The last non-empty `/` segment of a path ('' when there is none). */
+function lastSegment(path: string): string {
+  const parts = path.split('/').filter((p) => p !== '');
+  return parts.length > 0 ? parts[parts.length - 1]! : '';
+}
+/** One Kiro context reference, by its body (between `#[[` and `]]`); `closed` is false when a length limit cut it. */
+function shortRef(body: string, closed: boolean): string {
+  const at = body.indexOf(':');
+  const kind = at < 0 ? body : body.slice(0, at);
+  if (kind !== 'spec' && kind !== 'file') return '[ref]';
+  if (!closed) return `${kind}: …`;
+  let path = body.slice(at + 1);
+  if (kind === 'spec' && /^[^:/]*:/.test(path)) path = path.slice(path.indexOf(':') + 1); // `spec:<kind>:<path>`
+  const name = lastSegment(path);
+  return name === '' ? '[ref]' : `${kind}: ${name}`;
+}
+/**
+ * Text for the screen with Kiro's context references shortened (messenger-app bug fix, 2026-11-13):
+ * `#[[spec:<kind>:<path>]]` → `spec: <spec folder>`, `#[[file:<path>]]` → `file: <file name>`, any other
+ * `#[[…]]` → `[ref]`; a reference cut short by a length limit keeps only its kind. Only display uses it;
+ * events, the inbox file and session titles keep the raw text. Seen in Kiro prompts: `#[[spec:feature:<absolute path>]]`.
+ */
+export function displayRefs(text: string): string {
+  if (!text.includes('#[[')) return text;
+  return text.replace(/#\[\[([\s\S]*?)(\]\]|$)/g, (_m, body: string, end: string) => shortRef(body, end === ']]'));
+}
 export function statusParts(state: DisplayState, inSpecTask: boolean, statusText: string | undefined, hideText: boolean): StatusParts {
   const phrase = state === 'WORKING' && inSpecTask ? SPEC_TASK_PHRASE : PHRASES[state];
   const parts: StatusParts = { phrase };
   if (state === 'WORKING') parts.lead = 'work';
   if (hideText || statusText === undefined) return parts;
-  const excerpt = truncate(statusText, STATUS_TEXT_LIMIT);
+  const excerpt = truncate(displayRefs(statusText), STATUS_TEXT_LIMIT);
   if (excerpt !== '') parts.excerpt = excerpt;
   return parts;
 }

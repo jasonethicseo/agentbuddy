@@ -42,8 +42,9 @@ describe('progressView', () => {
     expect(progressView({ done: 16, total: 19 }, 'WORKING')).toEqual({ text: '16/19', ratio: 16 / 19, cells: progressCells(16, 19, 'WORKING') });
     expect(progressView({ done: 3, total: 40 }, 'WORKING')).toEqual({ text: '3/40', ratio: 3 / 40 });
     expect(progressView({ done: 0, total: 0 }, 'IDLE')).toEqual({ text: '0/0', ratio: 0 });
-    expect(progressView(null, 'WORKING')).toEqual({ text: '?/?' });
-    expect(progressView(undefined, 'WORKING')).toEqual({ text: '?/?' });
+    // Unknown progress shows neither `?/?` nor a bar (messenger-app bug fix, 2026-11-13).
+    expect(progressView(null, 'WORKING')).toBeUndefined();
+    expect(progressView(undefined, 'WORKING')).toBeUndefined();
   });
 
   it('reaches the Kiro buddy row, with the current cell following the buddy state', () => {

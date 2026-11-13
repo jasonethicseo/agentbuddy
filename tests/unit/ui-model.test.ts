@@ -75,7 +75,7 @@ describe('buddy list model', () => {
     expect(vm).toMatchObject({ state: 'WAITING_APPROVAL', hide: B, more: { text: '1 hidden' } });
   });
 
-  it('adds the parent folder when two groups share a folder name, and shows ?/? for unknown Kiro progress', () => {
+  it('adds the parent folder when two groups share a folder name, and shows nothing for unknown Kiro progress', () => {
     const groups = buildGroups(
       snapshot([buddyView('kiro', '/Users/dev/a/demo', [{ key: K, state: 'WORKING' }]), buddyView('kiro', '/Users/dev/b/demo', [{ key: key('kiro', 'k2'), state: 'WORKING' }])]),
       new Set(),
@@ -85,7 +85,7 @@ describe('buddy list model', () => {
       ['demo (a)', '/Users/dev/a/demo'],
       ['demo (b)', '/Users/dev/b/demo'],
     ]);
-    expect(groups[0]!.buddies[0]!.progress).toEqual({ text: '?/?' });
+    expect(groups[0]!.buddies[0]!.progress).toBeUndefined();
   });
 
   it('keeps group open state from settings; the offline group is open only when listed', () => {

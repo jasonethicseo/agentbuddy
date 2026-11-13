@@ -152,6 +152,7 @@ No `♥` or `♡` remains in Strawberry Milk. Decoration characters are never em
 | ENDED | `logged off` |
 
 The core phrases carry no skin glyph (D10); the screen draws the working glyph before them. The phrase comes first in the state color and bold; the prompt or reply excerpt follows in `text-2` after ` · `, up to 40 code points.
+Kiro context references in names and excerpts are shown short: `#[[spec:<kind>:<path>]]` as `spec: <spec folder>`, `#[[file:<path>]]` as `file: <file name>`, any other `#[[…]]` as `[ref]` (a reference cut by a length limit keeps only its kind); stored data keeps the raw text.
 
 ## Buddy list
 The 2000s messenger grammar: one line per buddy, the status message in parentheses after the name, cut with an ellipsis.
@@ -160,7 +161,7 @@ The 2000s messenger grammar: one line per buddy, the status message in parenthes
 - **List panel**: one sunken `panel` box holding every group.
 - **Group header** (project folder): full-width button, no fill: `[−]` (open) or `[+]` (closed) 9 px pixel box, the folder name bold in `group-text`, then `(online/total)` in `text-2`. A buddy counts as online unless all its sessions are OFFLINE or ENDED. The offline group: `[+] offline (n)`, name in the OFFLINE color.
 - **Buddy row**, one line: 24 px sprite with badge, agent name bold, `[n]` session count when more than one, then `(phrase · excerpt)` with ellipsis, then the unread marker at the right.
-- **Kiro progress**: `n/m` at the right end of the line, and a sunken track on a second line indented to the name. Blue Bot: one 7 px cell per task (`n` done `#36B9F0`, then one current `#2F6FD6` while `WORKING` and `n < m`, then to-do `#E3EEFC`) on `field`; above 30 tasks one continuous bar in the same colors (D5). Strawberry Milk: a 9 px striped bar `#FFB8D2` / `#D9C2FF` filled to `n/m` on `field`. `?/?` and no track when unknown.
+- **Kiro progress**: `n/m` at the right end of the line, and a sunken track on a second line indented to the name. Blue Bot: one 7 px cell per task (`n` done `#36B9F0`, then one current `#2F6FD6` while `WORKING` and `n < m`, then to-do `#E3EEFC`) on `field`; above 30 tasks one continuous bar in the same colors (D5). Strawberry Milk: a 9 px striped bar `#FFB8D2` / `#D9C2FF` filled to `n/m` on `field`. When progress is unknown, neither `n/m` nor the track is shown.
 - **Session rows** (when expanded): indented, `└` in `tree`, 12 px sprite, `session name (phrase)` with ellipsis, relative time in Galmuri9, × button (`Hide this session`). The top session row uses `urgent-row` when it is `WAITING_APPROVAL`, otherwise only a 3 px left line in its state color (D12).
 - Hidden or offline sessions: one muted line `2 logged off · show`.
 

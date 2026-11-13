@@ -3,7 +3,7 @@
 import type { BuddyView } from '../core/buddies';
 import type { Ping } from '../core/pings';
 import type { PopupContent } from '../core/snapshot';
-import { AGENT_NAMES, PHRASES, folderName, statusParts } from '../core/text';
+import { AGENT_NAMES, PHRASES, displayRefs, folderName, statusParts } from '../core/text';
 
 export interface PingText {
   hideText: boolean;
@@ -13,7 +13,7 @@ export interface PingText {
 
 /** The session name, or `started HH:MM:SS` without one or with hide-text on. */
 export function sessionLabel(t: PingText, title: string | undefined, startedAt: string): string {
-  return t.hideText || title === undefined ? `started ${t.formatTime(Date.parse(startedAt), true)}` : title;
+  return t.hideText || title === undefined ? `started ${t.formatTime(Date.parse(startedAt), true)}` : displayRefs(title);
 }
 
 export function popupContent(t: PingText, views: readonly BuddyView[], p: Ping, nowMs: number): PopupContent {

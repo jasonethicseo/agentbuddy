@@ -9,7 +9,7 @@ export const PROGRESS_CELLS_MAX = 30;
 export type Cell = 'done' | 'current' | 'todo';
 
 export interface ProgressVM {
-  /** `n/m`, or `?/?` when unknown. */
+  /** `n/m`. Unknown progress has no view at all: no `?/?` and no bar (messenger-app bug fix, 2026-11-13). */
   text: string;
   /** `n/m` as a number, when known. */
   ratio?: number;
@@ -29,8 +29,8 @@ export function progressCells(done: number, total: number, state: DisplayState):
   return cells;
 }
 
-export function progressView(p: Progress | undefined, state: DisplayState): ProgressVM {
-  if (p === null || p === undefined) return { text: '?/?' };
+export function progressView(p: Progress | undefined, state: DisplayState): ProgressVM | undefined {
+  if (p === null || p === undefined) return undefined;
   const vm: ProgressVM = { text: `${p.done}/${p.total}`, ratio: p.total > 0 ? p.done / p.total : 0 };
   const cells = progressCells(p.done, p.total, state);
   if (cells !== undefined) vm.cells = cells;
