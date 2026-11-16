@@ -35,7 +35,7 @@ inclusion: always
 ## Testing expectations
 - **Property tests**
   - normalize: never throws on arbitrary JSON or strings; output is `null` or a valid `BuddyEvent`; text is at most 120 code points.
-  - Codex title turns and suggestions turns (events.md traps 1 and 7) are always dropped, whichever of their two signals is present.
+  - Codex title turns, suggestions turns and suggestion safety checks (events.md traps 1, 7 and 8) are always dropped, whichever of their two signals is present.
   - state: applying a set of events in any arrival order gives the same final state as applying them sorted by event order (`at`, kind, `session`). Sets where two events of one session share both `at` and kind are excluded, because arrival order decides those ties.
   - state: each buddy's kept latest task event (and so its spec path) is the same in any arrival order, and stays after any number of later events push the task event out of the 50-event list.
   - state: a buddy's state is one of its sessions' displayed states, and no session of that buddy is more urgent (`OFFLINE` and `ENDED` share the lowest rank).

@@ -1,13 +1,13 @@
 // P1: normalize never throws and returns null or a valid event (Requirements 5.1–5.3, 6.1),
 // and keeps launcher fields exactly when well-formed (messenger-app Requirements 1.2–1.4).
-// P2: Codex title turns are dropped whichever signal is present (Requirements 4.2–4.4).
+// P2: Codex title turns, suggestions turns and suggestion safety checks are dropped whichever signal is present (Requirements 4.2–4.4; events.md traps 1, 7, 8).
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { TEXT_LIMIT } from '../../src/core/config';
 import { validateEvent } from '../../src/core/event';
 import type { AgentId, BuddyEvent } from '../../src/core/event';
 import { isBundleId, isTermProgram } from '../../src/core/launcher';
-import { CODEX_TITLE_PREFIX, normalize } from '../../src/core/normalize';
+import { CODEX_SAFETY_PREFIX, CODEX_TITLE_PREFIX, normalize } from '../../src/core/normalize';
 import { codePointLength } from '../../src/core/text';
 
 const AT = '2026-11-12T01:02:03.456Z';
@@ -167,5 +167,39 @@ describe('P2b Codex suggestions turns (trap 7, seen 2026-11-13)', () => {
   it('keeps a normal turn whose reply only mentions suggestions in text', () => {
     const payload = { type: 'agent-turn-complete', 'thread-id': '01a1…', cwd: '/Users/dev/demo', 'input-messages': ['any ideas?'], 'last-assistant-message': 'Here are some suggestions.' };
     expect(normalize('codex', JSON.stringify(payload), AT)).not.toBeNull();
+  });
+});
+
+describe('P2c Codex suggestion safety checks (trap 8, seen 2026-11-15 and 2026-11-16)', () => {
+  const safetyMessage = fc
+    .tuple(fc.constantFrom('', ' ', '\n'), fc.string({ maxLength: 80 }))
+    .map(([lead, rest]) => `${lead}${CODEX_SAFETY_PREFIX}${rest}`);
+  const safetyReply = fc
+    .tuple(fc.constantFrom('', ' ', '\n'), fc.array(fc.string({ maxLength: 20 }), { maxLength: 3 }))
+    .map(([pad, items]) => `${pad}${JSON.stringify({ exclude: items })}${pad}`);
+  const otherMessages = fc.array(fc.string({ maxLength: 40 }), { maxLength: 3 });
+  const anyReply = fc.string({ maxLength: 80 }).filter((s) => !s.includes('exclude'));
+  it('drops the event if either signal is present', () => {
+    fc.assert(
+      fc.property(fc.constantFrom('message', 'reply', 'both'), safetyMessage, safetyReply, otherMessages, anyReply, (which, msg, reply, before, plainReply) => {
+        const payload = {
+          type: 'agent-turn-complete',
+          'thread-id': '01a1…',
+          'turn-id': '01a1…',
+          cwd: '/',
+          'input-messages': which === 'reply' ? [...before, 'run ls'] : [...before, msg],
+          'last-assistant-message': which === 'message' ? plainReply : reply,
+        };
+        expect(normalize('codex', JSON.stringify(payload), AT)).toBeNull();
+      }),
+      { numRuns: 500 },
+    );
+  });
+  it('keeps a normal turn whose reply only mentions exclude in text, or whose earlier message quotes the template', () => {
+    const base = { type: 'agent-turn-complete', 'thread-id': '01a1…', cwd: '/Users/dev/demo' };
+    const text = { ...base, 'input-messages': ['what does exclude do?'], 'last-assistant-message': 'It leaves files out: exclude = ["dist"].' };
+    const quoted = { ...base, 'input-messages': [CODEX_SAFETY_PREFIX, 'thanks'], 'last-assistant-message': 'Done.' };
+    expect(normalize('codex', JSON.stringify(text), AT)).not.toBeNull();
+    expect(normalize('codex', JSON.stringify(quoted), AT)).not.toBeNull();
   });
 });

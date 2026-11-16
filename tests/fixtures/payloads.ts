@@ -195,6 +195,16 @@ export const FIXTURES: readonly Fixture[] = [
     raw: String.raw`{"type":"agent-turn-complete","thread-id":"01a1…","turn-id":"01a1…","cwd":"/","input-messages":["# Overview\nGenerate 0 to 3 hyperpersonalized suggestions for what this user can do ..."],"last-assistant-message":"{\"suggestions\":[]}"}`,
     expected: null,
   },
+  {
+    id: 'codex-safety-turn',
+    note: 'Rebuilt from two normalized events of the 2026-11-15 and 2026-11-16 daily logs (the raw payload is not kept): another thread-id, cwd "/", an input starting with the safety-check template, and the reply {"exclude":[]} (trap 8).',
+    row: 'Codex internal suggestion safety check',
+    label: 'derived',
+    verbatim: false,
+    agent: 'codex',
+    raw: String.raw`{"type":"agent-turn-complete","thread-id":"01a1…","turn-id":"01a1…","cwd":"/","input-messages":["You are an expert at upholding safety and compliance standards for Codex ambient suggestions. I will present you with t..."],"last-assistant-message":"{\"exclude\":[]}"}`,
+    expected: null,
+  },
 ];
 
 /** "Anything else or unparsable" row: all derived, all dropped. */

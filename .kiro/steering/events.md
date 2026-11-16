@@ -155,6 +155,7 @@ interface BuddyEvent {
 | Codex `agent-turn-complete` | `stop`, text = `last-assistant-message`, firstInput = first `input-messages` item |
 | Codex internal title turn (trap 1) | dropped |
 | Codex internal suggestions turn (trap 7) | dropped |
+| Codex internal suggestion safety check (trap 8) | dropped |
 | Anything else or unparsable | dropped, never thrown |
 
 All Claude rows also set `projectDir` from the hook process's `CLAUDE_PROJECT_DIR` environment variable when it is set (Claude Code sets it for hooks: the project root where the session started).
@@ -191,6 +192,7 @@ Launcher values seen so far:
 5. **Kiro `Stop` has no message text.** Kiro status messages come from the prompt or the task name.
 6. **Kiro starts a new `session_id` for every task run.** Each press of a task's run button produced a new session (`sess_dcdb…`, `sess_0bcd…`), separate from the chat session (`sess_ce19…`). Progress and the spec path therefore belong to the buddy, not to a session (see Buddies and sessions).
 7. **Codex suggestions turns** (seen 2026-11-13, once, from a Codex whose sessions run in folders under `~/Documents/Codex/`, probably Codex in the ChatGPT app). Besides the title turn, Codex ran a hidden turn that suggests next steps. It fired `agent-turn-complete` with yet another `thread-id`, `cwd` `/`, an input that starts with `# Overview` and `Generate 0 to 3 hyperpersonalized suggestions for what this user can do`, and a `last-assistant-message` of JSON like `{"suggestions":[]}`. It showed up as a second Codex buddy in folder `/`. Drop the event if **either** signal matches (the last input message starts with `# Overview` … `Generate <n> to <n> hyperpersonalized suggestions`, or the reply is a JSON object with a `suggestions` property). Seen from the normalized daily log only; the raw payload was not kept.
+8. **Codex suggestion safety checks** (seen 2026-11-15 08:31 and 2026-11-16 01:54 UTC, once each, from the same Codex as trap 7). A third hidden turn, which checks suggestions for safety. It fired `agent-turn-complete` with yet another `thread-id`, `cwd` `/`, an input that starts with `You are an expert at upholding safety and compliance standards for Codex ambient suggestions. I will present you with t…` (the first `input-messages` item; the log keeps only the first 120 code points), and a `last-assistant-message` of `{"exclude":[]}`. It showed up as a Codex buddy in folder `/` that stayed for 24 hours. Drop the event if **either** signal matches (the last input message starts with `You are an expert at upholding safety and compliance standards for Codex ambient suggestions`, or the reply is a JSON object with an `exclude` property). Seen from the normalized daily log only; the raw payload was not kept, so whether the template is also the last input message is unverified.
 
 ## Buddies and sessions
 - Two levels. A **buddy** is one **agent + session folder** pair. Under it, each **session** (agent + `session`) is one conversation window. Several sessions of the same agent in the same folder at once are normal; each keeps its own state.

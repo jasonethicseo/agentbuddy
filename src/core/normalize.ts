@@ -95,42 +95,40 @@ export const normalizeClaude: Normalizer = (p, at) => {
   }
 };
 
-/** True when `reply`, trimmed, is JSON for an object with an own `title` property. */
-function isTitleReply(reply: unknown): boolean {
+/** True when `reply`, trimmed, is JSON for an object with an own `key` property. */
+function replyHasKey(reply: unknown, key: string): boolean {
   if (typeof reply !== 'string') return false;
   try {
     const parsed: unknown = JSON.parse(reply.trim());
-    return isRecord(parsed) && Object.hasOwn(parsed, 'title');
+    return isRecord(parsed) && Object.hasOwn(parsed, key);
   } catch {
     return false;
   }
 }
 
-/** Codex hidden title turn (trap 1): either signal is enough. Only the last input message counts (trap 2). */
-export function isCodexTitleTurn(p: Payload): boolean {
+/** Last `input-messages` item, trimmed at the start; the only one a hidden-turn check reads (trap 2). */
+function lastInput(p: Payload): string | undefined {
   const messages = p['input-messages'];
   const last: unknown = Array.isArray(messages) ? messages.at(-1) : undefined;
-  if (typeof last === 'string' && last.trimStart().startsWith(CODEX_TITLE_PREFIX)) return true;
-  return isTitleReply(p['last-assistant-message']);
+  return typeof last === 'string' ? last.trimStart() : undefined;
+}
+
+/** Codex hidden title turn (trap 1): either signal is enough. */
+export function isCodexTitleTurn(p: Payload): boolean {
+  return lastInput(p)?.startsWith(CODEX_TITLE_PREFIX) === true || replyHasKey(p['last-assistant-message'], 'title');
 }
 /** Start of the prompt of Codex's hidden suggestions turn (trap 7, seen 2026-11-13). */
 export const CODEX_SUGGESTIONS_PATTERN = /^#\s*Overview\s+Generate \d+ to \d+ hyperpersonalized suggestions/;
-/** True when `reply`, trimmed, is JSON for an object with an own `suggestions` property. */
-function isSuggestionsReply(reply: unknown): boolean {
-  if (typeof reply !== 'string') return false;
-  try {
-    const parsed: unknown = JSON.parse(reply.trim());
-    return isRecord(parsed) && Object.hasOwn(parsed, 'suggestions');
-  } catch {
-    return false;
-  }
-}
-/** Codex hidden suggestions turn (trap 7): either signal is enough; only the last input message counts (trap 2). */
+/** Codex hidden suggestions turn (trap 7): either signal is enough. */
 export function isCodexSuggestionsTurn(p: Payload): boolean {
-  const messages = p['input-messages'];
-  const last: unknown = Array.isArray(messages) ? messages.at(-1) : undefined;
-  if (typeof last === 'string' && CODEX_SUGGESTIONS_PATTERN.test(last.trimStart())) return true;
-  return isSuggestionsReply(p['last-assistant-message']);
+  const last = lastInput(p);
+  return (last !== undefined && CODEX_SUGGESTIONS_PATTERN.test(last)) || replyHasKey(p['last-assistant-message'], 'suggestions');
+}
+/** Start of the prompt of Codex's hidden suggestion safety check (trap 8, seen 2026-11-15 and 2026-11-16). */
+export const CODEX_SAFETY_PREFIX = 'You are an expert at upholding safety and compliance standards for Codex ambient suggestions';
+/** Codex hidden suggestion safety check (trap 8): either signal is enough. */
+export function isCodexSafetyTurn(p: Payload): boolean {
+  return lastInput(p)?.startsWith(CODEX_SAFETY_PREFIX) === true || replyHasKey(p['last-assistant-message'], 'exclude');
 }
 
 /** First `input-messages` item: the thread's first user request (trap 2). Truncated; undefined if blank. */
@@ -147,7 +145,7 @@ export const normalizeCodex: Normalizer = (p, at) => {
   const session = str(p, 'thread-id');
   const cwd = str(p, 'cwd');
   if (session === undefined || cwd === undefined) return null;
-  if (isCodexTitleTurn(p) || isCodexSuggestionsTurn(p)) return null;
+  if (isCodexTitleTurn(p) || isCodexSuggestionsTurn(p) || isCodexSafetyTurn(p)) return null;
   return makeEvent('codex', session, cwd, 'stop', at, {
     text: shortText(p, 'last-assistant-message'),
     firstInput: codexFirstInput(p),
