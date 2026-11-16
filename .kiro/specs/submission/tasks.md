@@ -55,7 +55,7 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - The top: one line, demo link, video link (placeholder until the builder has it), `docs/demo.png`; a "Try the demo" section and what needs the real setup; the known limits, stored files and third-party libraries updated (Vite also builds the demo; the workflow's actions).
   - _Requirements: 7.1–7.3_
 
-- [ ] 9. Submission texts
+- [x] 9. Submission texts
   - `docs/submission/description.md`, `kiro.md` (every claim with a file or commit), `video.md` (shot list under three minutes: the real app with three real agents on the builder's Mac, then the demo URL). No private paths, names or prompts.
   - _Requirements: 8.1–8.4_
 
