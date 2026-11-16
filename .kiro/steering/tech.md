@@ -10,14 +10,14 @@ inclusion: always
 - **Desktop app**: Electron (development dependency, run from source with `npm run app`), `contextIsolation` on, `nodeIntegration` off and `sandbox` on in every window.
 - **Live updates**: Server-Sent Events from relay to UI.
 - **Tests**: Vitest for unit tests, fast-check for property-based tests.
-- **Demo**: a static build of the UI that replays a recorded, sanitized event file. Hosted on GitHub Pages.
+- **Demo**: a static build of the app's own main window and pop-ups that replays an invented, sanitized event file through the core and the app controller. Hosted on GitHub Pages at https://jasonethicseo.github.io/agentbuddy/, deployed by `.github/workflows/pages.yml` (privacy check, both builds, tests and type check must pass).
 
 ## Pieces
 1. **Hook command** `agentbuddy-hook <agent>`: reads the raw payload (stdin for Kiro and Claude, last argv for Codex), normalizes it with the pure core, and POSTs it to the relay.
 2. **Relay** `agentbuddy`: an HTTP server on `127.0.0.1:4343` (port overridable with `AGENTBUDDY_PORT`) that keeps buddy state in memory, appends every accepted event to a daily log `~/.agentbuddy/events-YYYY-MM-DD.jsonl`, rebuilds state from the last 24 hours of logs on start, streams updates to the UI, and reads Kiro `tasks.md` files to compute progress. `startRelay()` (`src/relay/start.ts`) is the relay as a function, used by the `agentbuddy` command and by the app.
 3. **UI**: the buddy list (with the "me" row), inbox and settings in the app's main window, and the ping pop-up in its own small window. The relay also serves the buddy list to a browser at `http://127.0.0.1:<port>/`, without the app-only parts (pings, pop-ups, jump, ×, inbox, settings, title bar buttons, toolbar, TIP banner).
 5. **Desktop app** `npm run app`: the Electron main process starts its own relay with `startRelay()`, or attaches to a relay already on the port, and reads its `/stream` (no token). It finds pings, plays the ding, shows pop-ups that never take focus, keeps the inbox in `~/.agentbuddy/inbox-YYYY-MM-DD.jsonl` and the settings in `~/.agentbuddy/app-settings.json`, shows a menu bar icon with a count, and brings an agent's app forward with `/usr/bin/lsappinfo` and `/usr/bin/open -b` through `execFile`. macOS only.
-4. **Demo build**: the same UI fed by a replay of `demo/events.json` instead of the relay.
+4. **Demo build** (`npm run build:demo` → `dist/demo`): the demo page hosts the main window and each pop-up in a same-origin frame and gives them the bridges the preloads give in the app; behind them run the app's controller and a replay of `demo/events.json` (submission spec). No relay, no storage, no network request but its own files; the ding plays in the demo page after the `Start demo` click.
 
 ## Hard constraints
 - **Never block an agent.** The hook command must finish within 1 second and always exit 0. Codex input is read from argv only, never stdin. Kiro and Claude stdin is awaited for at most 500 ms. The POST times out after 300 ms. At 900 ms after process start the command exits 0 no matter what. Errors are swallowed and appended to `~/.agentbuddy/hook-errors.log`. Agent hook configs call it as `agentbuddy-hook <agent> || true` (Kiro hook commands run through a shell), so even a missing or dangling command exits 0.
@@ -65,7 +65,8 @@ inclusion: always
 - `npm run dev` — UI dev server against a running relay
 - `npm run relay` — start the relay
 - `npm run app` — build, then start the desktop app from source
-- `npm run demo` — UI in replay mode (later spec; not built yet)
+- `npm run demo` — the web demo on a dev server (`127.0.0.1`)
+- `npm run build:demo` — the static demo site in `dist/demo` (relative paths, works under `/agentbuddy/`)
 - `npm run build` — build hook command, relay and UI
 - `npm test` — run all tests once (never starts Electron, opens a window, or runs `open` or `lsappinfo`)
 - `npm run typecheck` — type check without emitting

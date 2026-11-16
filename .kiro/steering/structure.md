@@ -65,11 +65,18 @@ inclusion: always
 │  │  ├─ public/fonts/ Galmuri11 (Regular, Bold), Galmuri9 and Nanum Gothic with their OFL licenses
 │  │  └─ styles/       themes.css + themes/blue-bot.css, themes/strawberry-milk.css (the only files with colors),
 │  │                   fonts, materials (raised, sunken, gloss, focus), sprites, main, list, inbox, settings, popup
+│  ├─ demo/            the web demo: scenario.ts and replay.ts (pure), ports.ts (controller ports), host.ts (frames,
+│  │                   bridges, timers), page.ts, window-entry.ts, popup-entry.ts, styles/demo.css
 │  └─ setup/           (later spec)
 │     └─ snippets.ts   prints hook snippets for Kiro, Claude Code, Codex
-├─ demo/               (later spec)
-│  └─ events.json      recorded, sanitized events for the demo build
+├─ demo/               the web demo pages (Vite root of vite.demo.config.ts)
+│  ├─ index.html       intro, Start demo / Replay, the window frame, the pop-up column
+│  ├─ window.html, popup.html   the app's two pages for frames (body kept equal to index.html / popup.html by a test)
+│  └─ events.json      the scenario: invented events at offsets from Start demo, /Users/dev paths, short IDs
 ├─ index.html, popup.html   the main window page and the pop-up page
+├─ .github/workflows/pages.yml   builds, tests and publishes the demo to GitHub Pages
+├─ scripts/           build-node.mjs, codex-notify.sh, probe.mjs (observation), check-public.sh (privacy check), demo-shot.mjs (headless check)
+├─ docs/              mockups, retro-skin brief, demo.png, submission/ (Devpost texts)
 ├─ tests/
 │  ├─ fixtures/        sanitized raw payloads (from events.md)
 │  ├─ unit/
@@ -81,7 +88,8 @@ inclusion: always
 ## Rules
 - `src/core` must not import from `hook`, `relay`, `app`, `ui` or `setup`, nor any Node built-in.
 - `src/app` may import `src/core` and `src/relay`. Only its Electron files import `electron`; the others are plain TypeScript that Vitest loads without Electron. `src/ui` never imports `src/app`; it talks to the main process only through the preload bridge.
-- Only `src/hook`, `src/relay` and `src/app` touch the file system or network. `src/app` writes only under `~/.agentbuddy/`, connects only to `127.0.0.1:<port>`, and runs only `/usr/bin/lsappinfo` and `/usr/bin/open`, with `execFile` and an argument array. Only `src/ui` touches the DOM; the preloads do not.
+- Only `src/hook`, `src/relay` and `src/app` touch the file system or network. `src/app` writes only under `~/.agentbuddy/`, connects only to `127.0.0.1:<port>`, and runs only `/usr/bin/lsappinfo` and `/usr/bin/open`, with `execFile` and an argument array. Only `src/ui` and `src/demo` touch the DOM; the preloads do not.
+- `src/demo` may import `src/core`, the UI entry modules and types of `src/ui`, and the plain `src/app` modules the controller needs (`controller`, `settings-data`, `jump`, `ping-content`, `ipc`, `config`); never Electron, never a Node built-in, never `src/relay` or `src/hook`. It touches only the demo page's DOM and its frames.
 - Time is always passed in as a parameter to core functions.
 - Keep each file under about 200 lines; split when it grows.
 - Never add `/.kiro` or any of its subfolders to `.gitignore` (submission requirement).

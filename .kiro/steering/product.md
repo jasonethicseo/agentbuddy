@@ -37,7 +37,7 @@ The buddy list was designed to answer "who is around and what are they doing rig
 4. **Get pinged**: when an agent finishes a turn or asks for approval, a "ding" sound plays and a message window pops up.
 5. **Kiro progress**: for Kiro spec tasks, the status shows `task n/m` read from the spec's `tasks.md`.
 6. **Inbox**: every ping is kept in a local message box for the day.
-7. **Demo mode**: a static build replays recorded events, so judges can see the whole experience without installing agents.
+7. **Demo mode**: https://jasonethicseo.github.io/agentbuddy/ replays a one-minute scenario of invented events, in the real hook format, through the app's own window, pop-ups and logic, so judges can see the whole experience without installing agents.
 
 ## Principles
 - **Local only.** Events never leave the machine. The relay listens on `127.0.0.1` only. No accounts, no cloud.

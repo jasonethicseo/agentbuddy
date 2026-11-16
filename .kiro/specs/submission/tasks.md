@@ -59,8 +59,13 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - `docs/submission/description.md`, `kiro.md` (every claim with a file or commit), `video.md` (shot list under three minutes: the real app with three real agents on the builder's Mac, then the demo URL). No private paths, names or prompts.
   - _Requirements: 8.1–8.4_
 
-- [ ] 10. Documents, final checks and handoff
+- [x] 10. Documents, final checks and handoff
   - tech.md (Demo build, Commands, Pieces 4), structure.md (`demo/`, `src/demo/`, the import rule for `src/demo`: core, ui entries, and the plain app modules the controller needs; no Electron, no Node built-ins), product.md (core flow step 7).
   - All tests pass; `npm run typecheck`, `npm run build`, `npm run build:demo` succeed; changed files under about 200 lines; `check-public.sh` passes; the pushed `master` equals the local one.
   - A short handoff at the end of this file: the demo URL, what the builder does next (video, Devpost form, social post if wanted), open items (session jumps, the probe removal if still pending).
   - _Requirements: 9.1–9.3_
+
+## Handoff (2026-11-16)
+State: tasks 1–9 and 10 are done; 7.5 waits for the builder's OK. The repository https://github.com/jasonethicseo/agentbuddy is public (MIT detected) and the demo is live at https://jasonethicseo.github.io/agentbuddy/ (deployed from `4725b82`; README, texts and steering commits after it are local until pushed). 871 tests pass locally and on `ubuntu-latest`; `typecheck`, `build`, `build:demo` and `check-public.sh` pass. No dev server, preview, headless Chrome or test process is running.
+Next for the builder: record the video from `docs/submission/video.md`, upload it to YouTube as Public, and give Kiro the link (README `Video: coming soon`, `VIDEO_URL` in `src/demo/page.ts`); fill in the Devpost form from `docs/submission/description.md` and `kiro.md` (category Frankenstein; deadline 2026-12-04 14:00 PT); a #KiroweenHackathon26 post is optional (Social Blitz).
+Open: 7.5 (About: the demo URL as the website, topics); jumping to a specific Claude app or Codex app session (after the submission, if time allows; `claude://code/continue?session=local_<id>` via the app's session files, `codex://threads/<thread-id>`); the Claude app's skip on a question is not observed (events.md).
