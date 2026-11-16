@@ -61,7 +61,7 @@ export function createHost(o: HostOptions) {
     if (i >= 0) open.splice(i, 1);
     p.frame.remove();
   }
-  const capacity = () => Math.max(1, Math.floor((window.innerHeight - POPUP.margin) / (POPUP.height + POPUP.gap)));
+  const capacity = () => Math.max(1, Math.floor((o.popupLayer.clientHeight + POPUP.gap) / (POPUP.height + POPUP.gap)));
   function showPopup(session: string | null, content: PopupContent): void {
     while (open.length >= capacity()) closePopup(open[0]!); // the oldest goes first, as in the app
     const id = String(nextId++);

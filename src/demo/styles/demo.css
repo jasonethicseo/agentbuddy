@@ -4,8 +4,8 @@ html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--te
 button { font: inherit; color: inherit; margin: 0; cursor: pointer; }
 [hidden] { display: none !important; }
 a { color: var(--group-text); }
-.demo { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 32px; padding: 32px 16px; }
-.demo-text { max-width: 360px; line-height: 1.6; color: var(--text-on-bg); }
+.demo { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 24px; padding: 32px 16px; }
+.demo-text { max-width: 300px; line-height: 1.6; color: var(--text-on-bg); }
 .demo-text h1 { margin: 0 0 12px; font-size: 24px; color: var(--group-text); text-shadow: 1px 1px 0 var(--bevel-light); }
 .demo-text p { margin: 0 0 10px; }
 .demo-error { color: var(--st-wait); font-weight: 700; }
@@ -14,5 +14,7 @@ a { color: var(--group-text); }
 .demo-start, .demo-end { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; background: var(--field); box-shadow: 2px 2px 0 var(--hard-shadow); }
 .demo-start p { margin: 0; font-family: var(--font-small); font-size: 10px; color: var(--text-2); }
 .demo-start-btn, .demo-replay { padding: 6px 14px; font-weight: 700; color: var(--quiet-text); }
-.demo-popups { position: fixed; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+/* The pop-ups stand beside the window, bottom-aligned, newest on top: the app puts them in the screen's
+   bottom-right corner, away from the window, and here they must not cover it either. */
+.demo-popups { width: 300px; height: 620px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
 .demo-popup { display: block; border: 0; background: transparent; pointer-events: auto; }

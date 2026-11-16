@@ -72,7 +72,7 @@ It builds on the finished specs `core-pipeline`, `messenger-app` ("MA"), `themes
 **User story:** As a judge, I want the ping to look and act like the real one.
 
 ### Acceptance criteria
-1. A ping SHALL show the same pop-up card as the app (RS Requirement 11) inside the demo page, at the bottom right of the page, newest on top, and SHALL close by itself after the app's time.
+1. A ping SHALL show the same pop-up card as the app (RS Requirement 11) inside the demo page, in a column beside the window (bottom-aligned, so it never covers the window, as the app's pop-ups sit away from it), newest on top, and SHALL close by itself after the app's time.
 2. `×`, `Later`, `Go there ▶` and a click on the card SHALL do what they do in the app (close and mark read, close only, go there).
 3. "Go there" and a click on a buddy, session or inbox entry SHALL show a notice that says which app the real AgentBuddy would bring forward (for example `In the app, this brings Claude forward.`), because a web page cannot.
 4. THE title bar buttons that act on the native window (pin, minimize, close) and the setting `macOS notification too` SHALL show a notice that says they work in the desktop app.

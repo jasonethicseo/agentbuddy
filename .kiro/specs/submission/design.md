@@ -172,7 +172,7 @@ One headless run, announced first: start `vite preview` of `dist/demo` on `127.0
 | `tests/property/demo-replay.prop.test.ts` | for any split of the 0–60 s span into ticks, the final views and the ping sequence are the same (Req 2.5) |
 | `tests/unit/demo-markup.test.ts` | `demo/window.html` and `demo/popup.html` bodies equal the app's pages (minus the script line) |
 | `tests/unit/demo-ports.test.ts` | notice texts for each jump plan, notify, window actions; nothing is stored |
-| `tests/unit/demo-build.test.ts` | after `build:demo`: no `node:` import, no `EventSource`, no `fetch(` to another origin in `dist/demo`; every font URL resolves |
+| `tests/unit/demo-build.test.ts` | after `build:demo`: no `node:` import; no address but the repository link and the SVG namespace; every CSS `url()` and page asset resolves by a relative path. (The bundle still holds `src/ui/bridge.ts`'s `EventSource` code, which runs only without a bridge; `window-entry.ts` never loads the UI without one.) |
 | chrome model tests | `mode: 'demo'` gives `demo replay` and the Connections line |
 
 The hook, relay and app tests stay as they are.

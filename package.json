@@ -16,8 +16,10 @@
     "build": "npm run build:node && npm run build:ui",
     "build:node": "node scripts/build-node.mjs",
     "build:ui": "vite build",
+    "build:demo": "vite build --config vite.demo.config.ts",
     "relay": "npm run build && node dist/relay.js",
     "dev": "vite",
+    "demo": "vite --config vite.demo.config.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "app": "npm run build && electron dist/app/main.cjs"
