@@ -74,6 +74,12 @@ Every hook command ends with `|| true`, so a missing or half-built command still
 { "hooks": [{ "type": "command", "command": "agentbuddy-hook claude || true", "timeout": 5 }] }
 ```
 
+Also append one group to `PostToolUse` and `PostToolUseFailure`. They run after every tool call and tell AgentBuddy that work goes on after you approved something; `async` keeps them off Claude's path. The hook sends no tool input or output.
+
+```json
+{ "matcher": "*", "hooks": [{ "type": "command", "command": "agentbuddy-hook claude || true", "timeout": 5, "async": true }] }
+```
+
 **Codex**: `notify` takes one program, so AgentBuddy uses a small relay script that runs your existing `notify` program first, unchanged, and then `agentbuddy-hook codex` with a 0.9-second limit. Install the copy and point `notify` at it in `~/.codex/config.toml`, followed by your old `notify` program and its arguments (or nothing, if you had none):
 
 ```sh

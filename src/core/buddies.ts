@@ -7,7 +7,7 @@ import { SESSION_TTL_MS } from './config';
 import type { AgentId, BuddyEvent } from './event';
 import { buddyKey, hasLauncher, insertEvent, laterTask, latest, sessionKey, stamp } from './history';
 import type { Stamped } from './history';
-import { displayState, foldSession, updateFirsts } from './state';
+import { displayState, foldSession, hasText, updateFirsts } from './state';
 import type { DisplayState, SessionRecord } from './state';
 import { displayName, shortId } from './text';
 
@@ -91,7 +91,9 @@ export function applyEvent(list: SessionList, event: BuddyEvent, seq: number): {
   const old = list.get(key);
   const window = insertEvent(old?.window ?? [], item);
   const firsts = updateFirsts(old?.firsts, item);
-  const record: SessionRecord = { window, firsts, state: foldSession(window, firsts) };
+  const lastText = latest(old?.lastText, item, hasText);
+  const record: SessionRecord = { window, firsts, state: foldSession(window, firsts, lastText) };
+  if (lastText !== undefined) record.lastText = lastText;
   const lastTask = laterTask(old?.lastTask, item);
   if (lastTask !== undefined) record.lastTask = lastTask;
   const launcher = latest(old?.launcher, item, hasLauncher);

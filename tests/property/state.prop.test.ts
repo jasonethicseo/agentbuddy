@@ -64,9 +64,9 @@ describe('P5, P6 state entry and exit', () => {
     );
   });
 
-  it('idle, prompt and stop always leave WAITING_APPROVAL', () => {
+  it('idle, prompt, stop and tool always leave WAITING_APPROVAL', () => {
     fc.assert(
-      fc.property(prevState, fc.constantFrom('idle', 'prompt', 'stop') as fc.Arbitrary<'idle' | 'prompt' | 'stop'>, (prev, k) => {
+      fc.property(prevState, fc.constantFrom('idle', 'prompt', 'stop', 'tool') as fc.Arbitrary<'idle' | 'prompt' | 'stop' | 'tool'>, (prev, k) => {
         const waiting = nextState(prev, 'permission');
         expect(waiting).toBe('WAITING_APPROVAL');
         expect(nextState(waiting, k)).not.toBe('WAITING_APPROVAL');
@@ -74,6 +74,14 @@ describe('P5, P6 state entry and exit', () => {
     );
   });
 
+  it('tool keeps every state except WAITING_APPROVAL, which it leaves for WORKING', () => {
+    fc.assert(
+      fc.property(fc.option(fc.constantFrom<CoreState>('WORKING', 'WAITING_APPROVAL', 'TURN_DONE', 'IDLE', 'ENDED'), { nil: undefined }), (prev) => {
+        const next = nextState(prev, 'tool');
+        expect(next).toBe(prev === undefined || prev === 'WAITING_APPROVAL' ? 'WORKING' : prev);
+      }),
+    );
+  });
   it('each session state equals nextState over its own window', () => {
     fc.assert(
       fc.property(fc.array(eventArb({ agent: 'claude' }), { maxLength: 80, size: 'max' }), (events) => {

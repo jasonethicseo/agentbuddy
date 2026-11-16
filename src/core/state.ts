@@ -52,11 +52,15 @@ export interface SessionRecord {
   lastTask?: Stamped;
   /** Latest event that carries `bundleId` or `termProgram` (running maximum). */
   launcher?: Stamped;
+  /** Latest event that carries text (running maximum), so a turn of many tool events keeps its status text. */
+  lastText?: Stamped;
 }
 
 /**
  * The whole state machine. WAITING_APPROVAL and TURN_DONE each come from one
- * kind only; idle, prompt and stop all leave WAITING_APPROVAL (trap 3).
+ * kind only; idle, prompt, stop and tool all leave WAITING_APPROVAL (trap 3).
+ * `tool` (Claude `PostToolUse`): a tool ran, so an approval was given; in any
+ * other state it changes nothing, so a late tool event never undoes a stop or an end.
  */
 export function nextState(prev: CoreState | undefined, kind: EventKind): CoreState {
   switch (kind) {
@@ -71,6 +75,8 @@ export function nextState(prev: CoreState | undefined, kind: EventKind): CoreSta
       return 'IDLE';
     case 'end':
       return 'ENDED';
+    case 'tool':
+      return prev === undefined || prev === 'WAITING_APPROVAL' ? 'WORKING' : prev;
     case 'task_done':
       return prev ?? 'WORKING';
   }
@@ -103,22 +109,22 @@ function eventText(event: BuddyEvent): string | undefined {
   return event.text ?? event.task?.name;
 }
 
+/** An event that contributes status text. */
+export function hasText(item: Stamped): boolean {
+  return eventText(item.event) !== undefined;
+}
+
 /** Recompute a session from the start of its window. `window` must be non-empty and sorted. */
-export function foldSession(window: readonly Stamped[], firsts: SessionFirsts): SessionState {
+export function foldSession(window: readonly Stamped[], firsts: SessionFirsts, lastText?: Stamped): SessionState {
   const last = window.at(-1);
   if (last === undefined) throw new Error('foldSession: empty window');
 
   let state: CoreState | undefined;
-  let statusText: string | undefined;
-  let textFromTask = false;
-  for (const { event } of window) {
-    state = nextState(state, event.kind);
-    const text = eventText(event);
-    if (text !== undefined) {
-      statusText = text;
-      textFromTask = event.kind === 'task_start' || event.kind === 'task_done';
-    }
-  }
+  for (const { event } of window) state = nextState(state, event.kind);
+  // The latest text event of the whole session, kept outside the window: the same as the window's latest
+  // whenever the window holds one (the window is a suffix in event order), and still there when it does not.
+  const statusText = lastText === undefined ? undefined : eventText(lastText.event);
+  const textFromTask = lastText !== undefined && isTaskEvent(lastText);
 
   const { agent, session } = last.event;
   const result: SessionState = {

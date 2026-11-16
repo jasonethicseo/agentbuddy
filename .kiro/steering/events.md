@@ -15,6 +15,7 @@ This file is the contract between agent hooks and AgentBuddy. Every mapping belo
 | Turn finished | `Stop` (no message text) | `Stop` (has `last_assistant_message`) | `agent-turn-complete` |
 | Spec task progress | `PreTaskExec`, `PostTaskExec` (has `spec_name` = path to tasks.md, `task_name`, `task_success`) | none | none |
 | Idle | none | `Notification` with `notification_type: "idle_prompt"` | none |
+| Work goes on after an approval | not observed | `PostToolUse` once the tool has run (`PostToolUseFailure` when it failed) | none |
 
 ## Delivery
 - Kiro and Claude Code pass a JSON object on **stdin** to the hook command.
@@ -112,17 +113,35 @@ Probe summary at the end of the observation (2026-11-12, 02:29–04:50 UTC; prob
 - The relay log over the same span: 64 events from 4 Kiro sessions and 2 Claude sessions, no hook errors.
 
 Not yet observed after connecting:
-- Claude app and CLI: `Notification` (`permission_prompt`, `idle_prompt`).
+- Claude app: `Notification` `idle_prompt`. Claude CLI: `Notification` (`permission_prompt`, `idle_prompt`). (Claude app `permission_prompt`: observed 2026-11-16, see below.)
 - Claude `SessionEnd` with a reason other than `other` (`clear`, `resume`, `logout`, `prompt_input_exit`).
 - Codex CLI: no `notify` call yet. Codex with sessions under `~/Documents/Codex/` (probably the ChatGPT app): first `notify` calls seen 2026-11-13 (3 `agent-turn-complete` events: two turns of one thread, and one suggestions turn, trap 7).
 - Kiro CLI `SessionEnd`: no call yet.
+
+## Observed on 2026-11-16: work after an approval
+Found in real use (Claude app, `claude-desktop`): after the user answered a `permission_prompt`, the session kept working, but AgentBuddy showed `need your OK` until the turn's `Stop` (session `cde2…`: `permission` at 01:52:45 UTC, no event for 21 minutes, `Stop` at 02:14:23; `?` from 02:02:45 by the 10-minute rule). None of the hooks connected then (`UserPromptSubmit`, `Notification`, `Stop`, `SessionEnd`) fires on an approval.
+
+Then `PostToolUse` and `PostToolUseFailure` were connected (`async: true`) with a raw-payload probe, 2026-11-16 03:52–03:55 UTC:
+- Claude app session `509b…`: four `permission` events (03:52:34, 03:53:29, 03:54:12, 03:54:59), each followed 2–10 s later by a `PostToolUse` of `AskUserQuestion` (03:52:37, 03:53:39, 03:54:21, 03:55:01), then more `PostToolUse` calls and the turn's `Stop`. So in the Claude app, `permission_prompt` also fires for a question the user picks an answer to (probably; the `Notification` payload itself was not probed).
+- 36 probe records from 2 sessions in about 3 minutes: `PostToolUse` for `Bash`, `AskUserQuestion`, `ToolSearch`, `SendUserFile` and MCP tools (`mcp__…`, with an extra `mcp_server` field); one `PostToolUseFailure` with `is_interrupt: false`. Raw size 1,044–19,706 bytes. `tool_input` and `tool_response` hold the tool's full input and output, so the hook never sends them.
+- Not observed: what fires after a rejected approval, and a `PostToolUseFailure` with `is_interrupt: true`.
+
+Claude app `PostToolUse` (stdin, session `cde2…`; the tool input and output replaced by a short example):
+```json
+{"session_id":"cde2…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/cde2….jsonl","cwd":"/Users/dev/demo","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/cde2…/scratchpad","prompt_id":"c0de…","permission_mode":"auto","effort":{"level":"high"},"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"ls","description":"List files"},"tool_response":{"stdout":"hello.txt","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false},"tool_use_id":"toolu_01…","duration_ms":40}
+```
+
+Claude app `PostToolUseFailure` (stdin, session `509b…`; the error text cut):
+```json
+{"session_id":"509b…","transcript_path":"/Users/dev/.claude/projects/-Users-dev-demo/509b….jsonl","cwd":"/Users/dev/demo","scratchpad_dir":"/private/tmp/claude-501/-Users-dev-demo/509b…/scratchpad","prompt_id":"c0de…","permission_mode":"auto","effort":{"level":"high"},"hook_event_name":"PostToolUseFailure","tool_name":"mcp__ccd_session_mgmt__set_session_title","tool_input":{},"tool_use_id":"toolu_01…","error":"MCP error -32602: Input validation error: Invalid arguments …","is_interrupt":false,"duration_ms":4,"mcp_server":{"name":"ccd_session_mgmt","source":"sdk"}}
+```
 
 ## Normalized event
 The hook command turns every raw payload into one shape, or drops it:
 
 ```ts
 type AgentId = 'kiro' | 'claude' | 'codex';
-type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop' | 'end';
+type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'tool' | 'idle' | 'stop' | 'end';
 
 interface BuddyEvent {
   v: 1;
@@ -150,6 +169,9 @@ interface BuddyEvent {
 | Claude `Notification` + `permission_prompt` | `permission` |
 | Claude `Notification` + `idle_prompt` | `idle` |
 | Claude `Notification` + any other type | dropped |
+| Claude `PostToolUse` | `tool` |
+| Claude `PostToolUseFailure` + `is_interrupt: false` | `tool` |
+| Claude `PostToolUseFailure` + `is_interrupt` not `false` | dropped |
 | Claude `Stop` | `stop`, text = `last_assistant_message` |
 | Claude `SessionEnd` (any `reason`) | `end` |
 | Codex `agent-turn-complete` | `stop`, text = `last-assistant-message`, firstInput = first `input-messages` item |
@@ -208,7 +230,7 @@ Launcher values seen so far:
 ## State rules (pure core, property-tested)
 | State | Entered by |
 |---|---|
-| `WORKING` | `prompt`, `task_start` |
+| `WORKING` | `prompt`, `task_start`; `tool` from `WAITING_APPROVAL` (or as a session's first event) |
 | `WAITING_APPROVAL` | `permission` |
 | `TURN_DONE` | `stop` |
 | `IDLE` | `idle`, or no event for 10 minutes while `TURN_DONE` |
@@ -217,10 +239,11 @@ Launcher values seen so far:
 | `ENDED` | `end`; shown as `ENDED` ("logged off") at once, whatever the time, until the session is removed after 24 hours (from 2026-11-12; before, it was shown as `OFFLINE`) |
 
 - `task_done` keeps the state and updates progress.
+- `tool` (a Claude tool ran, so any approval it needed was given) leaves `WAITING_APPROVAL` for `WORKING` and keeps every other state, so a late tool event never undoes a `stop` or an `end`. It carries no text. Like any event it resets the 10- and 30-minute clocks, so a Claude session that keeps running tools stays `WORKING`.
 - `end` (Claude `SessionEnd`) ends that session_id whatever the reason; `/clear` and `/resume` continue under another session_id. Earlier events of the session that arrive late do not bring it back, because `end` is later in event order (and last on `at` ties). A later event with the same session_id does bring it back, by the normal rules: Claude `--resume <id>` continues a session under its old session_id.
 - State is computed per session. Each session keeps its latest 50 events sorted by `at`, and its state is recomputed from the start of that list on every new event. A late event is inserted in its place, never ignored. The time rules (10 and 30 minutes) apply per session.
-- Each session also keeps, outside the 50-event list, its earliest event, earliest prompt with text, earliest `firstInput`, earliest task event and earliest `projectDir`, for its name and folder. Each session keeps its latest task event too.
+- Each session also keeps, outside the 50-event list, its earliest event, earliest prompt with text, earliest `firstInput`, earliest task event and earliest `projectDir`, for its name and folder. Each session keeps its latest task event and its latest event with text too.
 - Each buddy keeps its latest task event (`task_start` or `task_done`, from any of its sessions) outside the lists. It is replaced only by a task event that is later in the same order, so arrival order never changes it. The Kiro spec path comes from this event, so long chats and new task-run sessions keep progress.
-- Event order: `at`, then kind (`prompt`, `task_start`, `permission`, `task_done`, `stop`, `idle`, `end`), then `session`, then arrival order. Within one session only arrival order can break a full tie.
-- Status text of a session comes from its latest event that carries text (`text`, or `task.name` for task events). Events without text keep the earlier text, so a Kiro `stop` keeps the preceding prompt's text.
+- Event order: `at`, then kind (`prompt`, `task_start`, `permission`, `tool`, `task_done`, `stop`, `idle`, `end`), then `session`, then arrival order. Within one session only arrival order can break a full tie.
+- Status text of a session comes from its latest event that carries text (`text`, or `task.name` for task events). Events without text keep the earlier text, so a Kiro `stop` keeps the preceding prompt's text. The latest event with text is kept outside the 50-event list, so a turn of more than 50 tool events keeps its prompt's text.
 - Codex sessions only ever reach `TURN_DONE`, `IDLE`, `OFFLINE`. The UI says "Codex reports finished turns only".

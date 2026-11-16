@@ -85,6 +85,12 @@ export const normalizeClaude: Normalizer = (p, at) => {
       if (p['notification_type'] === 'permission_prompt') return makeEvent('claude', session, cwd, 'permission', at);
       if (p['notification_type'] === 'idle_prompt') return makeEvent('claude', session, cwd, 'idle', at);
       return null;
+    case 'PostToolUse':
+      // A tool ran, so any approval it needed was given (seen 2026-11-16). No text: tool input stays private.
+      return makeEvent('claude', session, cwd, 'tool', at);
+    case 'PostToolUseFailure':
+      // A failed tool the turn goes on from; an interrupt (`is_interrupt` true) or a missing flag is dropped.
+      return p['is_interrupt'] === false ? makeEvent('claude', session, cwd, 'tool', at) : null;
     case 'Stop':
       return makeEvent('claude', session, cwd, 'stop', at, { text: shortText(p, 'last_assistant_message') });
     case 'SessionEnd':

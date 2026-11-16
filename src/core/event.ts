@@ -6,7 +6,7 @@ import { isBundleId, isTermProgram } from './launcher';
 import { codePointLength } from './text';
 
 export type AgentId = 'kiro' | 'claude' | 'codex';
-export type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'idle' | 'stop' | 'end';
+export type EventKind = 'prompt' | 'task_start' | 'task_done' | 'permission' | 'tool' | 'idle' | 'stop' | 'end';
 
 export interface TaskInfo {
   name: string;
@@ -34,18 +34,20 @@ export interface BuddyEvent {
 }
 
 export const AGENTS: readonly AgentId[] = ['kiro', 'claude', 'codex'];
-export const KINDS: readonly EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'idle', 'stop', 'end'];
+export const KINDS: readonly EventKind[] = ['prompt', 'task_start', 'task_done', 'permission', 'tool', 'idle', 'stop', 'end'];
 
 /** Tie-break order for events of one buddy with the same `at` (events.md). */
 export const KIND_ORDER: Readonly<Record<EventKind, number>> = {
   prompt: 0,
   task_start: 1,
   permission: 2,
-  task_done: 3,
-  stop: 4,
-  idle: 5,
+  // A tool finishes after the approval that let it run, and before the turn ends.
+  tool: 3,
+  task_done: 4,
+  stop: 5,
+  idle: 6,
   // Last, so an event at the same `at` as a session end never revives the session.
-  end: 6,
+  end: 7,
 };
 
 const ISO_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/;

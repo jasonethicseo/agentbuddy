@@ -44,7 +44,7 @@ inclusion: always
   - state: a session whose `cwd` changes mid-session stays in exactly one buddy (agent + its fixed folder), in any arrival order.
   - state: after a session's `end`, its earlier or same-time events arriving late keep it `ENDED`; a later event of the same session brings it back.
   - state: `WAITING_APPROVAL` is only entered by `permission`; `TURN_DONE` only by `stop`.
-  - state: a buddy stuck in `WAITING_APPROVAL` leaves it on the next `idle`, `prompt` or `stop`.
+  - state: a buddy stuck in `WAITING_APPROVAL` leaves it on the next `idle`, `prompt`, `stop` or `tool`; `tool` changes no other state.
   - progress: `0 <= done <= total` for any `tasks.md` text.
   - normalize: `bundleId` and `termProgram` are present exactly when their environment values are well-formed.
   - state: a session's launcher is the same in any arrival order.
