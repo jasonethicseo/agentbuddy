@@ -16,11 +16,12 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - _Requirements: 2.1, 2.3, 2.5, 3.1–3.5_
   - Result (2026-11-16): `createDriver` in `replay.ts` holds the step rule (a new list on new events or every 5 s), so the host and the tests run the same steps. The Codex baseline turn is 15 minutes old, so Codex changes state (idle, then a finished turn). Kiro task-run events carry no launcher (events.md: unverified for task runs). The scenario test caught `GET /notes` in a sample reply (no `/` in texts); the criteria test fails when the Claude tool events after the approval are removed (checked once).
 
-- [ ] 3. Demo ports and host
-  - [ ] 3.1 `src/demo/ports.ts`: the controller's ports for the demo, with the notice texts of the design and the app-name map; memory-only inbox and settings.
-  - [ ] 3.2 `src/demo/host.ts`: start (baseline, then a 250 ms tick), main and pop-up bridges, pop-up frames closed after `POPUP_MS`, the ding in the demo page, `Replay` (fresh controller, frames reloaded), stop after the end.
-  - [ ] 3.3 `demo-ports.test.ts`: each jump plan, notify, window actions and the pin give their notice; nothing is stored.
+- [x] 3. Demo ports and host
+  - [x] 3.1 `src/demo/ports.ts`: the controller's ports for the demo, with the notice texts of the design and the app-name map; memory-only inbox and settings.
+  - [x] 3.2 `src/demo/host.ts`: start (baseline, then a 250 ms tick), main and pop-up bridges, pop-up frames closed after `POPUP_MS`, the ding in the demo page, `Replay` (fresh controller, frames reloaded), stop after the end.
+  - [x] 3.3 `demo-ports.test.ts`: each jump plan, notify, window actions and the pin give their notice; nothing is stored.
   - _Requirements: 2.2, 2.4, 4.1–4.5_
+  - Result (2026-11-16): the host has no unit test of its own (it is DOM and timers only; the repo has no DOM test environment); its steps are `createDriver` and the controller, both tested, and it is checked in the browser in task 5. Pop-up capacity follows the page height, the oldest closing first, as `popups.ts` does with the screen.
 
 - [ ] 4. Demo pages
   - `demo/index.html` (heading, three lines, links to the repository and the video, `Start demo` that says sound will play, `Replay`), `demo/window.html`, `demo/popup.html`, `src/demo/page.ts`, `window-entry.ts`, `popup-entry.ts`, `src/demo/styles/demo.css`.
