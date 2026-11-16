@@ -124,7 +124,8 @@ Found in real use (Claude app, `claude-desktop`): after the user answered a `per
 Then `PostToolUse` and `PostToolUseFailure` were connected (`async: true`) with a raw-payload probe, 2026-11-16 03:52–03:55 UTC:
 - Claude app session `509b…`: four `permission` events (03:52:34, 03:53:29, 03:54:12, 03:54:59), each followed 2–10 s later by a `PostToolUse` of `AskUserQuestion` (03:52:37, 03:53:39, 03:54:21, 03:55:01), then more `PostToolUse` calls and the turn's `Stop`. So in the Claude app, `permission_prompt` also fires for a question the user picks an answer to (probably; the `Notification` payload itself was not probed).
 - 36 probe records from 2 sessions in about 3 minutes: `PostToolUse` for `Bash`, `AskUserQuestion`, `ToolSearch`, `SendUserFile` and MCP tools (`mcp__…`, with an extra `mcp_server` field); one `PostToolUseFailure` with `is_interrupt: false`. Raw size 1,044–19,706 bytes. `tool_input` and `tool_response` hold the tool's full input and output, so the hook never sends them.
-- Not observed: what fires after a rejected approval, and a `PostToolUseFailure` with `is_interrupt: true`.
+- Not observed: what fires after a skipped question (the Claude app offers skip, not reject), and a `PostToolUseFailure` with `is_interrupt: true`.
+- Probe totals (2026-11-16 03:52:16–04:19:44 UTC, all `claude-desktop`, 2 sessions): 84 `PostToolUse`, 2 `PostToolUseFailure` (both `is_interrupt: false`). After the mapping and an app restart, the builder confirmed: an answered prompt shows working, then the finished-turn ping. The probe groups were removed and `~/.agentbuddy/probe/` deleted the same day (backup, diff and approval).
 
 Claude app `PostToolUse` (stdin, session `cde2…`; the tool input and output replaced by a short example):
 ```json
