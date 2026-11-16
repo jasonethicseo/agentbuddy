@@ -1,0 +1,37 @@
+{
+  "v": 1,
+  "note": "Invented sample events in the format the real hooks send (events.md). Paths under /Users/dev, short made-up IDs. t = seconds from Start demo; negative = before it.",
+  "end": 58,
+  "events": [
+    { "t": -900, "event": { "agent": "codex", "session": "01b2…", "kind": "stop", "cwd": "/Users/dev/notes-api", "text": "Wrote 12 tests for the notes API; all pass.", "firstInput": "write tests for the notes API" } },
+    { "t": -120, "event": { "agent": "kiro", "session": "sess_k0…", "kind": "prompt", "cwd": "/Users/dev/agentbuddy", "text": "run the inbox tasks one by one", "bundleId": "dev.kiro.desktop" } },
+    { "t": -110, "event": { "agent": "kiro", "session": "sess_k0…", "kind": "stop", "cwd": "/Users/dev/agentbuddy", "bundleId": "dev.kiro.desktop" } },
+
+    { "t": 2, "event": { "agent": "kiro", "session": "sess_k3…", "kind": "task_start", "cwd": "/Users/dev/agentbuddy", "task": { "name": "3. Add the inbox file", "specPath": "/Users/dev/agentbuddy/.kiro/specs/inbox/tasks.md" } }, "progress": { "done": 2, "total": 8 } },
+    { "t": 4, "event": { "agent": "claude", "session": "c1d2…", "kind": "prompt", "cwd": "/Users/dev/webshop", "text": "add a dark mode toggle to the settings page", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 6, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 8, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 10, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 12, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 14, "event": { "agent": "claude", "session": "c1d2…", "kind": "permission", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+
+    { "t": 18, "event": { "agent": "kiro", "session": "sess_k3…", "kind": "task_done", "cwd": "/Users/dev/agentbuddy", "task": { "name": "3. Add the inbox file", "specPath": "/Users/dev/agentbuddy/.kiro/specs/inbox/tasks.md", "success": true } }, "progress": { "done": 3, "total": 8 } },
+    { "t": 18, "event": { "agent": "kiro", "session": "sess_k3…", "kind": "stop", "cwd": "/Users/dev/agentbuddy" }, "progress": { "done": 3, "total": 8 } },
+    { "t": 19, "event": { "agent": "kiro", "session": "sess_k4…", "kind": "task_start", "cwd": "/Users/dev/agentbuddy", "task": { "name": "4. Mark all read", "specPath": "/Users/dev/agentbuddy/.kiro/specs/inbox/tasks.md" } }, "progress": { "done": 3, "total": 8 } },
+
+    { "t": 24, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 27, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 30, "event": { "agent": "codex", "session": "01b2…", "kind": "stop", "cwd": "/Users/dev/notes-api", "text": "Added pagination to the notes list, with two new tests.", "firstInput": "write tests for the notes API" } },
+    { "t": 31, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+    { "t": 34, "event": { "agent": "claude", "session": "c1d2…", "kind": "tool", "cwd": "/Users/dev/webshop", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+
+    { "t": 36, "event": { "agent": "kiro", "session": "sess_k4…", "kind": "task_done", "cwd": "/Users/dev/agentbuddy", "task": { "name": "4. Mark all read", "specPath": "/Users/dev/agentbuddy/.kiro/specs/inbox/tasks.md", "success": true } }, "progress": { "done": 4, "total": 8 } },
+    { "t": 36, "event": { "agent": "kiro", "session": "sess_k4…", "kind": "stop", "cwd": "/Users/dev/agentbuddy" }, "progress": { "done": 4, "total": 8 } },
+    { "t": 37, "event": { "agent": "kiro", "session": "sess_k5…", "kind": "task_start", "cwd": "/Users/dev/agentbuddy", "task": { "name": "5. Inbox screen", "specPath": "/Users/dev/agentbuddy/.kiro/specs/inbox/tasks.md" } }, "progress": { "done": 4, "total": 8 } },
+
+    { "t": 42, "event": { "agent": "claude", "session": "c1d2…", "kind": "stop", "cwd": "/Users/dev/webshop", "text": "Added a dark mode toggle to Settings; 3 files changed, tests pass.", "projectDir": "/Users/dev/webshop", "bundleId": "com.anthropic.claudefordesktop" } },
+
+    { "t": 52, "event": { "agent": "kiro", "session": "sess_k5…", "kind": "task_done", "cwd": "/Users/dev/agentbuddy", "task": { "name": "5. Inbox screen", "specPath": "/Users/dev/agentbuddy/.kiro/specs/inbox/tasks.md", "success": true } }, "progress": { "done": 5, "total": 8 } },
+    { "t": 52, "event": { "agent": "kiro", "session": "sess_k5…", "kind": "stop", "cwd": "/Users/dev/agentbuddy" }, "progress": { "done": 5, "total": 8 } }
+  ]
+}

@@ -8,12 +8,13 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - Unit tests for both; all existing tests pass unchanged.
   - _Requirements: 1.5, 2.2_
 
-- [ ] 2. Scenario and replay (pure)
-  - [ ] 2.1 `src/demo/scenario.ts`: `parseScenario` (never throws; errors listed) and `stampEvents(scenario, startMs)`.
-  - [ ] 2.2 `src/demo/replay.ts`: `due`, `applyDue`, `views`, with the progress map per buddy key.
-  - [ ] 2.3 `demo/events.json`: the timeline of the design, invented texts, `/Users/dev/` paths, short IDs.
-  - [ ] 2.4 Tests: `demo-scenario.test.ts` (format, paths, IDs, kinds per agent), `demo-criteria.test.ts` (every criterion of Req 3.1 within 60 s, with a fake-port controller), `demo-replay.prop.test.ts` (any tick split gives the same views and pings).
+- [x] 2. Scenario and replay (pure)
+  - [x] 2.1 `src/demo/scenario.ts`: `parseScenario` (never throws; errors listed) and `stampEvents(scenario, startMs)`.
+  - [x] 2.2 `src/demo/replay.ts`: `due`, `applyDue`, `views`, with the progress map per buddy key.
+  - [x] 2.3 `demo/events.json`: the timeline of the design, invented texts, `/Users/dev/` paths, short IDs.
+  - [x] 2.4 Tests: `demo-scenario.test.ts` (format, paths, IDs, kinds per agent), `demo-criteria.test.ts` (every criterion of Req 3.1 within 60 s, with a fake-port controller), `demo-replay.prop.test.ts` (any tick split gives the same views and pings).
   - _Requirements: 2.1, 2.3, 2.5, 3.1–3.5_
+  - Result (2026-11-16): `createDriver` in `replay.ts` holds the step rule (a new list on new events or every 5 s), so the host and the tests run the same steps. The Codex baseline turn is 15 minutes old, so Codex changes state (idle, then a finished turn). Kiro task-run events carry no launcher (events.md: unverified for task runs). The scenario test caught `GET /notes` in a sample reply (no `/` in texts); the criteria test fails when the Claude tool events after the approval are removed (checked once).
 
 - [ ] 3. Demo ports and host
   - [ ] 3.1 `src/demo/ports.ts`: the controller's ports for the demo, with the notice texts of the design and the app-name map; memory-only inbox and settings.
