@@ -2,9 +2,19 @@
 
 A 2000s-messenger-style buddy list for your AI coding agents. Kiro, Claude Code and Codex show up as buddies with a status and a status message, and they ping you when they finish or need your OK.
 
+**[Try the demo](https://jasonethicseo.github.io/agentbuddy/)** (about a minute, with sound) · Video: coming soon · Built for Kiroween 2026 (Frankenstein)
+
+![The AgentBuddy window in the web demo: Kiro studying a spec task at 2/8, Codex idle, Claude Code waiting for an OK, and the Ding! pop-up beside it](docs/demo.png)
+
 Everything stays on your machine: the relay listens on `127.0.0.1` only, and nothing is sent anywhere else.
 
-Status: the hooks, the relay and the macOS desktop app work (run from source). The demo build for the web and a setup command come in later specs.
+Status: the hooks, the relay and the macOS desktop app work (run from source). A web demo replays sample events. A setup command that prints the hook snippets is not built yet.
+
+## Try the demo
+
+The [demo](https://jasonethicseo.github.io/agentbuddy/) is the desktop app's own window and pop-ups, running in a browser. Instead of the relay, a one-minute scenario of invented events, in the same format the real hooks send, goes through the same state rules and the same ping, inbox and pop-up logic as the app. Press `Start demo`: Kiro works through spec tasks with its progress bar, Claude Code asks for an OK (ding and pop-up), works on after it and finishes, and Codex finishes a turn. Buttons, the inbox, Settings and the skin switch work; what only the desktop app can do (bring an agent's app forward, post a macOS notification, stay on top) shows a short notice instead. Nothing is stored or sent.
+
+Seeing your own agents needs the real setup below: the hooks, the relay and the macOS app.
 
 ## How it works
 
@@ -127,6 +137,7 @@ Old daily logs and inbox files are not deleted yet. Run from source, the app is 
 - Some sprites are drawn at sizes that are not whole multiples of their pixel grid (the 16 px title icon and Skin tiles, the 28 px banner mascot, the strawberry at 12 and 10 px), so a few pixel rows are one screen pixel wider than others.
 - Terminal tabs are never selected; a jump brings the terminal app forward.
 - The desktop app runs on macOS only and is not packaged or signed.
+- The web demo replays invented events; it cannot show your own agents, bring an app forward or post a notification, and it keeps nothing after the tab closes.
 
 ## Development
 
@@ -134,7 +145,11 @@ Old daily logs and inbox files are not deleted yet. Run from source, the app is 
 npm test          # unit and property tests
 npm run typecheck
 npm run dev       # UI dev server, proxying /stream to a running relay
+npm run demo      # the web demo on a local dev server (127.0.0.1)
+npm run build:demo  # the static demo site in dist/demo, as GitHub Pages serves it
 ```
+
+A GitHub Actions workflow (`.github/workflows/pages.yml`) runs the privacy check, both builds, the tests and the type check on every push to `master`, and publishes `dist/demo` to GitHub Pages only when all of them pass. `scripts/check-public.sh` is that privacy check: it looks through the tracked files and the history for user folders other than `/Users/dev`, the local user name, the relay token, full session IDs and non-noreply e-mail addresses. `scripts/demo-shot.mjs` opens the demo in a headless, muted Chrome, presses Start, reports what the page shows and saves a screenshot (it made `docs/demo.png`).
 
 `scripts/probe.mjs` is an observation tool that records raw hook payloads (including full prompt text) to `~/.agentbuddy/probe/`. It is not connected by default; remove it from your hooks and delete that folder when you are done observing.
 
@@ -145,12 +160,13 @@ Development only; the hook command and the relay have no runtime dependencies.
 | Library | Use | License |
 |---|---|---|
 | [TypeScript](https://www.typescriptlang.org/) | type checking | Apache-2.0 |
-| [Vite](https://vite.dev/) | UI dev server and build | MIT |
+| [Vite](https://vite.dev/) | UI dev server, the app UI and the web demo builds | MIT |
 | [Vitest](https://vitest.dev/) | unit and property test runner | MIT |
 | [fast-check](https://fast-check.dev/) | property-based tests | MIT |
 | [esbuild](https://esbuild.github.io/) | bundles the hook command and the relay | MIT |
 | [@types/node](https://github.com/DefinitelyTyped/DefinitelyTyped) | Node.js type definitions | MIT |
 | [Electron](https://www.electronjs.org/) | runs the desktop app from source | MIT |
+| GitHub Actions: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [configure-pages](https://github.com/actions/configure-pages), [upload-pages-artifact](https://github.com/actions/upload-pages-artifact), [deploy-pages](https://github.com/actions/deploy-pages) | the demo workflow | MIT |
 
 Bundled with the UI (in `src/ui/public/fonts/`, with their license files):
 
