@@ -4,7 +4,9 @@
 // script error, and saves a screenshot. Everything it starts is stopped before it exits, at the latest
 // after 120 s.
 //
-//   node scripts/demo-shot.mjs [--wait 16] [--out docs/demo.png] [--width 1000] [--height 700]
+//   node scripts/demo-shot.mjs [--wait 16] [--out docs/demo.png] [--width 1100] [--height 700] [--url https://…/]
+//
+// With --url it opens that page instead of serving dist/demo.
 //
 // Chrome: $CHROME, or Google Chrome in /Applications. Needs `npm run build:demo` first.
 import { spawn } from 'node:child_process';
@@ -21,6 +23,7 @@ const OUT = arg('out', 'docs/demo.png');
 const WIDTH = Number(arg('width', '1100'));
 const HEIGHT = Number(arg('height', '700'));
 const PORT = 4399;
+const URL_ARG = arg('url', '');
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -28,7 +31,17 @@ const children = [];
 const profile = mkdtempSync(join(tmpdir(), 'agentbuddy-shot-'));
 async function cleanup() {
   for (const c of children) if (c.exitCode === null) c.kill('SIGTERM');
-  await Promise.all(children.map((c) => (c.exitCode !== null ? null : new Promise((r) => c.once('exit', r)))));
+  // A child that ignores SIGTERM (seen once with Chrome, 2026-11-16) gets SIGKILL after 3 s.
+  await Promise.all(
+    children.map((c) =>
+      c.exitCode !== null || c.signalCode !== null
+        ? null
+        : new Promise((r) => {
+            const t = setTimeout(() => c.kill('SIGKILL'), 3000);
+            c.once('exit', () => (clearTimeout(t), r()));
+          }),
+    ),
+  );
   rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
 const hardStop = setTimeout(() => {
@@ -51,9 +64,11 @@ function waitFor(child, pattern) {
 }
 
 async function main() {
-  const preview = spawn('npx', ['vite', 'preview', '--config', 'vite.demo.config.ts', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], { stdio: 'pipe' });
-  children.push(preview);
-  await waitFor(preview, /127\.0\.0\.1:4399/);
+  if (URL_ARG === '') {
+    const preview = spawn('npx', ['vite', 'preview', '--config', 'vite.demo.config.ts', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], { stdio: 'pipe' });
+    children.push(preview);
+    await waitFor(preview, /127\.0\.0\.1:4399/);
+  }
 
   const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', '--autoplay-policy=no-user-gesture-required', '--mute-audio', 'about:blank'], { stdio: 'pipe' });
   children.push(chrome);
@@ -85,8 +100,8 @@ async function main() {
   await send('Log.enable');
   await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: 2, mobile: false });
-  await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/` });
-  await sleep(2500);
+  await send('Page.navigate', { url: URL_ARG || `http://127.0.0.1:${PORT}/` });
+  await sleep(URL_ARG ? 6000 : 2500);
   await evaluate("document.querySelector('.demo-start-btn').click()");
   await sleep(WAIT_S * 1000);
 
