@@ -8,7 +8,8 @@ import type { AttentionState } from './pings';
 import type { ThemeId } from './theme';
 
 /** `browser`: the relay's own page, with no app around it. */
-export type RelayMode = 'connecting' | 'own' | 'attached' | 'browser';
+/** `demo`: the demo page, which replays a scenario through the app's controller and uses no relay (submission Requirement 1.5). */
+export type RelayMode = 'connecting' | 'own' | 'attached' | 'browser' | 'demo';
 export type Connection = 'ok' | 'disconnected' | 'foreign' | 'error';
 
 export interface PublicSettings {

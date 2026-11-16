@@ -2,7 +2,7 @@
 
 Working rules (from earlier specs): report to the builder in Korean; one commit per task, files staged by name; announce every check that opens a window, a browser or plays sound, run it once with a fixed time limit, and confirm nothing is left running; nothing is pushed, published or made public without the builder's OK.
 
-- [ ] 1. Demo mode in the snapshot, and the pure settings module
+- [x] 1. Demo mode in the snapshot, and the pure settings module
   - Move `Settings`, `DEFAULT_SETTINGS`, `MAX_CLOSED_GROUPS`, `MAX_HIDDEN`, `parseSettings`, `serializeSettings` from `src/app/settings.ts` to `src/app/settings-data.ts`; `settings.ts` keeps load and save and re-exports the rest. `src/app/controller.ts` imports from `settings-data.ts`.
   - Add `'demo'` to `RelayMode`; the chrome model shows `demo replay` in the status bar and `Demo: no relay, events are replayed in this page.` in Settings › Connections; everything that checks `mode !== 'browser'` treats `demo` like the app.
   - Unit tests for both; all existing tests pass unchanged.

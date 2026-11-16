@@ -28,6 +28,7 @@ export function alertText(c: MenuCount): string | null {
 
 /** The relay connection as a dot and a line. */
 export function relayStatus(s: AppSnapshot): { dot: Dot; text: string } {
+  if (s.mode === 'demo') return { dot: 'ok', text: 'demo replay' };
   switch (s.connection) {
     case 'ok':
       return { dot: 'ok', text: 'relay connected' };
@@ -56,7 +57,8 @@ export function statusPanels(s: AppSnapshot, tab: Tab, notice?: string): StatusP
 }
 export function connections(s: AppSnapshot): Array<{ dot: Dot; text: string }> {
   const where = s.mode === 'own' ? ' · in this app' : s.mode === 'attached' ? ' · attached' : '';
-  const lines: Array<{ dot: Dot; text: string }> = [{ dot: relayStatus(s).dot, text: `Relay · 127.0.0.1:${s.port}${where}` }];
+  const relay = s.mode === 'demo' ? 'Demo: no relay, events are replayed in this page.' : `Relay · 127.0.0.1:${s.port}${where}`;
+  const lines: Array<{ dot: Dot; text: string }> = [{ dot: relayStatus(s).dot, text: relay }];
   const seen = new Set<AgentId>(s.buddies.map((b) => b.agent));
   for (const agent of ['kiro', 'claude', 'codex'] as const) {
     const name = AGENT_NAMES[agent];

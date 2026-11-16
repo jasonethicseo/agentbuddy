@@ -11,8 +11,8 @@ import type { ClickFrom, Ports } from './controller-ports';
 import type { PopupAction, WindowAction } from './ipc';
 import { NOTICES, planJump } from './jump';
 import { notificationBody, popupContent } from './ping-content';
-import { MAX_CLOSED_GROUPS } from './settings';
-import type { Settings } from './settings';
+import { MAX_CLOSED_GROUPS } from './settings-data';
+import type { Settings } from './settings-data';
 
 
 export type { ClickFrom, Ports } from './controller-ports';

@@ -5,7 +5,7 @@ import type { AppSnapshot, ClickTarget, PopupContent } from '../core/snapshot';
 import type { ThemeId } from '../core/theme';
 import type { WindowAction } from './ipc';
 import type { JumpPlan } from './jump';
-import type { Settings } from './settings';
+import type { Settings } from './settings-data';
 
 export interface Ports {
   now(): number;
