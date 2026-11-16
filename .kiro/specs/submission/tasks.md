@@ -28,15 +28,17 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - `demo-markup.test.ts`: the two frame pages keep the app's body markup.
   - _Requirements: 1.1–1.4, 1.6_
 
-- [ ] 5. Demo build
+- [x] 5. Demo build
   - `vite.demo.config.ts`; scripts `demo` and `build:demo`; `npm run build` and `npm run app` unchanged.
   - `demo-build.test.ts` (runs on `dist/demo` when present, and in the workflow after `build:demo`): no `node:` import, no `EventSource`, no request to another origin, every font URL resolves.
   - Builder check, announced first: `npm run demo` once in the builder's browser for about 90 s (the ding plays): the scenario's 60 s, a pop-up's ×, Later and Go there, the Skin switch, then the dev server stopped and confirmed gone.
   - _Requirements: 1.6, 5.1–5.3_
+  - Result (2026-11-16): two headless runs first (muted, no window; `scripts/demo-shot.mjs`): the first showed the pop-up covering the window's TIP banner and status bar, and a favicon 404; the pop-ups now stand in a column beside the window and the pages have an empty icon. The dev server could not load `../src/demo/*.ts` (it asked for `/src/…` outside `root`); an alias maps it, the build is unchanged. Builder check: `npm run demo` on `127.0.0.1:5180`, started 13:41 local time; the builder confirmed the scenario, the pop-up buttons, the skin switch and Replay. The server was meant to stop by itself after 300 s (`timeout 300 npx vite`), but it was still running at 13:53; it was stopped by hand and port 5180 confirmed free. Later checks use a watchdog that kills the process group instead.
 
-- [ ] 6. Screenshot
+- [x] 6. Screenshot
   - One headless run, announced first: `vite preview` of `dist/demo` on `127.0.0.1`, a headless Chromium (ask first if it needs a download), `Start demo`, wait to t = 16 s, save `docs/demo.png`, close the browser and the server, confirm both are gone.
   - _Requirements: 7.1; decision Q5_
+  - Result (2026-11-16): `docs/demo.png` (2200 × 1400, 2× scale) at t = 16 s: the needs-OK pop-up, the alert strip, Kiro at 2/8, Codex idle. Headless and muted, run once; no script error; the preview server, Chrome and its temporary profile were gone afterwards.
 
 - [ ] 7. Workflow and publishing
   - [ ] 7.1 `.github/workflows/pages.yml` as in the design; `scripts/check-public.sh` (reads the user name and token shape at run time, holds nothing private) and a step that runs it.

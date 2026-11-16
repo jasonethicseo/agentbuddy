@@ -21,6 +21,8 @@ export default defineConfig({
       },
     },
   },
+  // The pages load ../src/demo/*.ts; the dev server asks for them as /src/…, outside `root`. Map that to the repository's src.
+  resolve: { alias: [{ find: /^\/src\//, replacement: `${resolve(import.meta.dirname, 'src')}/` }] },
   preview: { host: '127.0.0.1' },
   server: {
     host: '127.0.0.1',
