@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AgentBuddy message (demo)</title>
+  </head>
+  <body>
+    <div class="card" data-state="TURN_DONE" hidden>
+      <header class="card-title">
+        <h1 class="card-head"></h1>
+        <span class="card-time"></span>
+        <button type="button" class="card-close" aria-label="Close and mark as read">×</button>
+      </header>
+      <div class="card-body">
+        <span class="card-icon"></span>
+        <div class="card-text">
+          <span class="card-who"><b class="card-agent"></b> <span class="card-at"></span></span>
+          <span class="phrase"></span>
+          <span class="card-detail"></span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="card-later">Later</button>
+        <button type="button" class="card-go">Go there<span class="go-mark" aria-hidden="true"></span></button>
+      </div>
+    </div>
+    <script type="module" src="../src/demo/popup-entry.ts"></script>
+  </body>
+</html>

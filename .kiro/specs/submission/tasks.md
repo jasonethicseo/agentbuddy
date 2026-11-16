@@ -23,7 +23,7 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - _Requirements: 2.2, 2.4, 4.1–4.5_
   - Result (2026-11-16): the host has no unit test of its own (it is DOM and timers only; the repo has no DOM test environment); its steps are `createDriver` and the controller, both tested, and it is checked in the browser in task 5. Pop-up capacity follows the page height, the oldest closing first, as `popups.ts` does with the screen.
 
-- [ ] 4. Demo pages
+- [x] 4. Demo pages
   - `demo/index.html` (heading, three lines, links to the repository and the video, `Start demo` that says sound will play, `Replay`), `demo/window.html`, `demo/popup.html`, `src/demo/page.ts`, `window-entry.ts`, `popup-entry.ts`, `src/demo/styles/demo.css`.
   - `demo-markup.test.ts`: the two frame pages keep the app's body markup.
   - _Requirements: 1.1–1.4, 1.6_

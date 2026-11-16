@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgentBuddy demo</title>
+  </head>
+  <body>
+    <main class="demo">
+      <section class="demo-text">
+        <h1>AgentBuddy</h1>
+        <p>A 2000s-messenger-style buddy list for your AI coding agents. Kiro, Claude Code and Codex show up as buddies, and they ping you when they finish or need your OK.</p>
+        <p>This page replays sample events in the same format the real hooks send. Nothing leaves this page.</p>
+        <p>The real app runs on macOS, from the <a href="https://github.com/jasonethicseo/agentbuddy">repository</a>.<span class="demo-video" hidden> Watch the <a class="demo-video-link" href="#">video</a>.</span></p>
+        <p class="demo-error" role="alert" hidden>The demo data is broken.</p>
+      </section>
+      <div class="demo-stage">
+        <iframe class="demo-window" src="window.html?theme=blue-bot&amp;frame=transparent" title="AgentBuddy window" width="320" height="620"></iframe>
+        <div class="demo-start sunken">
+          <button type="button" class="demo-start-btn raised">Start demo ▶</button>
+          <p>About a minute. Sound will play.</p>
+        </div>
+        <div class="demo-end" hidden>
+          <button type="button" class="demo-replay raised">Replay ▶</button>
+        </div>
+      </div>
+    </main>
+    <div class="demo-popups"></div>
+    <script type="module" src="../src/demo/page.ts"></script>
+  </body>
+</html>

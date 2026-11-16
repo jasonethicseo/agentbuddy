@@ -4,6 +4,7 @@
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "types": ["node"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -15,5 +16,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "tests", "vite.config.ts", "vite.demo.config.ts", "vitest.config.ts"]
 }

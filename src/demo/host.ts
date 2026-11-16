@@ -42,6 +42,8 @@ export interface HostOptions {
   windowFrame: HTMLIFrameElement;
   popupLayer: HTMLElement;
   onEnd(): void;
+  /** The skin of every snapshot, so the page around the window can follow it. */
+  onTheme(theme: ThemeId): void;
 }
 
 export function createHost(o: HostOptions) {
@@ -76,6 +78,7 @@ export function createHost(o: HostOptions) {
   const outputs = {
     pushState: (s: AppSnapshot) => {
       theme = s.settings.theme;
+      o.onTheme(theme);
       onState?.(s);
     },
     showPopup,
