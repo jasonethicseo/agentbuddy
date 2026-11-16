@@ -1,0 +1,51 @@
+# Builds and tests the repository, then publishes the demo (dist/demo) to GitHub Pages
+# (submission Requirement 5.4, 5.5; design "Workflow"). A failing step stops the deploy.
+name: Demo on GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # No test starts Electron (tech.md), so CI skips its download.
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/check-public.sh
+      # The hook tests spawn dist/hook.js and the demo build test reads dist/demo, so both builds come first.
+      - run: npm run build
+      - run: npm run build:demo
+      - run: npm test
+      - run: npm run typecheck
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/demo
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

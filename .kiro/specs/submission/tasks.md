@@ -41,12 +41,13 @@ Working rules (from earlier specs): report to the builder in Korean; one commit 
   - Result (2026-11-16): `docs/demo.png` (2200 × 1400, 2× scale) at t = 16 s: the needs-OK pop-up, the alert strip, Kiro at 2/8, Codex idle. Headless and muted, run once; no script error; the preview server, Chrome and its temporary profile were gone afterwards.
 
 - [ ] 7. Workflow and publishing
-  - [ ] 7.1 `.github/workflows/pages.yml` as in the design; `scripts/check-public.sh` (reads the user name and token shape at run time, holds nothing private) and a step that runs it.
-  - [ ] 7.2 Run `check-public.sh` locally and show the result. `.gitignore` does not list `.kiro`.
+  - [x] 7.1 `.github/workflows/pages.yml` as in the design; `scripts/check-public.sh` (reads the user name and token shape at run time, holds nothing private) and a step that runs it.
+  - [x] 7.2 Run `check-public.sh` locally and show the result. `.gitignore` does not list `.kiro`.
   - [ ] 7.3 With the builder's OK: create `jasonethicseo/agentbuddy` (public), add the remote, push `master`. No force push.
   - [ ] 7.4 With the builder's OK: Pages source = GitHub Actions; watch the first run; if a test needs macOS, move the job to `macos-latest` (never skip the test); open the Pages URL once headless and confirm the page, fonts and `Start demo` load.
   - [ ] 7.5 With the builder's OK: About = description, the demo URL, topics; confirm the MIT license shows.
   - _Requirements: 5.4, 5.5, 6.1–6.4_
+  - Result 7.1–7.2 (2026-11-16): `check-public.sh` scans tracked files and the whole history for user folders other than `/Users/dev`, the local user name and the relay token; tracked files for full UUIDs outside Kiro's own spec files (`tasks.meta.json`, `.config.kiro`, which hold Kiro's spec and execution IDs); and every author and committer e-mail. Locally: clean. A planted line with another user folder and a UUID was caught (then removed). `gh` is installed and logged in as `jasonethicseo`; the repository does not exist yet.
 
 - [ ] 8. README for judges
   - The top: one line, demo link, video link (placeholder until the builder has it), `docs/demo.png`; a "Try the demo" section and what needs the real setup; the known limits, stored files and third-party libraries updated (Vite also builds the demo; the workflow's actions).
