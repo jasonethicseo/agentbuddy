@@ -2,7 +2,7 @@
 
 A 2000s-messenger-style buddy list for your AI coding agents. Kiro, Claude Code and Codex show up as buddies with a status and a status message, and they ping you when they finish or need your OK.
 
-**[Try the demo](https://jasonethicseo.github.io/agentbuddy/)** (about a minute, with sound) · Video: coming soon · Built for Kiroween 2026 (Frankenstein)
+**[Try the demo](https://jasonethicseo.github.io/agentbuddy/)** (about a minute, with sound) · **[Watch the video](https://youtu.be/dd_SMLPNns4)** (2:20) · Built for Kiroween 2026 (Frankenstein)
 
 ![The AgentBuddy window in the web demo: Kiro studying a spec task at 2/8, Codex idle, Claude Code waiting for an OK, and the Ding! pop-up beside it](docs/demo.png)
 

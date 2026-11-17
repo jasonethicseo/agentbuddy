@@ -11,7 +11,7 @@ import { createHost } from './host';
 import { parseScenario } from './scenario';
 
 /** The demo video on YouTube; the link shows once this is set (Requirement 1.2). */
-const VIDEO_URL = '';
+const VIDEO_URL: string = 'https://youtu.be/dd_SMLPNns4';
 
 applyTheme(DEFAULT_THEME);
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
